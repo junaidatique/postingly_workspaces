@@ -1,0 +1,32 @@
+service: postingly-api-rest
+
+plugins:
+  - serverless-dotenv-plugin
+
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${env:STAGE}
+  region: ${env:AWS_REGION}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:${env:AWS_REGION}:*:*"
+  environment:
+    STORES_TABLE: "Store-${env:GRPAHQL_API_ID}-${env:STAGE}"
+
+functions:
+  app:
+    handler: index.handler
+    events:
+      - http: ANY /
+      - http: "ANY {proxy+}"
