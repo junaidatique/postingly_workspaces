@@ -1,0 +1,31 @@
+{
+  "name": "graqphql",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "apollo-server-express": "^2.5.0",
+    "dynamoose": "^1.7.2",
+    "express": "^4.16.4",
+    "graphql": "^14.3.0",
+    "graphql-tools": "^4.0.4",
+    "serverless-http": "^2.0.1",
+    "serverless-webpack": "^5.3.0"
+  },
+  "devDependencies": {
+    "jest": "^24.8.0",
+    "superagent": "^5.0.5",
+    "supertest": "^4.0.2"
+  },
+  "scripts": {
+    "test": "jest --coverage",
+    "test:watch": "jest --watch --coverage"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageFormats": [
+      "json",
+      "html"
+    ]
+  }
+}
