@@ -4,7 +4,10 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "dynamoose": "^1.7.2",
+    "faker": "^4.1.0",
     "jsonwebtoken": "^8.5.1",
+    "node-fetch": "^2.5.0",
     "shared": "1.0.0"
   }
 }

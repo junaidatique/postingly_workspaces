@@ -1,0 +1,40 @@
+service: postingly-functions
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-dynamodb-local
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${env:STAGE}
+  region: ${env:AWS_REGION}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:${env:AWS_REGION}:*:*"
+  environment:
+    STORES_TABLE: "Store"
+    PROFILE_TABLE: "Profile"
+
+functions:
+  data-seed:
+    handler: seeddata.createStore
+  service-connect:
+    handler: services.connect
+  service-profile:
+    handler: services.getProfile
+  cognito-create-auth-challenge:
+    handler: cognito.createAuthChallenge
+  cognito-define-auth-challenge:
+    handler: cognito.defineAuthChallenge
+  cognito-verify-auth-challenge:
+    handler: cognito.verifyAuthChallenge
