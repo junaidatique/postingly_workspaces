@@ -64,7 +64,7 @@ type Store {
   partner: String!
   partnerId: String
   partnerPlan: String
-  title: String
+  title: String!
   storeUrl: String
   partnerSpecificUrl: String
   partnerCreatedAt: String
