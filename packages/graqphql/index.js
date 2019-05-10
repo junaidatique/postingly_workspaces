@@ -3,12 +3,9 @@ import express from "express";
 import serverless from "serverless-http";
 
 import { ApolloServer } from 'apollo-server-express'
-const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
-const gql = require('apollo-server-express').gql;
 import graphiql from "graphql-playground-middleware-express";
 
-import resolvers from "./modules/Store/resolvers";
-
+import resolvers from "./modules/resolvers";
 const typeDefs = require('./schema/graphql');
 
 const app = express();

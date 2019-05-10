@@ -7,6 +7,7 @@
     "apollo-server-express": "^2.5.0",
     "dynamoose": "^1.7.2",
     "express": "^4.16.4",
+    "faker": "^4.1.0",
     "graphql": "^14.3.0",
     "graphql-tools": "^4.0.4",
     "serverless-http": "^2.0.1",
@@ -18,7 +19,7 @@
     "supertest": "^4.0.2"
   },
   "scripts": {
-    "test": "jest --coverage",
+    "test": "jest --coverage ",
     "test:watch": "jest --watch --coverage"
   },
   "jest": {

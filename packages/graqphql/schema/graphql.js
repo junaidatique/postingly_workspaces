@@ -1,5 +1,6 @@
 const gql = require('apollo-server-express').gql;
 const typeDefs = gql`
+# Generic search filters.
 input ModelStringFilterInput {
   ne: String
   eq: String
@@ -58,6 +59,7 @@ enum ModelSortDirection {
   ASC
   DESC
 }
+# Store type and inputs
 type Store {
   id: ID!
   userId: String!
@@ -69,22 +71,49 @@ type Store {
   partnerSpecificUrl: String
   partnerCreatedAt: String
   partnerUpdatedAt: String
+  partnerToken: String
   timezone: String
   moneyFormat: String
   moneyWithCurrencyFormat: String
-  numberOfProducts: String
-  noOfActiveProducts: String
-  numberOfScheduledPosts: String
-  numberOfPosted: String
+  numberOfProducts: Int
+  noOfActiveProducts: Int
+  numberOfScheduledPosts: Int
+  numberOfPosted: Int
   productsLastUpdated: String
-  isCharged: String
+  isCharged: Boolean
   chargedMethod: String
   chargeId: String
   chargeDate: String
-  isUninstalled: String
+  isUninstalled: Boolean
   profiles(filter: ModelProfileFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): ModelProfileConnection
 }
 
+input CreateStoreInput {
+  id: ID
+  userId: String!
+  partner: String!
+  partnerId: String
+  partnerPlan: String
+  title: String!
+  storeUrl: String
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  partnerToken: String
+  timezone: String
+  moneyFormat: String
+  moneyWithCurrencyFormat: String
+  numberOfProducts: Int
+  noOfActiveProducts: Int
+  numberOfScheduledPosts: Int
+  numberOfPosted: Int
+  productsLastUpdated: String
+  isCharged: Boolean
+  chargedMethod: String
+  chargeId: String
+  chargeDate: String
+  isUninstalled: Boolean
+}
 
 type ModelStoreConnection {
   items: [Store]
@@ -93,12 +122,14 @@ type ModelStoreConnection {
 
 input ModelStoreFilterInput {
   id: ModelIDFilterInput
-  name: ModelStringFilterInput
+  userId: ModelStringFilterInput
+  title: ModelStringFilterInput
   and: [ModelStoreFilterInput]
   or: [ModelStoreFilterInput]
   not: ModelStoreFilterInput
 }
 
+# Profile type and inputs
 type Profile {
   id: ID!
   name: String!
@@ -116,7 +147,6 @@ type Profile {
   store: Store
 }
 
-
 type ModelProfileConnection {
   items: [Profile]
   nextToken: String
@@ -124,7 +154,8 @@ type ModelProfileConnection {
 
 input ModelProfileFilterInput {
   id: ModelIDFilterInput
-  title: ModelStringFilterInput
+  store: ModelStringFilterInput
+  name: ModelStringFilterInput
   and: [ModelProfileFilterInput]
   or: [ModelProfileFilterInput]
   not: ModelProfileFilterInput
@@ -164,16 +195,17 @@ enum ServiceProfile {
 }
 
 
-
 type Query {
   listStores(filter: ModelStoreFilterInput, limit: Int, nextToken: String): ModelStoreConnection
-  books: [Book]
+  getStore(id: ID!): Store
 }
 
-type Book {
-  title: String
-  author: String
+
+type Mutation {
+  createStore(input: CreateStoreInput!): Store
 }
+
+
 
 `;
 

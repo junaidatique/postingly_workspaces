@@ -12,6 +12,8 @@
 //   dynamoDb = new AWS.DynamoDB.DocumentClient();
 // };
 // module.exports = dynamoDb;
+
+
 const dynamoose = require('dynamoose');
 
 const IS_OFFLINE = process.env.IS_OFFLINE;

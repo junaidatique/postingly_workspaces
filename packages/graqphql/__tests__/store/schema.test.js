@@ -2,14 +2,13 @@
 const addMockFunctionsToSchema = require('graphql-tools').addMockFunctionsToSchema;
 const mockServer = require('graphql-tools').mockServer;
 const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
-
 const graphql = require('graphql').graphql;
 
 const typeDefs = require('../../schema/graphql');
 
 
-const titleTestCase = {
-  id: 'Query Title',
+const listStoresCase = {
+  id: 'List Stores Query',
   query: `
       query {
         listStores {
@@ -26,8 +25,38 @@ const titleTestCase = {
   context: {},
   expected: { data: { listStores: { items: [{ title: 'Title', userId: 'Title', partner: 'Title' }, { title: 'Title', userId: 'Title', partner: 'Title' }] } } }
 };
+const getStoreCase = {
+  id: 'List Stores Query',
+  query: `
+      query {
+        getStore(id: "1") {
+          userId
+          partner
+          title
+        }
+      }
+    `,
+  variables: {},
+  context: {},
+  expected: { data: { getStore: { title: 'Title', userId: 'Title', partner: 'Title' } } }
+};
+const createStoreCase = {
+  id: 'Create Store Mutation',
+  query: `
+      mutation {
+        createStore (input: {id: "Title", userId: "Title", partner: "Title", title: "Title"}) {
+          userId
+          partner
+          title
+        }
+      }
+    `,
+  variables: {},
+  context: {},
+  expected: { data: { createStore: { title: 'Title', userId: 'Title', partner: 'Title' } } }
+};
 
-const cases = [titleTestCase];
+const cases = [listStoresCase, getStoreCase, createStoreCase];
 
 describe('Schema', () => {
   // const typeDefs = booksSchema;

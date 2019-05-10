@@ -11,6 +11,7 @@
     "@babel/core": "^7.4.4",
     "aws-lambda": "^0.1.2",
     "babel-loader": "^8.0.5",
+    "dotenv": "^8.0.0",
     "graphql-playground-middleware-express": "^1.7.12",
     "jest": "^24.8.0",
     "serverless-dotenv-plugin": "^2.1.1",

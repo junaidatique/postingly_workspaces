@@ -59,7 +59,7 @@ const storeSchema = new Schema({
     type: Number
   },
   productsLastUpdated: {
-    type: Date
+    type: String
   },
   isCharged: {
     type: Boolean
@@ -71,7 +71,7 @@ const storeSchema = new Schema({
     type: String
   },
   chargeDate: {
-    type: Date
+    type: String
   },
   isUninstalled: {
     type: Boolean

@@ -28,6 +28,8 @@ provider:
 functions:
   data-seed:
     handler: seeddata.createStore
+  data-test:
+    handler: seeddata.testData
   service-connect:
     handler: services.connect
   service-profile:

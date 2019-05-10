@@ -88,7 +88,7 @@ module.exports = {
         },
         serviceUserId: faker.random.number({ min: 10000000 }),
         serviceUsername: faker.name.title(),
-        profileURL: faker.internet.url(),
+        link: faker.internet.url(),
       }
       const pageParams = {
         id: `facebook_page-${pageProfile.id}`,
@@ -113,5 +113,10 @@ module.exports = {
     }
 
     // profile = await query.putItem(process.env.PROFILE_TABLE, pageParams);
+  },
+  testData: async function (event, context) {
+    console.log(event);
+    const p = await Profile.get({ id: event }, { attributes: ['id', 'storeId', 'profileURL', 'avatarUrl'] });
+    console.log(p);
   }
 }

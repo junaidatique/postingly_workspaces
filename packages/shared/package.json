@@ -5,5 +5,8 @@
   "license": "MIT",
   "dependencies": {
     "dynamoose": "^1.7.2"
+  },
+  "scripts": {
+    "seed": "STAGE=dev APP_NAME=postingly STORES_TABLE=Store PROFILE_TABLE=Profile node index.js"
   }
 }
