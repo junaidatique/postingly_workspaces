@@ -5,6 +5,7 @@ module.exports = {
     getStore: storeResolvers.getStore
   },
   Mutation: {
-    createStore: storeResolvers.createStore
+    createStore: storeResolvers.createStore,
+    updateStore: storeResolvers.updateStore
   },
 }

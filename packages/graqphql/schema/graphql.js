@@ -114,6 +114,29 @@ input CreateStoreInput {
   chargeDate: String
   isUninstalled: Boolean
 }
+input UpdateStoreInput { 
+  id: ID 
+  partnerPlan: String
+  title: String
+  storeUrl: String
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  partnerToken: String
+  timezone: String
+  moneyFormat: String
+  moneyWithCurrencyFormat: String
+  numberOfProducts: Int
+  noOfActiveProducts: Int
+  numberOfScheduledPosts: Int
+  numberOfPosted: Int
+  productsLastUpdated: String
+  isCharged: Boolean
+  chargedMethod: String
+  chargeId: String
+  chargeDate: String
+  isUninstalled: Boolean
+}
 
 type ModelStoreConnection {
   items: [Store]
@@ -203,6 +226,7 @@ type Query {
 
 type Mutation {
   createStore(input: CreateStoreInput!): Store
+  updateStore(input: UpdateStoreInput!): Store
 }
 
 

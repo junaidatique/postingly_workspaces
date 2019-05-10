@@ -41,8 +41,25 @@ module.exports = {
       };
 
       store = new Store(shopParams);
-      storeDetial = await store.save();
-      return formattedStore(storeDetial);
+      storeDetail = await store.save();
+      return formattedStore(storeDetail);
+    } catch (error) {
+      throw error;
+    }
+  },
+  updateStore: async (obj, args, context, info) => {
+    try {
+      storeKey = `${args.input.id}`;
+      let shopParams = {};
+      for (item in args.input) {
+        if (item !== "id") {
+          shopParams[item] = args.input[item];
+        }
+        // console.log(item, args.input[item]);
+      }
+      store = await Store.update({ id: storeKey }, shopParams)
+
+      return formattedStore(store);
     } catch (error) {
       throw error;
     }

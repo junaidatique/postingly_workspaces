@@ -4,9 +4,11 @@ const faker = require('faker');
 const resolvers = require("../../modules/resolvers")
 const typeDefs = require('../../schema/graphql');
 
+// -------------------------- createStoreTestCase --------------------------
+
 const partner = 'shopify';
-shop = {
-  id: faker.random.number({ min: 10000000 }),
+createShop = {
+  id: process.env.SHOPIFY_TEST_STORE_ID,
   partner: partner,
   plan_name: faker.lorem.word(),
   name: faker.company.companyName(),
@@ -20,37 +22,34 @@ shop = {
   chanrge_id: faker.random.number({ min: 10000000 }),
 }
 const userName = faker.internet.email();
-const accessToken = faker.random.uuid();
-
-const storeKey = `${partner}-${shop.id}`;
+const accessToken = process.env.SHOPIFY_TEST_ACCESS_TOKEN;
+const storeKey = `${partner}-${process.env.SHOPIFY_TEST_STORE_ID}`;
 
 const shopCreateStoreParams = {
   userId: userName,
-  partner: shop.partner,
-  partnerId: shop.id.toString(),
-  partnerPlan: shop.plan_name,
-  title: shop.name,
-  storeUrl: shop.domain,
-  partnerSpecificUrl: shop.myshopify_domain,
-  partnerCreatedAt: shop.created_at,
-  partnerUpdatedAt: shop.updated_at,
+  partner: createShop.partner,
+  partnerId: createShop.id.toString(),
+  partnerPlan: createShop.plan_name,
+  title: createShop.name,
+  storeUrl: createShop.domain,
+  partnerSpecificUrl: createShop.myshopify_domain,
+  partnerCreatedAt: createShop.created_at,
+  partnerUpdatedAt: createShop.updated_at,
   partnerToken: accessToken,
-  timezone: shop.iana_timezone,
-  moneyFormat: shop.money_format,
-  moneyWithCurrencyFormat: shop.money_with_currency_format,
+  timezone: createShop.iana_timezone,
+  moneyFormat: createShop.money_format,
+  moneyWithCurrencyFormat: createShop.money_with_currency_format,
   numberOfProducts: 0,
   noOfActiveProducts: 0,
   numberOfScheduledPosts: 0,
   numberOfPosted: 0,
   productsLastUpdated: new Date().toISOString(),
   isCharged: false,
-  chargedMethod: shop.partner,
-  chargeId: shop.chanrge_id.toString(),
+  chargedMethod: createShop.partner,
+  chargeId: createShop.chanrge_id.toString(),
   chargeDate: new Date().toISOString(),
   isUninstalled: false,
 };
-
-console.log('shopCreateStoreParams', shopCreateStoreParams);
 
 const shopCreateStoreExpected = { id: storeKey, ...shopCreateStoreParams };
 const shopCreateStoreParamsJson = JSON.stringify(shopCreateStoreParams).replace(/\"([^(\")"]+)\":/g, "$1:")
@@ -92,7 +91,9 @@ const createStoreTestCase = {
   context: {},
   expected: { data: { createStore: shopCreateStoreExpected } }
 };
-const getStoreTestCase = {
+
+// -------------------------- getStoreAfterCreateTestCase --------------------------
+const getStoreAfterCreateTestCase = {
   id: 'Get Store',
   query: `
      query {
@@ -131,37 +132,135 @@ const getStoreTestCase = {
 };
 
 
+// -------------------------- updateStoreTestCase --------------------------
+updateShop = {
+  id: process.env.SHOPIFY_TEST_STORE_ID,
+  partner: partner,
+  plan_name: faker.lorem.word(),
+  name: faker.company.companyName(),
+  domain: faker.internet.domainName(),
+  myshopify_domain: faker.internet.domainName(),
+  updated_at: faker.date.past().toString(),
+}
+
+const shopUpdateStoreParams = {
+  id: storeKey,
+  partnerPlan: updateShop.plan_name,
+  title: updateShop.name,
+  storeUrl: updateShop.domain,
+  partnerSpecificUrl: updateShop.myshopify_domain,
+  partnerUpdatedAt: updateShop.updated_at,
+  partnerToken: accessToken,
+  timezone: createShop.iana_timezone,
+  numberOfProducts: faker.random.number({ min: 10 }),
+  noOfActiveProducts: faker.random.number({ min: 10 }),
+  numberOfScheduledPosts: faker.random.number({ min: 10 }),
+  numberOfPosted: faker.random.number({ min: 10 }),
+  productsLastUpdated: new Date().toISOString(),
+  isCharged: true,
+  chargedMethod: createShop.partner,
+  chargeId: createShop.chanrge_id.toString(),
+  chargeDate: new Date().toISOString(),
+  isUninstalled: true,
+};
+
+const shopUpdateStoreExpected = {
+  userId: userName,
+  partner: partner,
+  partnerId: process.env.SHOPIFY_TEST_STORE_ID,
+  moneyFormat: createShop.money_format,
+  moneyWithCurrencyFormat: createShop.money_with_currency_format,
+  partnerCreatedAt: createShop.created_at,
+  ...shopUpdateStoreParams
+};
+const shopUpdateStoreParamsJson = JSON.stringify(shopUpdateStoreParams).replace(/\"([^(\")"]+)\":/g, "$1:")
+
+const updateStoreTestCase = {
+  id: 'Update Store',
+  query: `
+     mutation {
+      updateStore(input: ${shopUpdateStoreParamsJson})
+      {
+        userId
+        partner
+        partnerId
+        moneyFormat
+        moneyWithCurrencyFormat
+        partnerCreatedAt
+        id
+        partnerPlan
+        title
+        storeUrl
+        partnerSpecificUrl
+        partnerUpdatedAt
+        partnerToken
+        timezone        
+        numberOfProducts
+        noOfActiveProducts
+        numberOfScheduledPosts
+        numberOfPosted
+        productsLastUpdated
+        isCharged
+        chargedMethod
+        chargeId
+        chargeDate
+        isUninstalled
+      }
+    }
+    `,
+  variables: {},
+  context: {},
+  expected: { data: { updateStore: shopUpdateStoreExpected } }
+};
+
+// -------------------------- getStoreTestCase --------------------------
+const getStoreAfterUpdateTestCase = {
+  id: 'Get Store',
+  query: `
+     query {
+      getStore(id: "${storeKey}")
+      {
+        userId
+        partner
+        partnerId
+        moneyFormat
+        moneyWithCurrencyFormat
+        partnerCreatedAt
+        id
+        partnerPlan
+        title
+        storeUrl
+        partnerSpecificUrl
+        partnerUpdatedAt
+        partnerToken
+        timezone
+        numberOfProducts
+        noOfActiveProducts
+        numberOfScheduledPosts
+        numberOfPosted
+        productsLastUpdated
+        isCharged
+        chargedMethod
+        chargeId
+        chargeDate
+        isUninstalled
+      }
+    }
+    `,
+  variables: {},
+  context: {},
+  expected: { data: { getStore: shopUpdateStoreExpected } }
+};
 
 describe('Valid Test Cases', () => {
-
-  const cases = [createStoreTestCase, getStoreTestCase]
+  const cases = [createStoreTestCase, getStoreAfterCreateTestCase, updateStoreTestCase, getStoreAfterUpdateTestCase]
   const schema = makeExecutableSchema({ typeDefs: typeDefs, resolvers: resolvers })
-
   cases.forEach(obj => {
     const { id, query, variables, context, expected } = obj
-
     test(`query: ${id}`, async () => {
       const result = await graphql(schema, query, null, context, variables)
-      console.log("result", result);
-      console.log("expected", expected);
       return expect(result).toEqual(expected)
     })
   })
 })
 
-describe('Test Cases that throw exception', () => {
-
-  const cases = [createStoreTestCase, getStoreTestCase]
-  const schema = makeExecutableSchema({ typeDefs: typeDefs, resolvers: resolvers })
-
-  cases.forEach(obj => {
-    const { id, query, variables, context, expected } = obj
-
-    test(`query: ${id}`, async () => {
-      const result = await graphql(schema, query, null, context, variables)
-      console.log("result", result);
-      console.log("expected", expected);
-      return expect(result).toEqual(expected)
-    })
-  })
-})
