@@ -177,7 +177,7 @@ type ModelProfileConnection {
 
 input ModelProfileFilterInput {
   id: ModelIDFilterInput
-  store: ModelStringFilterInput
+  store: ModelStringFilterInput!
   name: ModelStringFilterInput
   and: [ModelProfileFilterInput]
   or: [ModelProfileFilterInput]
@@ -221,6 +221,7 @@ enum ServiceProfile {
 type Query {
   listStores(filter: ModelStoreFilterInput, limit: Int, nextToken: String): ModelStoreConnection
   getStore(id: ID!): Store
+  listProfiles(filter: ModelProfileFilterInput, limit: Int, nextToken: String): ModelProfileConnection
 }
 
 
