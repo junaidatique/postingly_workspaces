@@ -55,7 +55,7 @@ const shopCreateStoreExpected = { id: storeKey, ...shopCreateStoreParams };
 const shopCreateStoreParamsJson = JSON.stringify(shopCreateStoreParams).replace(/\"([^(\")"]+)\":/g, "$1:")
 
 const createStoreTestCase = {
-  id: 'Create Store',
+  id: 'Create new store',
   query: `
      mutation {
       createStore(input: ${shopCreateStoreParamsJson})
@@ -94,7 +94,7 @@ const createStoreTestCase = {
 
 // -------------------------- getStoreAfterCreateTestCase --------------------------
 const getStoreAfterCreateTestCase = {
-  id: 'Get Store',
+  id: 'Query: Get newly created Store',
   query: `
      query {
       getStore(id: "${storeKey}")
@@ -252,12 +252,12 @@ const getStoreAfterUpdateTestCase = {
   expected: { data: { getStore: shopUpdateStoreExpected } }
 };
 
-describe('Valid Test Cases', () => {
+describe('Store Model', () => {
   const cases = [createStoreTestCase, getStoreAfterCreateTestCase, updateStoreTestCase, getStoreAfterUpdateTestCase]
   const schema = makeExecutableSchema({ typeDefs: typeDefs, resolvers: resolvers })
   cases.forEach(obj => {
     const { id, query, variables, context, expected } = obj
-    test(`query: ${id}`, async () => {
+    test(`${id}`, async () => {
       const result = await graphql(schema, query, null, context, variables)
       return expect(result).toEqual(expected)
     })
