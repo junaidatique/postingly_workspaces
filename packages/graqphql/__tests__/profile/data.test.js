@@ -1,9 +1,10 @@
 const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
+const requireGraphQLFile = require('require-graphql-file');
 const graphql = require('graphql').graphql;
 const faker = require('faker');
 const resolvers = require("../../modules/resolvers")
-const typeDefs = require('../../schema/graphql');
-
+// const typeDefs = require('../../schema/graphql');
+const typeDefs = requireGraphQLFile('../../schema/schema');
 
 
 const connectFacebookTestCase = {

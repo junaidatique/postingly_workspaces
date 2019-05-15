@@ -1,6 +1,3 @@
-const gql = require('apollo-server-express').gql;
-const typeDefs = gql`
-# Generic search filters.
 input ModelStringFilterInput {
   ne: String
   eq: String
@@ -63,7 +60,7 @@ enum ModelSortDirection {
 type Store {
   id: ID!
   userId: String!
-  partner: String!
+  partner: Partner
   partnerId: String
   partnerPlan: String
   title: String!
@@ -86,6 +83,9 @@ type Store {
   chargeDate: String
   isUninstalled: Boolean
   profiles(filter: ModelProfileFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): ModelProfileConnection
+}
+enum Partner {
+  shopify
 }
 
 input CreateStoreInput {
@@ -195,31 +195,198 @@ enum Service {
 }
 
 enum ServiceProfile {
-  facebook_profile
-  facebook_page
-  facebook_group
-  twitter_profile
-  linkedin_profile
-  linkedin_page
-  linkedin_group
-  pinterest_profile
-  instagram_profile
-  instagram_business
-  buffer_instagram_profile
-  buffer_instagram_business
-  buffer_profile
-  buffer_twitter_profile
-  buffer_facebook_profile
-  buffer_facebook_page
-  buffer_facebook_group
-  buffer_linkedin_profile
-  buffer_linkedin_page
-  buffer_linkedin_group
-  buffer_pinterest_profile
+  facebookProfile
+  facebookPage
+  facebookGroup
+  twitterProfile
+  linkedinProfile
+  linkedinPage
+  linkedinGroup
+  pinterestProfile
+  instagramProfile
+  instagramBusiness
+  bufferInstagramProfile
+  bufferInstagramBusiness
+  bufferProfile
+  bufferTwitterProfile
+  bufferFacebookProfile
+  bufferFacebookPage
+  bufferFacebookGroup
+  bufferLinkedinProfile
+  bufferLinkedinPage
+  bufferLinkedinGroup
+  bufferPinterestProfile
 }
+
 # Rule
+type Rule {
+  id: ID!
+  name: String!
+  store: Store
+  service: Service
+  profiles: ModelProfileConnection
+  postingTimeOption: String
+  postTimings: [RulePostTimings]
+  postAsOption: ProfilePostingOptions
+  collectionOption: Int
+  collections: [ModelCollectionConnection]
+  allowZeroQuantity: Boolean
+  postAsVariants: Boolean
+  postingProductOrder: PostingSortOrder
+  captions: [Caption]
+}
 
+enum PostingSortOrder {
+  random
+  newest
+}
 
+type RulePostTimings {
+  id: ID!
+  startPostingHour: Int
+  endPostingHour: Int
+  postingInterval: Int
+  postingHour: Int
+  postingMinute: Int
+  postingMeridiem: Meridiem
+  
+}
+
+enum Meridiem {
+  am
+  pm
+}
+
+enum ProfilePostingOptions {
+  facebookPostAsAlbum
+  facebookPostAsLink
+  facebookPostAsPhoto
+  twitterPostAsSinglePhoto
+  twitterPostAsMultiplePhoto
+  twitterPostAsLink
+}
+
+# updates
+type Update {
+  id: ID!
+  store: Store!
+  rule: Rule
+  scheduleType: ScheduleType!
+  service: Service
+  serviceProfile: ServiceProfile
+  product: Product
+  profile: Profile
+  variant: Variant
+  bufferId: String
+  scheduleOn: String
+  utcScheduleTime: String
+  userScheduleTime: String
+  formattedUtcScheduleTime: String
+  formattedUserScheduleTime: String
+  scheduledAt: String
+  images: [UpdateImages]
+}
+type UpdateImages {
+  id: ID!
+  update: Update
+  imageUrl: String
+}
+enum ScheduleType {
+  product
+  feed
+  upload
+  link
+  blog
+}
+
+# products and collections starts here.
+type Product {
+  id: ID!
+  store: Store
+  title: String!
+  slug: String
+  url: String
+  partnerId: String
+  partner: Partner
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  uniqKey: String
+  description: String
+  position: String
+  isPublished: Boolean
+  quantity: Int
+  minimumPrice: Float
+  maximumPrice: Float
+  onSale: Boolean
+  shortUrl: String
+  postableByQuantity: Boolean
+  postableByPrice: Boolean
+  postableIsNew: Boolean
+  postableBySale: Boolean
+  collections: [Collection]
+  updates: [Update]
+  variants: [Variant]
+  images: [ProductImage]
+}
+type Variant {
+  id: ID!
+  product: Product
+  title: String!
+  slug: String
+  url: String
+  partnerId: String
+  partner: Partner
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  uniqKey: String
+  description: String
+  position: String
+  isPublished: Boolean
+  quantity: Int
+  price: Float
+  original_price: Float
+  onSale: Boolean
+  postableByQuantity: Boolean
+  postableByPrice: Boolean
+  postableIsNew: Boolean
+  postableBySale: Boolean
+  images: [ProductImage]
+}
+
+type ProductImage {
+  id: ID!
+  product: Product
+  partnerId: String
+  partner: Partner
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  url: String
+  thumbnail_url: String
+}
+
+type Collection {
+  id: ID!
+  name: String!
+  store: Store
+  products: [Product]
+}
+
+type ModelCollectionConnection {
+  items: [Collection]
+  nextToken: String
+}
+
+type Caption {
+  id: ID!
+  rule: Rule
+  text: String
+  startDate: String
+  endDate: String
+}
+# all quries
 type Query {
   listStores(filter: ModelStoreFilterInput, limit: Int, nextToken: String): ModelStoreConnection
   getStore(id: ID!): Store
@@ -231,9 +398,3 @@ type Mutation {
   updateStore(input: UpdateStoreInput!): Store
 }
 
-
-
-`;
-
-// export default typeDefs
-module.exports = typeDefs;

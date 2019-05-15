@@ -1,8 +1,10 @@
 const addMockFunctionsToSchema = require('graphql-tools').addMockFunctionsToSchema;
+const requireGraphQLFile = require('require-graphql-file');
 const mockServer = require('graphql-tools').mockServer;
 const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
 const graphql = require('graphql').graphql;
-const typeDefs = require('../../schema/graphql');
+const typeDefs = requireGraphQLFile('../../schema/schema');
+// const typeDefs = require('../../schema/graphql');
 
 const item = {
   id: '1',
