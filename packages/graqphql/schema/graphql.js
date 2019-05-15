@@ -155,6 +155,7 @@ input ModelStoreFilterInput {
 # Profile type and inputs
 type Profile {
   id: ID!
+  parentProfile: Profile
   name: String!
   avatarUrl: String
   serviceUsername: String
@@ -216,6 +217,7 @@ enum ServiceProfile {
   buffer_linkedin_group
   buffer_pinterest_profile
 }
+# Rule
 
 
 type Query {

@@ -7,7 +7,7 @@ const typeDefs = require('../../schema/graphql');
 // -------------------------- createStoreTestCase --------------------------
 
 const partner = 'shopify';
-createShop = {
+const createShop = {
   id: process.env.SHOPIFY_TEST_STORE_ID,
   partner: partner,
   plan_name: faker.lorem.word(),
@@ -133,7 +133,7 @@ const getStoreAfterCreateTestCase = {
 
 
 // -------------------------- updateStoreTestCase --------------------------
-updateShop = {
+const updateShop = {
   id: process.env.SHOPIFY_TEST_STORE_ID,
   partner: partner,
   plan_name: faker.lorem.word(),

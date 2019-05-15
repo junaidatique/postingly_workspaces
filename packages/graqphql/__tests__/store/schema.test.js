@@ -1,12 +1,10 @@
-// import { addMockFunctionsToSchema, mockServer } from 'graphql-tools';
 const addMockFunctionsToSchema = require('graphql-tools').addMockFunctionsToSchema;
 const mockServer = require('graphql-tools').mockServer;
 const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
 const graphql = require('graphql').graphql;
-
 const typeDefs = require('../../schema/graphql');
 
-item = {
+const item = {
   id: '1',
   userId: 'Title',
   partner: 'Title',
@@ -192,9 +190,7 @@ const updateStoreCase = {
 const cases = [listStoresCase, getStoreCase, createStoreCase, updateStoreCase];
 
 describe('Schema', () => {
-  // const typeDefs = booksSchema;
   const mockSchema = makeExecutableSchema({ typeDefs });
-  // const mockSchema = typeDefs;
 
   addMockFunctionsToSchema({
     schema: mockSchema,
