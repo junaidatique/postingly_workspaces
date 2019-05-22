@@ -1,12 +1,12 @@
 // index.js
-import express from "express";
-import serverless from "serverless-http";
-
-import { ApolloServer } from 'apollo-server-express'
-import graphiql from "graphql-playground-middleware-express";
-
-import resolvers from "./modules/resolvers";
-const typeDefs = require('./schema/graphql');
+const express = require("express");
+const connectToDb = require('shared').mongodb;
+const serverless = require("serverless-http");
+const ApolloServer = require("apollo-server-express").ApolloServer;
+const graphiql = require("graphql-playground-middleware-express").default;
+const requireGraphQLFile = require('require-graphql-file');
+const resolvers = require("./modules/resolvers");
+const typeDefs = requireGraphQLFile('./schema/schema');
 
 const app = express();
 app.use((request, response, next) => {
@@ -29,5 +29,5 @@ const server = new ApolloServer({
 
 server.applyMiddleware({ app });
 app.get("/playground", graphiql({ endpoint: "/graphql" }));
-const handler = serverless(app);
-export { handler };
+exports.handler = serverless(app);
+// export { handler };

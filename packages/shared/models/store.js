@@ -1,17 +1,21 @@
-const dynamoose = require('../helpers/dynamodb');
 
-const Schema = dynamoose.Schema;
-
-const storeSchema = new Schema({
-  id: {
-    type: String,
-    hashKey: true
-  },
+const mongoose = require('mongoose');
+const storeSchema = new mongoose.Schema({
   userId: {
     type: String,
+    required: true,
+    index: true
+  },
+  title: {
+    type: String,
+  },
+  url: {
+    type: String
   },
   partner: {
-    type: String
+    type: String,
+    required: true,
+    index: true
   },
   partnerId: {
     type: String
@@ -19,23 +23,24 @@ const storeSchema = new Schema({
   partnerPlan: {
     type: String
   },
-  title: {
-    type: String,
-  },
-  storeUrl: {
-    type: String
-  },
   partnerSpecificUrl: {
     type: String
   },
   partnerCreatedAt: {
-    type: String
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
   },
   partnerUpdatedAt: {
-    type: String
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
   },
   partnerToken: {
     type: String
+  },
+  uniqKey: {
+    type: String,
+    required: true,
+    unique: true
   },
   timezone: {
     type: String
@@ -59,7 +64,8 @@ const storeSchema = new Schema({
     type: Number
   },
   productsLastUpdated: {
-    type: String
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
   },
   isCharged: {
     type: Boolean
@@ -71,18 +77,21 @@ const storeSchema = new Schema({
     type: String
   },
   chargeDate: {
-    type: String
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
   },
   isUninstalled: {
     type: Boolean
   }
-}, {
-    throughput: {
-      read: 5,
-      write: 5
-    },
-    timestamps: true,
-    errorUnknown: true
-  });
+});
 
-module.exports = dynamoose.model(process.env.STORES_TABLE, storeSchema);
+storeSchema.set('timestamps', true);
+
+if (process.env.IS_OFFLINE) {
+  delete mongoose.connection.models.Store;
+}
+
+module.exports = mongoose.model(process.env.STORES_TABLE, storeSchema);
+
+
+

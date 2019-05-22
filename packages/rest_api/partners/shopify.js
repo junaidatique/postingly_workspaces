@@ -108,14 +108,14 @@ module.exports = {
 
     storeKey = `shopify-${shop.id}`;
 
-    let store = await StoreModel.get({ id: storeKey });
+    let store = await StoreModel.findOne({ uniqKey: storeKey });
 
-    // let store = await query.getItem(process.env.STORES_TABLE, { id: storeKey });
+    console.log(store);
     let isCharged = false;
-    if (store === undefined) {
+    if (store === null) {
       console.log("verifyCallback new signup");
       const shopParams = {
-        id: storeKey,
+        uniqKey: storeKey,
         userId: userName,
         partner: 'shopify',
         partnerId: shop.id,
@@ -134,14 +134,16 @@ module.exports = {
         // chargeId: '',
         isUninstalled: false,
       };
-      store = await StoreModel.create(shopParams);
+      // store = await StoreModel.create(shopParams);
       // store = await query.putItem(process.env.STORES_TABLE, shopParams);
+      const storeInstance = new StoreModel(shopParams);
+      store = await storeInstance.save();
     } else {
       isCharged = store.isCharged;
     }
     let chargeAuthorizationUrl = null
     if (!isCharged) {
-      chargeAuthorizationUrl = await this.createCharge(shop.id, accessToken);
+      chargeAuthorizationUrl = await this.createCharge(shop.myshopify_domain, accessToken);
     }
     console.log("chargeAuthorizationUrl:", chargeAuthorizationUrl)
     nonce = str.getRandomString(32);
@@ -255,7 +257,8 @@ module.exports = {
     });
     console.log("exchangeToken body", body);
     const url = `https://${shop}/admin/oauth/access_token`;
-
+    console.log("exchangeToken url", url);
+    console.log("exchangeToken body", body);
     const res = await fetch(url, {
       body,
       headers: {
@@ -308,7 +311,7 @@ module.exports = {
     }
     storeKey = `shopify-${shop}`;
     console.log("activatePayment storeKey", storeKey);
-    let store = await StoreModel.get({ id: storeKey });
+    const store = await StoreModel.findOne({ uniqKey: storeKey });
     // let store = await query.getItem(process.env.STORES_TABLE, { storeKey: storeKey });
     console.log("activatePayment store", store);
     const accessToken = store.partnerToken;

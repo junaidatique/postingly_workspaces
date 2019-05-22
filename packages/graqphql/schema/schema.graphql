@@ -1,0 +1,399 @@
+input ModelStringFilterInput {
+  ne: String
+  eq: String
+  lte: String
+  lt: String
+  gte: String
+  gt: String
+  contains: String
+}
+
+
+input ModelIntFilterInput {
+  ne: Int
+  eq: Int
+  lte: Int
+  lt: Int
+  gte: Int
+  gt: Int
+  contains: Int
+}
+
+input ModelFloatFilterInput {
+  ne: Float
+  eq: Float
+  lte: Float
+  lt: Float
+  gte: Float
+  gt: Float
+  contains: Float
+}
+
+input ModelBooleanFilterInput {
+  ne: Boolean
+  eq: Boolean
+}
+enum ModelSortDirection {
+  ASC
+  DESC
+}
+# Store type and inputs
+type Store {
+  id: ID!
+  title: String!
+  url: String
+  userId: String!
+  partner: Partner
+  partnerId: String!
+  partnerPlan: String
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  partnerToken: String
+  uniqKey: String!
+  timezone: String
+  moneyFormat: String
+  moneyWithCurrencyFormat: String
+  numberOfProducts: Int
+  noOfActiveProducts: Int
+  numberOfScheduledPosts: Int
+  numberOfPosted: Int
+  productsLastUpdated: String
+  isCharged: Boolean
+  chargedMethod: String
+  chargeId: String
+  chargeDate: String
+  isUninstalled: Boolean
+  createdAt: String
+  updatedAt: String
+  profiles(filter: ModelProfileFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): ModelProfileConnection
+}
+enum Partner {
+  shopify
+}
+
+input CreateStoreInput {
+  id: ID
+  userId: String!
+  partner: String!
+  partnerId: String!
+  partnerPlan: String
+  title: String!
+  url: String
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  partnerToken: String
+  timezone: String
+  moneyFormat: String
+  moneyWithCurrencyFormat: String
+  numberOfProducts: Int
+  noOfActiveProducts: Int
+  numberOfScheduledPosts: Int
+  numberOfPosted: Int
+  productsLastUpdated: String
+  isCharged: Boolean
+  chargedMethod: String
+  chargeId: String
+  chargeDate: String
+  isUninstalled: Boolean
+}
+input UpdateStoreInput { 
+  id: ID 
+  uniqKey: String!
+  partnerPlan: String
+  title: String
+  url: String
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  partnerToken: String
+  timezone: String
+  moneyFormat: String
+  moneyWithCurrencyFormat: String
+  numberOfProducts: Int
+  noOfActiveProducts: Int
+  numberOfScheduledPosts: Int
+  numberOfPosted: Int
+  productsLastUpdated: String
+  isCharged: Boolean
+  chargedMethod: String
+  chargeId: String
+  chargeDate: String
+  isUninstalled: Boolean
+}
+
+type ModelStoreConnection {
+  items: [Store]
+  nextToken: String
+}
+
+input ModelStoreFilterInput {
+  partner: ModelStringFilterInput
+  userId: ModelStringFilterInput
+  title: ModelStringFilterInput
+}
+enum ModelStoreSortInput {
+  title_ASC
+  title_DESC
+  userId_ASC
+  userId_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  numberOfProducts_ASC
+  numberOfProducts_DESC
+  noOfActiveProducts_ASC
+  noOfActiveProducts_DESC
+  numberOfScheduledPosts_ASC
+  numberOfScheduledPosts_DESC
+  numberOfPosted_ASC
+  numberOfPosted_DESC
+}
+
+# Profile type and inputs
+type Profile {
+  id: ID!
+  parentProfile: Profile
+  name: String!
+  avatarUrl: String
+  serviceUsername: String
+  serviceUserId: String
+  profileURL: String
+  accessToken: String
+  accessTokenSecret: String
+  service: Service
+  serviceProfile: ServiceProfile
+  isConnected: Boolean
+  isTokenExpired: Boolean
+  isSharePossible: Boolean
+  store: Store
+}
+
+type ModelProfileConnection {
+  items: [Profile]
+  nextToken: String
+}
+
+input ModelProfileFilterInput {
+  store: ModelStringFilterInput
+  name: ModelStringFilterInput
+  and: [ModelProfileFilterInput]
+  or: [ModelProfileFilterInput]
+  not: ModelProfileFilterInput
+}
+
+enum Service { 
+  Facebook
+  Twitter
+  Instagram
+  linkedin
+  Pinterest
+  Buffer
+}
+
+enum ServiceProfile {
+  facebookProfile
+  facebookPage
+  facebookGroup
+  twitterProfile
+  linkedinProfile
+  linkedinPage
+  linkedinGroup
+  pinterestProfile
+  instagramProfile
+  instagramBusiness
+  bufferInstagramProfile
+  bufferInstagramBusiness
+  bufferProfile
+  bufferTwitterProfile
+  bufferFacebookProfile
+  bufferFacebookPage
+  bufferFacebookGroup
+  bufferLinkedinProfile
+  bufferLinkedinPage
+  bufferLinkedinGroup
+  bufferPinterestProfile
+}
+
+# Rule
+type Rule {
+  id: ID!
+  name: String!
+  store: Store
+  service: Service
+  profiles: ModelProfileConnection
+  postingTimeOption: String
+  postTimings: [RulePostTimings]
+  postAsOption: ProfilePostingOptions
+  collectionOption: Int
+  collections: [ModelCollectionConnection]
+  allowZeroQuantity: Boolean
+  postAsVariants: Boolean
+  postingProductOrder: PostingSortOrder
+  captions: [Caption]
+}
+
+enum PostingSortOrder {
+  random
+  newest
+}
+
+type RulePostTimings {
+  id: ID!
+  startPostingHour: Int
+  endPostingHour: Int
+  postingInterval: Int
+  postingHour: Int
+  postingMinute: Int
+  postingMeridiem: Meridiem
+  
+}
+
+enum Meridiem {
+  am
+  pm
+}
+
+enum ProfilePostingOptions {
+  facebookPostAsAlbum
+  facebookPostAsLink
+  facebookPostAsPhoto
+  twitterPostAsSinglePhoto
+  twitterPostAsMultiplePhoto
+  twitterPostAsLink
+}
+
+# updates
+type Update {
+  id: ID!
+  store: Store!
+  rule: Rule
+  scheduleType: ScheduleType!
+  service: Service
+  serviceProfile: ServiceProfile
+  product: Product
+  profile: Profile
+  variant: Variant
+  bufferId: String
+  scheduleOn: String
+  utcScheduleTime: String
+  userScheduleTime: String
+  formattedUtcScheduleTime: String
+  formattedUserScheduleTime: String
+  scheduledAt: String
+  images: [UpdateImages]
+}
+type UpdateImages {
+  id: ID!
+  update: Update
+  imageUrl: String
+}
+enum ScheduleType {
+  product
+  feed
+  upload
+  link
+  blog
+}
+
+# products and collections starts here.
+type Product {
+  id: ID!
+  store: Store
+  title: String!
+  slug: String
+  url: String
+  partnerId: String
+  partner: Partner
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  uniqKey: String!
+  description: String
+  position: String
+  isPublished: Boolean
+  quantity: Int
+  minimumPrice: Float
+  maximumPrice: Float
+  onSale: Boolean
+  shortUrl: String
+  postableByQuantity: Boolean
+  postableByPrice: Boolean
+  postableIsNew: Boolean
+  postableBySale: Boolean
+  collections: [Collection]
+  updates: [Update]
+  variants: [Variant]
+  images: [ProductImage]
+}
+type Variant {
+  id: ID!
+  product: Product
+  title: String!
+  slug: String
+  url: String
+  partnerId: String
+  partner: Partner
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  uniqKey: String
+  description: String
+  position: String
+  isPublished: Boolean
+  quantity: Int
+  price: Float
+  original_price: Float
+  onSale: Boolean
+  postableByQuantity: Boolean
+  postableByPrice: Boolean
+  postableIsNew: Boolean
+  postableBySale: Boolean
+  images: [ProductImage]
+}
+
+type ProductImage {
+  id: ID!
+  product: Product
+  partnerId: String
+  partner: Partner
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  url: String
+  thumbnail_url: String
+}
+
+type Collection {
+  id: ID!
+  name: String!
+  store: Store
+  products: [Product]
+}
+
+type ModelCollectionConnection {
+  items: [Collection]
+  nextToken: String
+}
+
+type Caption {
+  id: ID!
+  rule: Rule
+  text: String
+  startDate: String
+  endDate: String
+}
+# all quries
+type Query {
+  listStores(filter: ModelStoreFilterInput, limit: Int, skip: Int, sort: ModelStoreSortInput): [Store]
+  getStore(uniqKey: ID!): Store
+}
+
+
+type Mutation {
+  createStore(input: CreateStoreInput!): Store
+  updateStore(input: UpdateStoreInput!): Store
+}
+

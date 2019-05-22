@@ -1,31 +1,19 @@
 service: postingly-graphql
 plugins:
-  - serverless-webpack
+  # - serverless-webpack
   - serverless-dotenv-plugin
-  - serverless-dynamodb-local
   - serverless-offline
 
-custom:
-  webpack:
-    webpackConfig: ./webpack.config.js
-    includeModules: true
+# custom:
+#   webpack:
+#     webpackConfig: ./webpack.config.js
+#     includeModules: true
 
 provider:
   name: aws
   runtime: nodejs8.10
   stage: ${env:STAGE}
   region: ${env:AWS_REGION}
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource:
-        - "arn:aws:dynamodb:${env:AWS_REGION}:*:*"
   environment:
     STORES_TABLE: "Store"
     PROFILE_TABLE: "Profile"

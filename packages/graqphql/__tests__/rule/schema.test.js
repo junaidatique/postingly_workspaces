@@ -5,7 +5,8 @@
 // const graphql = require('graphql').graphql;
 // // const typeDefs = require('../../schema/graphql');
 // const typeDefs = requireGraphQLFile('../../schema/schema');
-// const item = {
+
+// const profile = {
 //   id: '1',
 //   name: 'Title',
 //   avatarUrl: 'Title',
@@ -22,114 +23,109 @@
 //   store: 'Title',
 // }
 
-// const connectFacebookTestCase = {
-//   id: 'Connect Facebook Service',
-//   query: `
-//       mutation {
-//         connnectService () {
-//           id
+// const rule_post_time = {
+//   id: '1',
+//   startPostingHour: 1,
+//   endPostingHour: 1,
+//   postingInterval: 1,
+//   postingHour: 1,
+//   postingMinute: 1,
+//   postingMeridiem: 'Title',
 
-//         }
-//       }
-//     `,
-//   variables: {},
-//   context: {},
-//   expected: { data: { connnectService: [item] } }
-// };
-
-// const connectTwitterTestCase = {
-//   id: 'Connect Twitter Service',
-//   query: `
-//       mutation {
-//         connnectService () {
-//           id
-
-//         }
-//       }
-//     `,
-//   variables: {},
-//   context: {},
-//   expected: { data: { connnectService: [item] } }
-// };
-
-// const connectBufferTestCase = {
-//   id: 'Connect Buffer Service',
-//   query: `
-//       mutation {
-//         connnectService () {
-//           id
-
-//         }
-//       }
-//     `,
-//   variables: {},
-//   context: {},
-//   expected: { data: { connnectService: [item] } }
-// };
-
-
-// const connectLinkedinTestCase = {
-//   id: 'Connect LinkedIn Service',
-//   query: `
-//       mutation {
-//         connnectService () {
-//           id
-
-//         }
-//       }
-//     `,
-//   variables: {},
-//   context: {},
-//   expected: { data: { connnectService: [item] } }
-// };
-
-// const connectPinterestTestCase = {
-//   id: 'Connect Pinterest Service',
-//   query: `
-//       mutation {
-//         connnectService () {
-//           id
-
-//         }
-//       }
-//     `,
-//   variables: {},
-//   context: {},
-//   expected: { data: { connnectService: [item] } }
-// };
-
-// const saveSelectedProfiles = {
-//   id: 'Save Selected Profiles',
-//   query: `
-//      mutation {
-//       saveService()
-//       {
-
-//       }
-//     }
-//     `,
-//   variables: {},
-//   context: {},
-//   expected: { data: { connnectService: {} } }
+// }
+// const collection_item = {
+//   id: '1',
+//   name: 'Title',
+//   store: 'Title',
 // }
 
-// const getConnectedProfilesTestCase = {
-//   id: 'Get Connected Services',
-//   query: `
-//      query {
-//       getConnnectedServices()
-//       {
+// const caption = {
+//   id: '1',
+//   text: 'Title',
+//   startDate: 'Title',
+//   endDate: 'Title'
+// }
 
+// const item = {
+//   id: '1',
+//   name: 'Title',
+//   store: 'Title',
+//   service: 'Title',
+//   profiles: {
+//     items: [
+//       profile
+//     ]
+//   },
+//   postingTimeOption: 'Title',
+//   postTimings: [rule_post_time],
+//   postAsOption: 'Title',
+//   collectionOption: 1,
+//   collections: [collection_item],
+//   allowZeroQuantity: false,
+//   postAsVariants: false,
+//   postingProductOrder: 'Title',
+//   captions: [caption]
+// }
+
+// const createRuleTestCase = {
+//   id: 'Create Rule',
+//   query: `
+//       mutation {
+//         createRule () {
+//           id
+
+//         }
 //       }
-//     }
 //     `,
 //   variables: {},
 //   context: {},
-//   expected: { data: { getConnnectedServices: {} } }
-// }
+//   expected: { data: { connnectService: [item] } }
+// };
+// const getRuleAfterCreationTestCase = {
+//   id: 'Create Rule after creation',
+//   query: `
+//       query {
+//         getRule () {
+//           id
+
+//         }
+//       }
+//     `,
+//   variables: {},
+//   context: {},
+//   expected: { data: { connnectService: [item] } }
+// };
+// const updateRuleTestCase = {
+//   id: 'Update Rule',
+//   query: `
+//       mutation {
+//         createRule () {
+//           id
+
+//         }
+//       }
+//     `,
+//   variables: {},
+//   context: {},
+//   expected: { data: { connnectService: [item] } }
+// };
+// const getRuleAfterUpdateTestCase = {
+//   id: 'Create Rule after creation',
+//   query: `
+//       query {
+//         getRule () {
+//           id
+
+//         }
+//       }
+//     `,
+//   variables: {},
+//   context: {},
+//   expected: { data: { connnectService: [item] } }
+// };
 
 
-// const cases = [connectFacebookTestCase, connectTwitterTestCase, connectBufferTestCase, connectLinkedinTestCase, connectPinterestTestCase, saveSelectedProfiles, getConnectedProfilesTestCase];
+// const cases = [createRuleTestCase, getRuleAfterCreationTestCase, updateRuleTestCase, getRuleAfterUpdateTestCase];
 
 // describe('Schema', () => {
 //   const mockSchema = makeExecutableSchema({ typeDefs });

@@ -1,23 +1,24 @@
-// import { addMockFunctionsToSchema, mockServer } from 'graphql-tools';
 const addMockFunctionsToSchema = require('graphql-tools').addMockFunctionsToSchema;
+const requireGraphQLFile = require('require-graphql-file');
 const mockServer = require('graphql-tools').mockServer;
 const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
 const graphql = require('graphql').graphql;
+const typeDefs = requireGraphQLFile('../../schema/schema');
 
-const typeDefs = require('../../schema/graphql');
 
-item = {
+const item = {
   id: '1',
+  title: 'Title',
+  url: 'Title',
   userId: 'Title',
-  partner: 'Title',
+  partner: 'shopify',
   partnerId: 'Title',
   partnerPlan: 'Title',
-  title: 'Title',
-  storeUrl: 'Title',
   partnerSpecificUrl: 'Title',
   partnerCreatedAt: 'Title',
   partnerUpdatedAt: 'Title',
   partnerToken: 'Title',
+  uniqKey: 'Title',
   timezone: 'Title',
   moneyFormat: 'Title',
   moneyWithCurrencyFormat: 'Title',
@@ -38,32 +39,31 @@ const listStoresCase = {
   query: `
       query {
         listStores {
-          items{
-            id
-            userId
-            partner
-            partnerId
-            partnerPlan
-            title
-            storeUrl
-            partnerSpecificUrl
-            partnerCreatedAt
-            partnerUpdatedAt
-            partnerToken
-            timezone
-            moneyFormat
-            moneyWithCurrencyFormat
-            numberOfProducts
-            noOfActiveProducts
-            numberOfScheduledPosts
-            numberOfPosted
-            productsLastUpdated
-            isCharged
-            chargedMethod
-            chargeId
-            chargeDate
-            isUninstalled
-          }
+          id
+          userId
+          title
+          url
+          partner
+          partnerId
+          partnerPlan
+          partnerSpecificUrl
+          partnerCreatedAt
+          partnerUpdatedAt
+          partnerToken
+          uniqKey
+          timezone
+          moneyFormat
+          moneyWithCurrencyFormat
+          numberOfProducts
+          noOfActiveProducts
+          numberOfScheduledPosts
+          numberOfPosted
+          productsLastUpdated
+          isCharged
+          chargedMethod
+          chargeId
+          chargeDate
+          isUninstalled
         }
       }
     `,
@@ -71,31 +71,30 @@ const listStoresCase = {
   context: {},
   expected: {
     data: {
-      listStores: {
-        items: [
-          item,
-          item
-        ]
-      }
+      listStores: [
+        item,
+        item
+      ]
     }
   }
 };
 const getStoreCase = {
-  id: 'List Stores Query',
+  id: 'Get Store Query',
   query: `
       query {
-        getStore(id: "1") {
+        getStore(uniqKey: "1") {
           id
           userId
           partner
           partnerId
           partnerPlan
           title
-          storeUrl
+          url
           partnerSpecificUrl
           partnerCreatedAt
           partnerUpdatedAt
           partnerToken
+          uniqKey
           timezone
           moneyFormat
           moneyWithCurrencyFormat
@@ -120,18 +119,19 @@ const createStoreCase = {
   id: 'Create Store Mutation',
   query: `
       mutation {
-        createStore (input: {id: "Title", userId: "Title", partner: "Title", title: "Title"}) {
+        createStore (input: {id: "Title", userId: "Title", partner: "Title", title: "Title", partnerId: "Title"}) {
           id
           userId
+          title
+          url
           partner
           partnerId
           partnerPlan
-          title
-          storeUrl
           partnerSpecificUrl
           partnerCreatedAt
           partnerUpdatedAt
           partnerToken
+          uniqKey
           timezone
           moneyFormat
           moneyWithCurrencyFormat
@@ -156,18 +156,19 @@ const updateStoreCase = {
   id: 'Update Store Mutation',
   query: `
       mutation {
-        updateStore (input: {id: "Title", title: "Title"}) {
+        updateStore (input: {uniqKey: "Title", title: "Title"}) {
           id
           userId
           partner
           partnerId
           partnerPlan
           title
-          storeUrl
+          url
           partnerSpecificUrl
           partnerCreatedAt
           partnerUpdatedAt
           partnerToken
+          uniqKey
           timezone
           moneyFormat
           moneyWithCurrencyFormat
@@ -190,11 +191,10 @@ const updateStoreCase = {
 };
 
 const cases = [listStoresCase, getStoreCase, createStoreCase, updateStoreCase];
+// const cases = [listStoresCase, createStoreCase];
 
 describe('Schema', () => {
-  // const typeDefs = booksSchema;
   const mockSchema = makeExecutableSchema({ typeDefs });
-  // const mockSchema = typeDefs;
 
   addMockFunctionsToSchema({
     schema: mockSchema,

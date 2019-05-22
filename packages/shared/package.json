@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "dynamoose": "^1.7.2"
+    "lodash": "^4.17.11",
+    "mongoose": "^5.5.9"
   },
   "scripts": {
     "seed": "STAGE=dev APP_NAME=postingly STORES_TABLE=Store PROFILE_TABLE=Profile node index.js"
