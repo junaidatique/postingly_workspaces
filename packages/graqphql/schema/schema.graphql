@@ -1,51 +1,32 @@
 input ModelStringFilterInput {
   ne: String
   eq: String
-  le: String
+  lte: String
   lt: String
-  ge: String
+  gte: String
   gt: String
   contains: String
-  notContains: String
-  between: [String]
-  beginsWith: String
 }
 
-input ModelIDFilterInput {
-  ne: ID
-  eq: ID
-  le: ID
-  lt: ID
-  ge: ID
-  gt: ID
-  contains: ID
-  notContains: ID
-  between: [ID]
-  beginsWith: ID
-}
 
 input ModelIntFilterInput {
   ne: Int
   eq: Int
-  le: Int
+  lte: Int
   lt: Int
-  ge: Int
+  gte: Int
   gt: Int
   contains: Int
-  notContains: Int
-  between: [Int]
 }
 
 input ModelFloatFilterInput {
   ne: Float
   eq: Float
-  le: Float
+  lte: Float
   lt: Float
-  ge: Float
+  gte: Float
   gt: Float
   contains: Float
-  notContains: Float
-  between: [Float]
 }
 
 input ModelBooleanFilterInput {
@@ -59,16 +40,17 @@ enum ModelSortDirection {
 # Store type and inputs
 type Store {
   id: ID!
+  title: String!
+  url: String
   userId: String!
   partner: Partner
-  partnerId: String
+  partnerId: String!
   partnerPlan: String
-  title: String!
-  storeUrl: String
   partnerSpecificUrl: String
   partnerCreatedAt: String
   partnerUpdatedAt: String
   partnerToken: String
+  uniqKey: String!
   timezone: String
   moneyFormat: String
   moneyWithCurrencyFormat: String
@@ -82,6 +64,8 @@ type Store {
   chargeId: String
   chargeDate: String
   isUninstalled: Boolean
+  createdAt: String
+  updatedAt: String
   profiles(filter: ModelProfileFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): ModelProfileConnection
 }
 enum Partner {
@@ -92,10 +76,10 @@ input CreateStoreInput {
   id: ID
   userId: String!
   partner: String!
-  partnerId: String
+  partnerId: String!
   partnerPlan: String
   title: String!
-  storeUrl: String
+  url: String
   partnerSpecificUrl: String
   partnerCreatedAt: String
   partnerUpdatedAt: String
@@ -116,9 +100,10 @@ input CreateStoreInput {
 }
 input UpdateStoreInput { 
   id: ID 
+  uniqKey: String!
   partnerPlan: String
   title: String
-  storeUrl: String
+  url: String
   partnerSpecificUrl: String
   partnerCreatedAt: String
   partnerUpdatedAt: String
@@ -144,12 +129,27 @@ type ModelStoreConnection {
 }
 
 input ModelStoreFilterInput {
-  id: ModelIDFilterInput
+  partner: ModelStringFilterInput
   userId: ModelStringFilterInput
   title: ModelStringFilterInput
-  and: [ModelStoreFilterInput]
-  or: [ModelStoreFilterInput]
-  not: ModelStoreFilterInput
+}
+enum ModelStoreSortInput {
+  title_ASC
+  title_DESC
+  userId_ASC
+  userId_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  numberOfProducts_ASC
+  numberOfProducts_DESC
+  noOfActiveProducts_ASC
+  noOfActiveProducts_DESC
+  numberOfScheduledPosts_ASC
+  numberOfScheduledPosts_DESC
+  numberOfPosted_ASC
+  numberOfPosted_DESC
 }
 
 # Profile type and inputs
@@ -177,7 +177,6 @@ type ModelProfileConnection {
 }
 
 input ModelProfileFilterInput {
-  id: ModelIDFilterInput
   store: ModelStringFilterInput
   name: ModelStringFilterInput
   and: [ModelProfileFilterInput]
@@ -311,7 +310,7 @@ type Product {
   partnerSpecificUrl: String
   partnerCreatedAt: String
   partnerUpdatedAt: String
-  uniqKey: String
+  uniqKey: String!
   description: String
   position: String
   isPublished: Boolean
@@ -388,8 +387,8 @@ type Caption {
 }
 # all quries
 type Query {
-  listStores(filter: ModelStoreFilterInput, limit: Int, nextToken: String): ModelStoreConnection
-  getStore(id: ID!): Store
+  listStores(filter: ModelStoreFilterInput, limit: Int, skip: Int, sort: ModelStoreSortInput): [Store]
+  getStore(uniqKey: ID!): Store
 }
 
 
