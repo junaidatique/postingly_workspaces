@@ -1,8 +1,10 @@
 const fetch = require("node-fetch");
 const querystring = require('querystring')
-const query = require("../helpers/model");
+const ProfileModel = require('shared').ProfileModel;
+const StoreModel = require('shared').StoreModel;
+const formattedProfile = require("../functions").formattedProfile
 
-const { FACEBOOK_GRPAHAPI_URL } = require("../constants");
+const { FACEBOOK_GRPAHAPI_URL } = require("../../../constants");
 module.exports = {
   login: async function (storeId, code, serviceProfile) {
     console.log(" -- FB Login Start -- ");
@@ -26,8 +28,9 @@ module.exports = {
         client_secret: process.env.FACEBOOK_APP_SECRET,
         redirect_uri: `${process.env.FRONTEND_URL}facebook-callback`
       };
-      query = querystring.stringify(paramsAccessToken);
-      const accessTokenResponse = await fetch(`${accessTokenUrl}?${query}`);
+      console.log('getAccessToken paramsAccessToken', paramsAccessToken)
+      queryStr = querystring.stringify(paramsAccessToken);
+      const accessTokenResponse = await fetch(`${accessTokenUrl}?${queryStr}`);
       const response = await accessTokenResponse.json();
       if (accessTokenResponse.status === 200) {
         console.log("Fb Login Access Token Recieved");
@@ -35,7 +38,7 @@ module.exports = {
         return response.access_token;
       } else {
         console.log("Fb Login Access Token Not Recieved", response);
-        throw new Error(accessTokenResponse.statusText);
+        throw new Error(response.error.message);
       }
     } catch (error) {
       console.log(" -- FB Get Access Token Error -- ");
@@ -78,7 +81,7 @@ module.exports = {
 
   },
   getUserDetail: async function (storeId, accessToken) {
-    console.log(" -- FB getUserDetail Start -- ");
+    console.log(" -- FB getUserDetail Start -- ", storeId);
     console.log("FB getUserDetail ", accessToken);
     try {
       const fields = ['id', 'email', 'link', 'name', 'picture'];
@@ -93,29 +96,28 @@ module.exports = {
       });
       const userResponse = await userDetailResponse.json();
       if (userDetailResponse.status === 200) {
-        console.log("FB getUserDetail Recieved", userResponse);
-        console.log(" -- FB getUserDetail End -- ");
-
+        console.log("FB getUserDetail Recieved");
         const userParams = {
-          id: `facebook_profile-${userResponse.id}`,
+          uniqKey: `facebookProfile-${userResponse.id}`,
           name: userResponse.name,
           avatarUrl: userResponse.picture.data.url,
           serviceUserId: userResponse.id,
-          // serviceUsername: userResponse.link,
           profileURL: userResponse.link,
           accessToken: accessToken,
-          // accessTokenSecret: "",
-          service: "facebook",
-          serviceProfile: "facebook_profile",
-          // bufferId: "",
+          service: "Facebook",
+          serviceProfile: "facebookProfile",
           isConnected: true,
           isTokenExpired: false,
           isSharePossible: false,
-          profileStoreId: storeId
+          store: storeId
         };
         console.log("userparams", userParams);
-        profile = await query.putItem(process.env.PROFILE_TABLE, userParams);
-        return userParams;
+        const profileInstance = new ProfileModel(userParams);
+        const profile = await profileInstance.save();
+        const storeDetail = await StoreModel.findById(storeId);
+        await storeDetail.profiles.push(profile);
+        console.log(" -- FB getUserDetail End -- ");
+        return profile;
       } else {
         console.log("Fb getUserDetail Not Recieved");
         throw new Error(userDetailResponse.statusText);
@@ -130,23 +132,28 @@ module.exports = {
   getProfile: async function (storeId, accessToken, serviceProfile) {
     try {
       const userDetail = await this.getUserDetail(storeId, accessToken);
-      if (serviceProfile === 'facebook_page') {
-        const userPages = await this.getPages(storeId, accessToken);
+      let profiles;
+      if (serviceProfile === 'facebookPage') {
+        profiles = await this.getPages(storeId, userDetail.id, accessToken);
+
       } else {
 
       }
+      return profiles;
     } catch (error) {
       throw new Error(error.message);
     }
   },
-  getPages: async function (storeId, accessToken) {
+  getPages: async function (storeId, parentId, accessToken) {
     console.log(" -- FB getPages Start -- ");
     console.log("FB getPages ", accessToken);
+    const store = await StoreModel.findById(storeId);
+    const parent = await ProfileModel.findById(parentId);
     try {
-      const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me?fields=accounts.limit(5000){access_token,description,is_published,username,picture,link}`;
+      const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me?fields=accounts.limit(5000){access_token,description,is_published,username,name,picture,link,id}`;
       console.log("FB getPages graphApiUrl", graphApiUrl);
-      accessTokenQuery = querystring.stringify({ access_token: accessToken });
-      const pagesDetailResponse = await fetch(`${graphApiUrl}&${accessTokenQuery}`, {
+      getPagesQuery = querystring.stringify({ access_token: accessToken });
+      const pagesDetailResponse = await fetch(`${graphApiUrl}&${getPagesQuery}`, {
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
@@ -154,42 +161,36 @@ module.exports = {
         method: "GET",
       });
       const pageResponse = await pagesDetailResponse.json();
+      let pageInstance;
+      let page;
       if (pagesDetailResponse.status === 200) {
-        // console.log("FB getPages Recieved", pageResponse.accounts.data);
+        console.log("FB getPages Recieved", pageResponse);
         for (pageProfile of pageResponse.accounts.data) {
           const pageParams = {
-            id: `facebook_page-${pageProfile.id}`,
+            uniqKey: `facebookPage-${pageProfile.id}`,
             name: pageProfile.name,
             avatarUrl: pageProfile.picture.data.url,
             serviceUserId: pageProfile.id,
-            // serviceUsername: userResponse.link,
             profileURL: pageProfile.link,
             accessToken: accessToken,
-            // accessTokenSecret: "",
-            service: "facebook",
-            serviceProfile: "facebook_page",
-            // bufferId: "",
+            service: "Facebook",
+            serviceProfile: "facebookPage",
             isConnected: true,
             isTokenExpired: false,
             isSharePossible: true,
-            storeId: storeId
+            store: storeId,
+            parent: parentId
           };
-          console.log("pageParams", pageParams);
-          profile = await query.putItem(process.env.PROFILE_TABLE, pageParams);
+          // console.log("pageParams", pageParams);
+          pageInstance = new ProfileModel(pageParams);
+          page = await pageInstance.save();
+          // console.log('store', store);
+          await store.profiles.push(page);
+          await store.save();
+          await parent.children.push(page);
+          await parent.save();
         }
-
-        // const responseProfiles = await dynamodb.query({
-        //   TableName: process.env.profileTable,
-        //   KeyConditionExpression: "serviceProfile = :sp and isSharePossible = :isp",
-        //   ExpressionAttributeValues: {
-        //     ":sp": "facebook_page",
-        //     ":isp": true
-        //   }
-        // }).promise();
-
-        // console.log(" -- FB getPages End -- ", responseProfiles);
-        // return responseProfiles;
-        return '';
+        return parent.children;
       } else {
         console.log("Fb getPages Not Recieved");
         throw new Error(userDetailResponse.statusText);

@@ -29,7 +29,6 @@ describe('Store Model', () => {
   const accessToken = process.env.SHOPIFY_TEST_ACCESS_TOKEN;
   const storeKey = `${partner}-${partnerStoreId}`;
 
-  // -------------------------- getStoreBeforeCreateTestCase --------------------------
   const createShop = {
     id: partnerStoreId,
     partner: partner,
@@ -72,6 +71,9 @@ describe('Store Model', () => {
   };
 
   const shopCreateStoreExpected = { ...shopCreateStoreParams, uniqKey: storeKey };
+
+  // -------------------------- getStoreBeforeCreateTestCase --------------------------
+
 
   const getStoreBeforeCreateTestCase = {
     id: 'Get store before creation',

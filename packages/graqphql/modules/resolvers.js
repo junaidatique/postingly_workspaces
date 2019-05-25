@@ -1,4 +1,5 @@
 const storeResolvers = require('./Store/resolvers');
+const profileResolvers = require('./Profile/resolvers');
 
 module.exports = {
   Query: {
@@ -7,6 +8,7 @@ module.exports = {
   },
   Mutation: {
     createStore: storeResolvers.createStore,
-    updateStore: storeResolvers.updateStore
+    updateStore: storeResolvers.updateStore,
+    connectProfile: profileResolvers.connectProfile
   },
 }

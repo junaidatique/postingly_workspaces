@@ -1,65 +1,70 @@
-// const dynamoose = require('shared/helpers/db');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+const profileSchema = new mongoose.Schema({
+  store: {
+    type: Schema.Types.ObjectId,
+    ref: 'Store'
+  },
+  parent: {
+    type: Schema.Types.ObjectId,
+    ref: 'Profile'
+  },
+  children: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Profile'
+    }
+  ],
+  name: {
+    type: String,
+  },
+  uniqKey: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  avatarUrl: {
+    type: String
+  },
+  serviceUserId: {
+    type: String
+  },
+  serviceUsername: {
+    type: String
+  },
+  profileURL: {
+    type: String
+  },
+  accessToken: {
+    type: String
+  },
+  accessTokenSecret: {
+    type: String
+  },
+  service: {
+    type: String
+  },
+  serviceProfile: {
+    type: String
+  },
+  bufferId: {
+    type: String
+  },
+  isConnected: {
+    type: Boolean
+  },
+  isTokenExpired: {
+    type: Boolean
+  },
+  isSharePossible: {
+    type: Boolean
+  },
+});
 
-// const Schema = dynamoose.Schema;
+profileSchema.set('timestamps', true);
 
-// const profileSchema = new Schema({
-//   id: {
-//     type: String,
-//     hashKey: true
-//   },
-//   storeId: {
-//     type: String
-//   },
-//   parentProfile: {
-//     type: String
-//   },
-//   name: {
-//     type: String
-//   },
-//   avatarUrl: {
-//     type: String
-//   },
-//   serviceUserId: {
-//     type: String
-//   },
-//   serviceUsername: {
-//     type: String
-//   },
-//   profileURL: {
-//     type: String
-//   },
-//   accessToken: {
-//     type: String
-//   },
-//   accessTokenSecret: {
-//     type: String
-//   },
-//   service: {
-//     type: String
-//   },
-//   serviceProfile: {
-//     type: String
-//   },
-//   bufferId: {
-//     type: String
-//   },
-//   isConnected: {
-//     type: Boolean
-//   },
-//   isTokenExpired: {
-//     type: Boolean
-//   },
-//   isSharePossible: {
-//     type: Boolean
-//   },
+if (process.env.IS_OFFLINE) {
+  delete mongoose.connection.models.Profile;
+}
 
-// }, {
-//     throughput: {
-//       read: 5,
-//       write: 5
-//     },
-//     timestamps: true,
-//     errorUnknown: true
-//   });
-
-// module.exports = dynamoose.model(process.env.PROFILE_TABLE, profileSchema);
+module.exports = mongoose.model(process.env.PROFILE_TABLE, profileSchema);

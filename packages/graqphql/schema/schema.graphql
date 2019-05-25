@@ -49,7 +49,7 @@ type Store {
   partnerSpecificUrl: String
   partnerCreatedAt: String
   partnerUpdatedAt: String
-  partnerToken: String
+  partnerToken: String!
   uniqKey: String!
   timezone: String
   moneyFormat: String
@@ -66,7 +66,7 @@ type Store {
   isUninstalled: Boolean
   createdAt: String
   updatedAt: String
-  profiles(filter: ModelProfileFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): ModelProfileConnection
+  profiles(filter: ModelProfileFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): [Profile]
 }
 enum Partner {
   shopify
@@ -83,7 +83,7 @@ input CreateStoreInput {
   partnerSpecificUrl: String
   partnerCreatedAt: String
   partnerUpdatedAt: String
-  partnerToken: String
+  partnerToken: String!
   timezone: String
   moneyFormat: String
   moneyWithCurrencyFormat: String
@@ -155,9 +155,10 @@ enum ModelStoreSortInput {
 # Profile type and inputs
 type Profile {
   id: ID!
-  parentProfile: Profile
+  parent: Profile
   name: String!
   avatarUrl: String
+  uniqKey: String
   serviceUsername: String
   serviceUserId: String
   profileURL: String
@@ -171,9 +172,11 @@ type Profile {
   store: Store
 }
 
-type ModelProfileConnection {
-  items: [Profile]
-  nextToken: String
+input connectProfileInput {
+  storeId: String!
+  code: String!
+  service: Service!
+  serviceProfile: ServiceProfile!
 }
 
 input ModelProfileFilterInput {
@@ -223,7 +226,7 @@ type Rule {
   name: String!
   store: Store
   service: Service
-  profiles: ModelProfileConnection
+  profiles: [Profile]
   postingTimeOption: String
   postTimings: [RulePostTimings]
   postAsOption: ProfilePostingOptions
@@ -395,5 +398,6 @@ type Query {
 type Mutation {
   createStore(input: CreateStoreInput!): Store
   updateStore(input: UpdateStoreInput!): Store
+  connectProfile(input: connectProfileInput!): [Profile]
 }
 

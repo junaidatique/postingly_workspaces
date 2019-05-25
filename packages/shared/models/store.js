@@ -1,5 +1,6 @@
 
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 const storeSchema = new mongoose.Schema({
   userId: {
     type: String,
@@ -8,6 +9,7 @@ const storeSchema = new mongoose.Schema({
   },
   title: {
     type: String,
+    required: true,
   },
   url: {
     type: String
@@ -18,7 +20,8 @@ const storeSchema = new mongoose.Schema({
     index: true
   },
   partnerId: {
-    type: String
+    type: String,
+    required: true,
   },
   partnerPlan: {
     type: String
@@ -35,7 +38,8 @@ const storeSchema = new mongoose.Schema({
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
   partnerToken: {
-    type: String
+    type: String,
+    required: true
   },
   uniqKey: {
     type: String,
@@ -82,7 +86,13 @@ const storeSchema = new mongoose.Schema({
   },
   isUninstalled: {
     type: Boolean
-  }
+  },
+  profiles: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Profile'
+    }
+  ]
 });
 
 storeSchema.set('timestamps', true);

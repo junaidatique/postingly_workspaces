@@ -106,7 +106,7 @@ module.exports = {
         isTokenExpired: false,
         isSharePossible: true,
         storeId: storeKey,
-        parentProfile: userResponse.id
+        parent: userResponse.id
       };
       console.log("pageParams", pageParams);
       fb_page = await Profile.create(pageParams);
