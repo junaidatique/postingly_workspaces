@@ -5,6 +5,8 @@ const formattedProfile = async (profile) => {
   return {
     ...profile._doc,
     id: profile._id,
+    parent: getProfileById.bind(this, profile._doc.parent),
+    children: getProfiles.bind(this, profile._doc.children),
     store: storeFunctions.getStoreByID.bind(this, profile._doc.store)
   }
 }

@@ -66,7 +66,7 @@ type Store {
   isUninstalled: Boolean
   createdAt: String
   updatedAt: String
-  profiles(filter: ModelProfileFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): [Profile]
+  profiles(service: Service!, isConnected: Boolean): [Profile]
 }
 enum Partner {
   shopify
@@ -156,6 +156,7 @@ enum ModelStoreSortInput {
 type Profile {
   id: ID!
   parent: Profile
+  children: [Profile]
   name: String!
   avatarUrl: String
   uniqKey: String
@@ -168,7 +169,6 @@ type Profile {
   serviceProfile: ServiceProfile
   isConnected: Boolean
   isTokenExpired: Boolean
-  isSharePossible: Boolean
   store: Store
 }
 
@@ -179,13 +179,12 @@ input connectProfileInput {
   serviceProfile: ServiceProfile!
 }
 
-input ModelProfileFilterInput {
-  store: ModelStringFilterInput
-  name: ModelStringFilterInput
-  and: [ModelProfileFilterInput]
-  or: [ModelProfileFilterInput]
-  not: ModelProfileFilterInput
+input updateProfileInput {
+  id: String!
+  isConnected: Boolean!
 }
+
+
 
 enum Service { 
   Facebook
@@ -391,6 +390,7 @@ type Caption {
 # all quries
 type Query {
   listStores(filter: ModelStoreFilterInput, limit: Int, skip: Int, sort: ModelStoreSortInput): [Store]
+  listProfiles(storeId: String!, service: Service!, isConnected: Boolean): [Profile]
   getStore(uniqKey: ID!): Store
 }
 
@@ -399,5 +399,6 @@ type Mutation {
   createStore(input: CreateStoreInput!): Store
   updateStore(input: UpdateStoreInput!): Store
   connectProfile(input: connectProfileInput!): [Profile]
+  updateProfile(input: [updateProfileInput]!): [Profile]
 }
 

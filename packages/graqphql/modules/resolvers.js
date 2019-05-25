@@ -4,11 +4,13 @@ const profileResolvers = require('./Profile/resolvers');
 module.exports = {
   Query: {
     getStore: storeResolvers.getStore,
-    listStores: storeResolvers.listStores
+    listStores: storeResolvers.listStores,
+    listProfiles: profileResolvers.listProfiles
   },
   Mutation: {
     createStore: storeResolvers.createStore,
     updateStore: storeResolvers.updateStore,
-    connectProfile: profileResolvers.connectProfile
+    connectProfile: profileResolvers.connectProfile,
+    updateProfile: profileResolvers.updateProfile
   },
 }
