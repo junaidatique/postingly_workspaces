@@ -10,30 +10,12 @@ provider:
   runtime: nodejs8.10
   stage: ${env:STAGE}
   region: ${env:AWS_REGION}
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource:
-        - "arn:aws:dynamodb:${env:AWS_REGION}:*:*"
-  environment:
-    STORES_TABLE: "Store"
-    PROFILE_TABLE: "Profile"
 
 functions:
   data-seed:
     handler: seeddata.createStore
   data-test:
     handler: seeddata.testData
-  service-connect:
-    handler: services.connect
-  service-profile:
-    handler: services.getProfile
   cognito-create-auth-challenge:
     handler: cognito.createAuthChallenge
   cognito-define-auth-challenge:

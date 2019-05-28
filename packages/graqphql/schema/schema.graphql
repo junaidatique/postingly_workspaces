@@ -190,7 +190,7 @@ enum Service {
   Facebook
   Twitter
   Instagram
-  linkedin
+  Linkedin
   Pinterest
   Buffer
 }
@@ -222,19 +222,66 @@ enum ServiceProfile {
 # Rule
 type Rule {
   id: ID!
-  name: String!
-  store: Store
-  service: Service
+  store: Store!
+  service: Service!
   profiles: [Profile]
-  postingTimeOption: String
+  postingTimeOption: RulePostingTimeOptions # one of the option from the publish timing option (post between timings or custom timing sections)
   postTimings: [RulePostTimings]
   postAsOption: ProfilePostingOptions
-  collectionOption: Int
-  collections: [ModelCollectionConnection]
+  collectionOption: collectionOptions
+  collections: [Collection]
   allowZeroQuantity: Boolean
   postAsVariants: Boolean
   postingProductOrder: PostingSortOrder
   captions: [Caption]
+}
+type Caption {
+  rule: Rule
+  text: String
+  startDate: String
+  endDate: String
+}
+input RuleInput {
+  id: ID
+  store: ID!
+  service: Service!
+  profiles: [ID!]
+  postingTimeOption: RulePostingTimeOptions
+  postTimings: [RulePostTimingsInput]
+  postAsOption: ProfilePostingOptions
+  collectionOption: collectionOptions
+  collections: [ID!]
+  allowZeroQuantity: Boolean
+  postAsVariants: Boolean
+  postingProductOrder: PostingSortOrder
+  captions: [CreateCaptionInput]
+}
+
+input CreateCaptionInput {
+  text: String
+  startDate: String
+  endDate: String
+}
+
+input RulePostTimingsInput {
+  postingInterval: Int #number of seconds.
+  startPostingHour: Int
+  endPostingHour: Int
+  postingHour: Int
+  postingMinute: Int
+  postingMeridiem: Meridiem
+}
+
+enum RulePostingTimeOptions {
+  postImmediately
+  postBetweenWithInterval
+  customTimings
+}
+
+enum collectionOptions {
+  selectProductsFromAll
+  selectProductsFromSelected
+  dontSelectProductsFromSelected
 }
 
 enum PostingSortOrder {
@@ -243,10 +290,9 @@ enum PostingSortOrder {
 }
 
 type RulePostTimings {
-  id: ID!
+  postingInterval: Int
   startPostingHour: Int
   endPostingHour: Int
-  postingInterval: Int
   postingHour: Int
   postingMinute: Int
   postingMeridiem: Meridiem
@@ -259,6 +305,7 @@ enum Meridiem {
 }
 
 enum ProfilePostingOptions {
+  none
   facebookPostAsAlbum
   facebookPostAsLink
   facebookPostAsPhoto
@@ -266,6 +313,13 @@ enum ProfilePostingOptions {
   twitterPostAsMultiplePhoto
   twitterPostAsLink
 }
+
+# rule inputs
+input ModelRuleFilterInput {
+  storeId: ID!
+  service: Service!
+}
+
 
 # updates
 type Update {
@@ -380,18 +434,14 @@ type ModelCollectionConnection {
   nextToken: String
 }
 
-type Caption {
-  id: ID!
-  rule: Rule
-  text: String
-  startDate: String
-  endDate: String
-}
+
 # all quries
 type Query {
   listStores(filter: ModelStoreFilterInput, limit: Int, skip: Int, sort: ModelStoreSortInput): [Store]
   listProfiles(storeId: String!, service: Service!, isConnected: Boolean): [Profile]
   getStore(uniqKey: ID!): Store
+  listRules(filter: ModelRuleFilterInput, limit: Int, skip: Int): [Rule]
+  getRule(id: ID!): Rule
 }
 
 
@@ -400,5 +450,6 @@ type Mutation {
   updateStore(input: UpdateStoreInput!): Store
   connectProfile(input: connectProfileInput!): [Profile]
   updateProfile(input: [updateProfileInput]!): [Profile]
+  manageRule(input: RuleInput!): Rule
 }
 

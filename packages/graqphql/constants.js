@@ -1,6 +1,0 @@
-exports.FACEBOOK_SERVICE = 'Facebook'
-exports.FACEBOOK_GRPAHAPI_URL = 'https://graph.facebook.com/v3.2/'
-exports.DEV = 'dev'
-exports.TEST = 'test'
-exports.STAGING = 'staging'
-exports.PROD = 'prod'

@@ -3,7 +3,7 @@ const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
 
 
-const createFBPageProfileStub = async (storeId) => {
+const createFBPageProfileStub = async (storeId, isConnected, numberOfProfiles) => {
   const storeDetail = await StoreModel.findById(storeId);
 
   let serviceUserId = faker.random.number({ min: 10000000 });
@@ -29,7 +29,7 @@ const createFBPageProfileStub = async (storeId) => {
 
   let childParams = {}
   let child;
-  for (let i = 1; i <= 8; i++) {
+  for (let i = 1; i <= numberOfProfiles; i++) {
     serviceUserId = faker.random.number({ min: 10000000 });
     uniqKey = `facebookPage-${serviceUserId}`;
     childParams = {
@@ -44,7 +44,7 @@ const createFBPageProfileStub = async (storeId) => {
       accessToken: faker.random.uuid(),
       service: 'Facebook',
       serviceProfile: 'facebookPage',
-      isConnected: false,
+      isConnected: isConnected,
       isTokenExpired: false,
       isSharePossible: true
     };

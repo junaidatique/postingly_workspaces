@@ -1,7 +1,6 @@
 const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
 const requireGraphQLFile = require('require-graphql-file');
 const graphql = require('graphql').graphql;
-
 const resolvers = require("graqphql/modules/resolvers")
 const typeDefs = requireGraphQLFile('../../schema/schema');
 const schema = makeExecutableSchema({ typeDefs: typeDefs, resolvers: resolvers })
@@ -22,7 +21,7 @@ describe('Profile Model', () => {
     }
     const storeDetail = await storeStub.createStoreStub();
     storeId = storeDetail._id;
-    profiles = await profileStub.createFBPageProfileStub(storeId);
+    profiles = await profileStub.createFBPageProfileStub(storeId, false, 8);
     done();
   });
 

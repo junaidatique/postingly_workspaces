@@ -2,9 +2,8 @@ const fetch = require("node-fetch");
 const querystring = require('querystring')
 const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
-const formattedProfile = require("../functions").formattedProfile
 
-const { FACEBOOK_GRPAHAPI_URL } = require("../../../constants");
+const { FACEBOOK_GRPAHAPI_URL } = require('shared/constants');
 module.exports = {
   login: async function (storeId, code, serviceProfile) {
     console.log(" -- FB Login Start -- ");

@@ -67,4 +67,4 @@ if (process.env.IS_OFFLINE) {
   delete mongoose.connection.models.Profile;
 }
 
-module.exports = mongoose.model(process.env.PROFILE_TABLE, profileSchema);
+module.exports = mongoose.model('Profile', profileSchema);

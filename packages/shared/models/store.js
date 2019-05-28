@@ -101,7 +101,7 @@ if (process.env.IS_OFFLINE) {
   delete mongoose.connection.models.Store;
 }
 
-module.exports = mongoose.model(process.env.STORES_TABLE, storeSchema);
+module.exports = mongoose.model('Store', storeSchema);
 
 
 

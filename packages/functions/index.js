@@ -1,2 +1,1 @@
-const shared = require('shared').StoreModel;
-console.log(shared);
+exports.createUpdates = require('./createUpdates');
