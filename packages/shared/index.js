@@ -6,4 +6,5 @@ exports.string_helper = require('./helpers/string');
 exports.StoreModel = require('./models/store');
 exports.ProfileModel = require('./models/profile');
 exports.RuleModel = require('./models/rule');
+exports.UpdateModel = require('./models/update');
 exports.query = require('./helpers/query');

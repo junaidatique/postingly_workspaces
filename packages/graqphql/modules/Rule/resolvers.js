@@ -1,7 +1,13 @@
 const RuleModel = require('shared').RuleModel;
 const formattedRule = require('./functions').formattedRule
-const _ = require('lodash')
-const query = require('shared').query
+const _ = require('lodash');
+const query = require('shared').query;
+let createUpdates;
+const { TEST } = require('shared/constants');
+if (process.env.IS_OFFLINE == true || process.env.STAGE == TEST) {
+  createUpdates = require('functions').createUpdates.createUpdates;
+}
+
 module.exports = {
   manageRule: async (obj, args, context, info) => {
     let ruleParams = {};
@@ -19,7 +25,9 @@ module.exports = {
       ruleDetail = await RuleModel.findOne({ _id: args.input.id });
     }
 
-
+    if (process.env.IS_OFFLINE == true || process.env.STAGE == TEST) {
+      createUpdates({ id: ruleDetail._id });
+    }
     const ruleResult = formattedRule(ruleDetail);
     return ruleResult;
   },

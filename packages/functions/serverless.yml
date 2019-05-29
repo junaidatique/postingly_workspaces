@@ -22,3 +22,6 @@ functions:
     handler: cognito.defineAuthChallenge
   cognito-verify-auth-challenge:
     handler: cognito.verifyAuthChallenge
+
+  create-updates:
+    handler: createUpdates.createUpdates

@@ -184,8 +184,6 @@ input updateProfileInput {
   isConnected: Boolean!
 }
 
-
-
 enum Service { 
   Facebook
   Twitter
@@ -224,6 +222,7 @@ type Rule {
   id: ID!
   store: Store!
   service: Service!
+  type: RuleTypes!,
   profiles: [Profile]
   postingTimeOption: RulePostingTimeOptions # one of the option from the publish timing option (post between timings or custom timing sections)
   postTimings: [RulePostTimings]
@@ -233,7 +232,9 @@ type Rule {
   allowZeroQuantity: Boolean
   postAsVariants: Boolean
   postingProductOrder: PostingSortOrder
+  repeatFrequency: Int
   captions: [Caption]
+  queueOption: RuleQueueOption
 }
 type Caption {
   rule: Rule
@@ -245,6 +246,7 @@ input RuleInput {
   id: ID
   store: ID!
   service: Service!
+  type: RuleTypes!,
   profiles: [ID!]
   postingTimeOption: RulePostingTimeOptions
   postTimings: [RulePostTimingsInput]
@@ -254,7 +256,9 @@ input RuleInput {
   allowZeroQuantity: Boolean
   postAsVariants: Boolean
   postingProductOrder: PostingSortOrder
+  repeatFrequency: Int
   captions: [CreateCaptionInput]
+  queueOption: RuleQueueOption
 }
 
 input CreateCaptionInput {
@@ -263,13 +267,24 @@ input CreateCaptionInput {
   endDate: String
 }
 
+enum RuleTypes {
+  old
+  new
+  sale
+}
+enum RuleQueueOption {
+  pause
+  replace
+}
+
 input RulePostTimingsInput {
   postingInterval: Int #number of seconds.
   startPostingHour: Int
   endPostingHour: Int
   postingHour: Int
   postingMinute: Int
-  postingMeridiem: Meridiem
+  postingDays: [Int]
+
 }
 
 enum RulePostingTimeOptions {
@@ -295,14 +310,11 @@ type RulePostTimings {
   endPostingHour: Int
   postingHour: Int
   postingMinute: Int
-  postingMeridiem: Meridiem
+  
   
 }
 
-enum Meridiem {
-  am
-  pm
-}
+
 
 enum ProfilePostingOptions {
   none
@@ -318,6 +330,7 @@ enum ProfilePostingOptions {
 input ModelRuleFilterInput {
   storeId: ID!
   service: Service!
+  type: RuleTypes!
 }
 
 

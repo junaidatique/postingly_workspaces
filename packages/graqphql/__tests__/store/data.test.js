@@ -38,7 +38,7 @@ describe('Store Model', () => {
     myshopify_domain: faker.internet.domainName(),
     created_at: new Date(),
     updated_at: new Date(),
-    iana_timezone: "America/New_York",
+    iana_timezone: "America/Los_Angeles",
     money_format: "$",
     money_with_currency_format: "$ USD",
     chanrge_id: faker.random.number({ min: 10000000 }),

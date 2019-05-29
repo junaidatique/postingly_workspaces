@@ -10,6 +10,7 @@
     "graphql": "^14.3.0",
     "graphql-tools": "^4.0.4",
     "lodash": "^4.17.11",
+    "moment-timezone": "^0.5.25",
     "mongoose": "^5.5.9",
     "require-graphql-file": "^1.0.1",
     "serverless-http": "^2.0.1",

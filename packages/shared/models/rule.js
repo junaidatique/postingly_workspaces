@@ -1,15 +1,9 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const { SERVICES, POSTING_TIME_OPTIONS, POST_AS_OPTION, MERIDIM, COLLECTION_OPTION, POSTING_SORTORDER, TEST } = require('shared/constants');
-
-let createUpdates;
-
-if (process.env.IS_OFFLINE == true || process.env.STAGE == TEST) {
-  createUpdates = require('functions').createUpdates.createUpdates;
-}
+const { SERVICES, POSTING_TIME_OPTIONS, POST_AS_OPTION, COLLECTION_OPTION, POSTING_SORTORDER, TEST, RULE_TYPE, QUEUE_OPTIONS } = require('shared/constants');
 
 const POST_TIMING = {
-  postingNumbererval: {
+  postingInterval: {
     type: Number
   },
   startPostingHour: {
@@ -24,10 +18,7 @@ const POST_TIMING = {
   postingMinute: {
     type: Number
   },
-  postingMeridiem: {
-    type: String,
-    enum: MERIDIM
-  },
+  postingDays: [Number]
 };
 
 const CAPTION = {
@@ -53,15 +44,26 @@ const ruleSchema = new mongoose.Schema({
     type: String,
     enum: SERVICES
   },
+  type: {
+    type: String,
+    enum: RULE_TYPE
+  },
   profiles: [
     {
       type: Schema.Types.ObjectId,
       ref: 'Profile'
     }
   ],
+  updates: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Update'
+    }
+  ],
   postingTimeOption: {
     type: String,
-    enum: POSTING_TIME_OPTIONS
+    enum: POSTING_TIME_OPTIONS,
+    index: true
   },
   postTimings: [POST_TIMING],
   postAsOption: {
@@ -84,20 +86,35 @@ const ruleSchema = new mongoose.Schema({
   postAsVariants: {
     type: Boolean
   },
+  repeatFrequency: {
+    type: Number
+  },
   postingProductOrder: {
     type: String,
     enum: POSTING_SORTORDER
   },
-  captions: [CAPTION]
+  queueOption: {
+    type: String,
+    enum: QUEUE_OPTIONS
+  },
+  captions: [CAPTION],
+  startDate: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  endDate: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  active: {
+    type: Boolean,
+    default: true,
+    index: true
+  }
 });
 
 ruleSchema.set('timestamps', true);
 
-ruleSchema.post('save', function (doc) {
-  if (process.env.IS_OFFLINE == true || process.env.STAGE == TEST) {
-    createUpdates({ id: doc.id });
-  }
-});
 
 if (process.env.IS_OFFLINE) {
   delete mongoose.connection.models.Rule;

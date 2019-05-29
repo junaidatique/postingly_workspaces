@@ -10,3 +10,6 @@ exports.MERIDIM = ['am', 'pm'];
 exports.POST_AS_OPTION = ['none', 'facebookPostAsAlbum', 'facebookPostAsLink', 'facebookPostAsPhoto', 'twitterPostAsSinglePhoto', 'twitterPostAsMultiplePhoto', 'twitterPostAsLink'];
 exports.COLLECTION_OPTION = ['selectProductsFromAll', 'selectProductsFromSelected', 'dontSelectProductsFromSelected'];
 exports.POSTING_SORTORDER = ['newest', 'random'];
+exports.SCHEDULE_STATE = ['not_scheduled', 'scheduled', 'posted', 'failed'];
+exports.RULE_TYPE = ['old', 'new', 'sale'];
+exports.QUEUE_OPTIONS = ['pause', 'replace'];

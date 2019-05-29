@@ -15,7 +15,8 @@ const createStoreStub = async () => {
     partnerToken: accessToken,
     partner: partner,
     partnerId: partnerStoreId,
-    uniqKey: storeKey
+    uniqKey: storeKey,
+    timezone: "America/New_York"
   };
 
   const storeInstance = await StoreModel.create(shopCreateStoreParams);
