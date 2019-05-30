@@ -84,7 +84,12 @@ const ruleSchema = new mongoose.Schema({
     type: Boolean
   },
   postAsVariants: {
-    type: Boolean
+    type: Boolean,
+    default: false,
+  },
+  rotateImages: {
+    type: Boolean,
+    default: false,
   },
   repeatFrequency: {
     type: Number
