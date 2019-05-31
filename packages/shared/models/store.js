@@ -1,7 +1,56 @@
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+
+const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
+
+const LINK_SHORTNER = {
+  service: {
+    type: String,
+    enum: LINK_SHORTNER_SERVICES
+  },
+  api_key: {
+    type: String,
+  }
+}
+
 const storeSchema = new mongoose.Schema({
+  products: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Profile'
+    }
+  ],
+  collections: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Collection'
+    }
+  ],
+  variants: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Variant'
+    }
+  ],
+  profiles: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Profile'
+    }
+  ],
+  rules: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Rule'
+    }
+  ],
+  updates: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Update'
+    }
+  ],
   userId: {
     type: String,
     required: true,
@@ -17,7 +66,8 @@ const storeSchema = new mongoose.Schema({
   partner: {
     type: String,
     required: true,
-    index: true
+    index: true,
+    enum: PARTNERS
   },
   partnerId: {
     type: String,
@@ -87,12 +137,12 @@ const storeSchema = new mongoose.Schema({
   isUninstalled: {
     type: Boolean
   },
-  profiles: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Profile'
-    }
-  ]
+  linkSettings: [LINK_SHORTNER],
+  uninstalledDate: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+
 });
 
 storeSchema.set('timestamps', true);

@@ -1,12 +1,9 @@
-const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
-const requireGraphQLFile = require('require-graphql-file');
 const graphql = require('graphql').graphql;
-const resolvers = require("graqphql/modules/resolvers")
-const typeDefs = requireGraphQLFile('../../schema/schema');
-const schema = makeExecutableSchema({ typeDefs: typeDefs, resolvers: resolvers })
 const mongoose = require('mongoose');
-const storeStub = require("graqphql/__tests__/store/stubs");
-const profileStub = require("graqphql/__tests__/profile/stubs");
+const schema = require('../executableSchema').schema;
+
+const storeStub = require("../store/stubs");
+const profileStub = require("../profile/stubs");
 
 describe('Rule Model', () => {
   let storeId, profiles, ruleId;

@@ -1,0 +1,30 @@
+type Profile {
+  id: ID!
+  parent: Profile
+  children: [Profile]
+  name: String!
+  avatarUrl: String
+  uniqKey: String
+  serviceUsername: String
+  serviceUserId: String
+  profileURL: String
+  accessToken: String
+  accessTokenSecret: String
+  service: Service
+  serviceProfile: ServiceProfile
+  isConnected: Boolean
+  isTokenExpired: Boolean
+  store: Store
+}
+
+input connectProfileInput {
+  storeId: String!
+  code: String!
+  service: Service!
+  serviceProfile: ServiceProfile!
+}
+
+input updateProfileInput {
+  id: String!
+  isConnected: Boolean!
+}

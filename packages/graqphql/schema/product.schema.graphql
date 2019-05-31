@@ -1,0 +1,83 @@
+
+# products and collections starts here.
+type Product {
+  id: ID!
+  store: Store
+  title: String!
+  slug: String
+  url: String
+  partnerId: String
+  partner: Partner
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  uniqKey: String!
+  description: String
+  position: String
+  isPublished: Boolean
+  quantity: Int
+  minimumPrice: Float
+  maximumPrice: Float
+  onSale: Boolean
+  shortUrl: String
+  postableByQuantity: Boolean
+  postableByPrice: Boolean
+  postableIsNew: Boolean
+  postableBySale: Boolean
+  collections: [Collection]
+  updates: [Update]
+  variants: [Variant]
+  images: [ProductImage]
+}
+type Variant {
+  id: ID!
+  product: Product
+  title: String!
+  slug: String
+  url: String
+  partnerId: String
+  partner: Partner
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  uniqKey: String
+  description: String
+  position: String
+  isPublished: Boolean
+  quantity: Int
+  price: Float
+  original_price: Float
+  onSale: Boolean
+  postableByQuantity: Boolean
+  postableByPrice: Boolean
+  postableIsNew: Boolean
+  postableBySale: Boolean
+  images: [ProductImage]
+}
+
+type ProductImage {
+  id: ID!
+  product: Product
+  partnerId: String
+  partner: Partner
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  url: String
+  thumbnail_url: String
+}
+
+type Collection {
+  id: ID!
+  name: String!
+  store: Store
+  products: [Product]
+}
+
+
+
+
+input ModelProductFilterInput {
+  store: ModelStringFilterInput!
+  title: ModelStringFilterInput
+}

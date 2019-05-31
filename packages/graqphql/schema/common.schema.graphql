@@ -1,0 +1,76 @@
+input ModelStringFilterInput {
+  ne: String
+  eq: String
+  lte: String
+  lt: String
+  gte: String
+  gt: String
+  contains: String
+}
+
+
+input ModelIntFilterInput {
+  ne: Int
+  eq: Int
+  lte: Int
+  lt: Int
+  gte: Int
+  gt: Int
+  contains: Int
+}
+
+input ModelFloatFilterInput {
+  ne: Float
+  eq: Float
+  lte: Float
+  lt: Float
+  gte: Float
+  gt: Float
+  contains: Float
+}
+
+input ModelBooleanFilterInput {
+  ne: Boolean
+  eq: Boolean
+}
+enum ModelSortDirection {
+  ASC
+  DESC
+}
+
+enum Partner {
+  shopify
+}
+
+enum Service { 
+  Facebook
+  Twitter
+  Instagram
+  Linkedin
+  Pinterest
+  Buffer
+}
+
+enum ServiceProfile {
+  facebookProfile
+  facebookPage
+  facebookGroup
+  twitterProfile
+  linkedinProfile
+  linkedinPage
+  linkedinGroup
+  pinterestProfile
+  instagramProfile
+  instagramBusiness
+  bufferInstagramProfile
+  bufferInstagramBusiness
+  bufferProfile
+  bufferTwitterProfile
+  bufferFacebookProfile
+  bufferFacebookPage
+  bufferFacebookGroup
+  bufferLinkedinProfile
+  bufferLinkedinPage
+  bufferLinkedinGroup
+  bufferPinterestProfile
+}

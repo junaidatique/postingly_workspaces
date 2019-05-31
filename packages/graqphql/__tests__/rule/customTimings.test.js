@@ -1,16 +1,14 @@
-const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
-const requireGraphQLFile = require('require-graphql-file');
 const graphql = require('graphql').graphql;
-const resolvers = require("graqphql/modules/resolvers")
-const typeDefs = requireGraphQLFile('../../schema/schema');
-const schema = makeExecutableSchema({ typeDefs: typeDefs, resolvers: resolvers })
 const mongoose = require('mongoose');
+const schema = require('../executableSchema').schema;
+
 const storeStub = require("../store/stubs");
 const profileStub = require("../profile/stubs");
 
 describe('Rule Model', () => {
   let storeId, profiles, ruleId;
   const service = 'Facebook';
+  const type = 'old';
   beforeAll(async (done) => {
     if (mongoose.connection.readyState === 2) {
       mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useCreateIndex: true }, async function () {
@@ -29,6 +27,7 @@ describe('Rule Model', () => {
     createRuleInput = {
       store: storeId,
       service: service,
+      type: type,
       profiles: [
         profiles[0]._id,
         profiles[1]._id
@@ -74,6 +73,8 @@ describe('Rule Model', () => {
     createRuleInputJson = createRuleInputJson.replace('"facebookPostAsAlbum"', 'facebookPostAsAlbum');
     createRuleInputJson = createRuleInputJson.replace('"selectProductsFromAll"', 'selectProductsFromAll');
     createRuleInputJson = createRuleInputJson.replace('"random"', 'random');
+    createRuleInputJson = createRuleInputJson.replace('"old"', 'old');
+    createRuleInputJson = createRuleInputJson.replace('"pause"', 'pause');
     const createRuleTestCase = {
       id: 'Create Rule',
       query: `
@@ -99,6 +100,7 @@ describe('Rule Model', () => {
       id: ruleId,
       store: storeId,
       service: service,
+      type: type,
       profiles: [
         profiles[0]._id,
         profiles[1]._id
@@ -129,6 +131,8 @@ describe('Rule Model', () => {
     createRuleInputJson = createRuleInputJson.replace('"facebookPostAsLink"', 'facebookPostAsLink');
     createRuleInputJson = createRuleInputJson.replace('"selectProductsFromAll"', 'selectProductsFromAll');
     createRuleInputJson = createRuleInputJson.replace('"random"', 'random');
+    createRuleInputJson = createRuleInputJson.replace('"old"', 'old');
+    createRuleInputJson = createRuleInputJson.replace('"pause"', 'pause');
     const createRuleTestCase = {
       id: 'Update Rule',
       query: `
@@ -144,6 +148,7 @@ describe('Rule Model', () => {
       expected: { data: { manageRule: [createRuleInput] } }
     };
     const result = await graphql(schema, createRuleTestCase.query, null, createRuleTestCase.context, createRuleTestCase.variables);
+    console.log('result', result);
     expect(result.data.manageRule.service).toEqual(service);
   }, 30000);
 
@@ -154,7 +159,7 @@ describe('Rule Model', () => {
       id: 'List Rules',
       query: `
       query {
-        listRules(filter: {storeId: "${storeId}", service: Facebook}) {
+        listRules(filter: {storeId: "${storeId}", service: Facebook, type: old}) {
           service
           
         }

@@ -1,10 +1,7 @@
 const addMockFunctionsToSchema = require('graphql-tools').addMockFunctionsToSchema;
-const requireGraphQLFile = require('require-graphql-file');
 const mockServer = require('graphql-tools').mockServer;
-const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
 const graphql = require('graphql').graphql;
-// const typeDefs = require('../../schema/graphql');
-const typeDefs = requireGraphQLFile('../../schema/schema');
+const mockSchema = require('../mockSchema').mockSchema;
 
 const profile = {
   id: '1',
@@ -20,7 +17,6 @@ const profile = {
 }
 
 const rule_post_time = {
-  id: '1',
   startPostingHour: 1,
   endPostingHour: 1,
   postingInterval: 1,
@@ -34,7 +30,6 @@ const collection_item = {
 }
 
 const caption = {
-  id: '1',
   text: 'Title',
   startDate: 'Title',
   endDate: 'Title'
@@ -72,12 +67,11 @@ const createRuleTestCase = {
   id: 'Create Rule',
   query: `
       mutation {
-        manageRule (input: {store: "1", service: Facebook}) {
+        manageRule (input: {store: "1", service: Facebook, type: old}) {
           id
           postAsVariants
           allowZeroQuantity
           postTimings {
-            id
             postingHour
             endPostingHour
             postingInterval
@@ -97,7 +91,6 @@ const createRuleTestCase = {
             isTokenExpired
           }
           captions {
-            id
             text
             startDate
             endDate
@@ -132,7 +125,7 @@ const getRuleAfterCreationTestCase = {
           postAsVariants
           allowZeroQuantity
           postTimings {
-            id
+            
             postingHour
             endPostingHour
             postingInterval
@@ -152,7 +145,7 @@ const getRuleAfterCreationTestCase = {
             isTokenExpired
           }
           captions {
-            id
+            
             text
             startDate
             endDate
@@ -189,7 +182,6 @@ const getRuleAfterUpdateTestCase = {
           postAsVariants
           allowZeroQuantity
           postTimings {
-            id
             postingHour
             endPostingHour
             postingInterval
@@ -209,7 +201,6 @@ const getRuleAfterUpdateTestCase = {
             isTokenExpired
           }
           captions {
-            id
             text
             startDate
             endDate
@@ -242,7 +233,6 @@ const getRuleAfterUpdateTestCase = {
 const cases = [createRuleTestCase, getRuleAfterCreationTestCase, getRuleAfterUpdateTestCase];
 
 describe('Schema', () => {
-  const mockSchema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({
     schema: mockSchema,
     mocks: {
@@ -254,17 +244,9 @@ describe('Schema', () => {
     }
   });
 
-  test('Has valid type definitions', async () => {
-    expect(async () => {
-      const MockServer = mockServer(typeDefs);
-
-      await MockServer.query(`{ __schema { types { name } } }`);
-    }).not.toThrow();
-  });
 
   cases.forEach(obj => {
     const { id, query, variables, context: ctx, expected } = obj;
-
     test(`Testing Query: ${id}`, async () => {
       return await expect(
         graphql(mockSchema, query, null, { ctx }, variables)

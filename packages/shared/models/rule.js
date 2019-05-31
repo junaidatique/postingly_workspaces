@@ -21,6 +21,8 @@ const POST_TIMING = {
   postingDays: [Number]
 };
 
+
+
 const CAPTION = {
   text: {
     type: String,

@@ -1,0 +1,114 @@
+# Store type and inputs
+type Store {
+  id: ID!
+  title: String!
+  url: String
+  userId: String!
+  partner: Partner
+  partnerId: String!
+  partnerPlan: String
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  partnerToken: String!
+  uniqKey: String!
+  timezone: String
+  moneyFormat: String
+  moneyWithCurrencyFormat: String
+  numberOfProducts: Int
+  noOfActiveProducts: Int
+  numberOfScheduledPosts: Int
+  numberOfPosted: Int
+  productsLastUpdated: String
+  isCharged: Boolean
+  chargedMethod: String
+  chargeId: String
+  chargeDate: String
+  isUninstalled: Boolean
+  uninstalledDate: String
+  createdAt: String
+  updatedAt: String
+  profiles(service: Service!, isConnected: Boolean): [Profile]
+  products: [Product]
+  collections: [Collection]
+  variants(productId: String!): [Variant]
+  rules(filter: ModelRuleFilterInput, limit: Int, skip: Int): [Rule]
+  updates(limit: Int, skip: Int): [Update]
+}
+
+input CreateStoreInput {
+  id: ID
+  userId: String!
+  partner: String!
+  partnerId: String!
+  partnerPlan: String
+  title: String!
+  url: String
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  partnerToken: String!
+  timezone: String
+  moneyFormat: String
+  moneyWithCurrencyFormat: String
+  numberOfProducts: Int
+  noOfActiveProducts: Int
+  numberOfScheduledPosts: Int
+  numberOfPosted: Int
+  productsLastUpdated: String
+  isCharged: Boolean
+  chargedMethod: String
+  chargeId: String
+  chargeDate: String
+  isUninstalled: Boolean
+}
+
+input UpdateStoreInput { 
+  id: ID 
+  uniqKey: String!
+  partnerPlan: String
+  title: String
+  url: String
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  partnerToken: String
+  timezone: String
+  moneyFormat: String
+  moneyWithCurrencyFormat: String
+  numberOfProducts: Int
+  noOfActiveProducts: Int
+  numberOfScheduledPosts: Int
+  numberOfPosted: Int
+  productsLastUpdated: String
+  isCharged: Boolean
+  chargedMethod: String
+  chargeId: String
+  chargeDate: String
+  isUninstalled: Boolean
+}
+
+input ModelStoreFilterInput {
+  partner: ModelStringFilterInput
+  userId: ModelStringFilterInput
+  title: ModelStringFilterInput
+}
+
+enum ModelStoreSortInput {
+  title_ASC
+  title_DESC
+  userId_ASC
+  userId_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  numberOfProducts_ASC
+  numberOfProducts_DESC
+  noOfActiveProducts_ASC
+  noOfActiveProducts_DESC
+  numberOfScheduledPosts_ASC
+  numberOfScheduledPosts_DESC
+  numberOfPosted_ASC
+  numberOfPosted_DESC
+}

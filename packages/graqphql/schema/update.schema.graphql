@@ -1,0 +1,33 @@
+
+# updates
+type Update {
+  id: ID!
+  store: Store!
+  rule: Rule
+  scheduleType: ScheduleType!
+  service: Service
+  serviceProfile: ServiceProfile
+  product: Product
+  profile: Profile
+  variant: Variant
+  bufferId: String
+  scheduleOn: String
+  utcScheduleTime: String
+  userScheduleTime: String
+  formattedUtcScheduleTime: String
+  formattedUserScheduleTime: String
+  scheduledAt: String
+  images: [UpdateImages]
+}
+type UpdateImages {
+  id: ID!
+  update: Update
+  imageUrl: String
+}
+enum ScheduleType {
+  product
+  feed
+  upload
+  link
+  blog
+}

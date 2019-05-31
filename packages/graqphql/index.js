@@ -7,6 +7,13 @@ const graphiql = require("graphql-playground-middleware-express").default;
 const requireGraphQLFile = require('require-graphql-file');
 const resolvers = require("./modules/resolvers");
 const typeDefs = requireGraphQLFile('./schema/schema');
+const commonTypeDefs = requireGraphQLFile('./schema/common.schema');
+const productTypeDefs = requireGraphQLFile('./schema/product.schema');
+const profileTypeDefs = requireGraphQLFile('./schema/profile.schema');
+const ruleTypeDefs = requireGraphQLFile('./schema/rule.schema');
+const storeTypeDefs = requireGraphQLFile('./schema/store.schema');
+const updateTypeDefs = requireGraphQLFile('./schema/update.schema');
+
 
 const app = express();
 app.use((request, response, next) => {
@@ -22,7 +29,7 @@ app.use((request, response, next) => {
 
 
 const server = new ApolloServer({
-  typeDefs,
+  typeDefs: [typeDefs, commonTypeDefs, productTypeDefs, profileTypeDefs, ruleTypeDefs, storeTypeDefs, updateTypeDefs],
   resolvers,
   path: "/graphql"
 });

@@ -1,0 +1,110 @@
+type Rule {
+  id: ID!
+  store: Store!
+  service: Service!
+  type: RuleTypes!,
+  profiles: [Profile]
+  postingTimeOption: RulePostingTimeOptions # one of the option from the publish timing option (post between timings or custom timing sections)
+  postTimings: [RulePostTimings]
+  postAsOption: ProfilePostingOptions
+  collectionOption: collectionOptions
+  collections: [Collection]
+  allowZeroQuantity: Boolean
+  postAsVariants: Boolean
+  postingProductOrder: PostingSortOrder
+  repeatFrequency: Int
+  captions: [Caption]
+  queueOption: RuleQueueOption
+}
+type Caption {
+  rule: Rule
+  text: String
+  startDate: String
+  endDate: String
+}
+input RuleInput {
+  id: ID
+  store: ID!
+  service: Service!
+  type: RuleTypes!,
+  profiles: [ID!]
+  postingTimeOption: RulePostingTimeOptions
+  postTimings: [RulePostTimingsInput]
+  postAsOption: ProfilePostingOptions
+  collectionOption: collectionOptions
+  collections: [ID!]
+  allowZeroQuantity: Boolean
+  postAsVariants: Boolean
+  postingProductOrder: PostingSortOrder
+  repeatFrequency: Int
+  captions: [CreateCaptionInput]
+  queueOption: RuleQueueOption
+}
+
+input CreateCaptionInput {
+  text: String
+  startDate: String
+  endDate: String
+}
+
+enum RuleTypes {
+  old
+  new
+  sale
+}
+
+enum RuleQueueOption {
+  pause
+  replace
+}
+
+input RulePostTimingsInput {
+  postingInterval: Int #number of seconds.
+  startPostingHour: Int
+  endPostingHour: Int
+  postingHour: Int
+  postingMinute: Int
+  postingDays: [Int]
+}
+
+enum RulePostingTimeOptions {
+  postImmediately
+  postBetweenWithInterval
+  customTimings
+}
+
+enum collectionOptions {
+  selectProductsFromAll
+  selectProductsFromSelected
+  dontSelectProductsFromSelected
+}
+
+enum PostingSortOrder {
+  random
+  newest
+}
+
+type RulePostTimings {
+  postingInterval: Int
+  startPostingHour: Int
+  endPostingHour: Int
+  postingHour: Int
+  postingMinute: Int
+}
+
+enum ProfilePostingOptions {
+  none
+  facebookPostAsAlbum
+  facebookPostAsLink
+  facebookPostAsPhoto
+  twitterPostAsSinglePhoto
+  twitterPostAsMultiplePhoto
+  twitterPostAsLink
+}
+
+input ModelRuleFilterInput {
+  storeId: ID!
+  service: Service!
+  type: RuleTypes!
+}
+

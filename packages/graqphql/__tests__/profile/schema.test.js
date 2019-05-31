@@ -1,9 +1,8 @@
 const addMockFunctionsToSchema = require('graphql-tools').addMockFunctionsToSchema;
-const requireGraphQLFile = require('require-graphql-file');
 const mockServer = require('graphql-tools').mockServer;
-const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
 const graphql = require('graphql').graphql;
-const typeDefs = requireGraphQLFile('../../schema/schema');
+const mockSchema = require('../mockSchema').mockSchema;
+
 const item = {
   id: '1',
   name: 'Title',
@@ -18,7 +17,6 @@ const item = {
     accessTokenSecret: 'Title',
     isConnected: false,
     isTokenExpired: false,
-    isSharePossible: false,
   },
   avatarUrl: 'Title',
   serviceUsername: 'Title',
@@ -28,7 +26,6 @@ const item = {
   accessTokenSecret: 'Title',
   isConnected: false,
   isTokenExpired: false,
-  isSharePossible: false,
   store: {
     uniqKey: 'Title'
   }
@@ -52,7 +49,7 @@ const connectFacebookTestCase = {
             accessTokenSecret
             isConnected
             isTokenExpired
-            isSharePossible
+            
           }
           avatarUrl
           serviceUsername
@@ -62,7 +59,7 @@ const connectFacebookTestCase = {
           accessTokenSecret
           isConnected
           isTokenExpired
-          isSharePossible
+          
           store {
             uniqKey
           }
@@ -170,7 +167,6 @@ const connectFacebookTestCase = {
 const cases = [connectFacebookTestCase];
 
 describe('Schema', () => {
-  const mockSchema = makeExecutableSchema({ typeDefs });
   addMockFunctionsToSchema({
     schema: mockSchema,
     mocks: {
@@ -182,17 +178,8 @@ describe('Schema', () => {
     }
   });
 
-  test('Has valid type definitions', async () => {
-    expect(async () => {
-      const MockServer = mockServer(typeDefs);
-
-      await MockServer.query(`{ __schema { types { name } } }`);
-    }).not.toThrow();
-  });
-
   cases.forEach(obj => {
     const { id, query, variables, context: ctx, expected } = obj;
-
     test(`Testing Query: ${id}`, async () => {
       result = graphql(mockSchema, query, null, { ctx }, variables);
       console.log('expected', expected.data);

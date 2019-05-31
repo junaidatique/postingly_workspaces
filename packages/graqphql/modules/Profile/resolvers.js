@@ -46,10 +46,7 @@ module.exports = {
 
       if (!_.isEmpty(args)) {
         _.each(args.input, async (value, key) => {
-          console.log({ id: value.id });
-          console.log({ isConnected: value.isConnected });
           res = await ProfileModel.updateOne({ _id: value.id }, { isConnected: value.isConnected });
-          console.log(res);
         });
       }
       const profileIds = args.input.map(profile => {

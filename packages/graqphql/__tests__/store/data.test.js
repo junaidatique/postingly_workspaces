@@ -1,13 +1,7 @@
-const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
-const requireGraphQLFile = require('require-graphql-file');
-
 const graphql = require('graphql').graphql;
 const faker = require('faker');
-const resolvers = require("graqphql/modules/resolvers")
-const typeDefs = requireGraphQLFile('../../schema/schema');
-
 const mongoose = require('mongoose');
-const schema = makeExecutableSchema({ typeDefs: typeDefs, resolvers: resolvers });
+const schema = require('../executableSchema').schema;
 
 
 

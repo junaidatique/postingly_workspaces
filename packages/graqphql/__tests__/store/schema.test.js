@@ -1,10 +1,9 @@
 const addMockFunctionsToSchema = require('graphql-tools').addMockFunctionsToSchema;
-const requireGraphQLFile = require('require-graphql-file');
-const mockServer = require('graphql-tools').mockServer;
-const makeExecutableSchema = require('graphql-tools').makeExecutableSchema;
-const graphql = require('graphql').graphql;
-const typeDefs = requireGraphQLFile('../../schema/schema');
 
+const graphql = require('graphql').graphql;
+const typeDefs = require('../mockSchema').typeDefs;
+
+const mockSchema = makeExecutableSchema({ typeDefs: typeDefs });
 
 const item = {
   id: '1',
@@ -119,7 +118,7 @@ const createStoreCase = {
   id: 'Create Store Mutation',
   query: `
       mutation {
-        createStore (input: {id: "Title", userId: "Title", partner: "Title", title: "Title", partnerId: "Title"}) {
+        createStore (input: {id: "Title", userId: "Title", partner: "Title", title: "Title", partnerId: "Title", partnerToken: "Title"}) {
           id
           userId
           title
@@ -194,7 +193,7 @@ const cases = [listStoresCase, getStoreCase, createStoreCase, updateStoreCase];
 // const cases = [listStoresCase, createStoreCase];
 
 describe('Schema', () => {
-  const mockSchema = makeExecutableSchema({ typeDefs });
+
 
   addMockFunctionsToSchema({
     schema: mockSchema,
@@ -207,13 +206,6 @@ describe('Schema', () => {
     }
   });
 
-  test('Has valid type definitions', async () => {
-    expect(async () => {
-      const MockServer = mockServer(typeDefs);
-
-      await MockServer.query(`{ __schema { types { name } } }`);
-    }).not.toThrow();
-  });
 
   cases.forEach(obj => {
     const { id, query, variables, context: ctx, expected } = obj;
