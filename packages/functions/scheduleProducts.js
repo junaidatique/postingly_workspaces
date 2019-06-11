@@ -1,6 +1,6 @@
 const shared = require('shared');
 const moment = require('moment')
-const { NOT_SCHEDULED, SCHEDULED, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
+const { NOT_SCHEDULED, SCHEDULED, SCHEDULE_TYPE_PRODUCT, COLLECTION_OPTION_SELECTED, COLLECTION_OPTION_NOT_SELECTED } = require('shared/constants');
 
 
 module.exports = {
@@ -11,14 +11,14 @@ module.exports = {
       const ProfileModel = shared.ProfileModel;
       const UpdateModel = shared.UpdateModel;
       const ProductModel = shared.ProductModel;
+      const CollectionModel = shared.CollectionModel;
 
-      let query, products, counter = 0, updates, update, existingUpdates, existingUpdateProducts;
+      let query, products, counter = 0, updates, update, includeProducts = [], excludeProducts = [];
       const ruleDetail = await RuleModel.findById(event.ruleId);
       if (ruleDetail === null) {
         throw new Error(`rule not found for ${event.ruleId}`);
       }
       const storeDetail = await StoreModel.findById(ruleDetail.store);
-
 
       query = ProductModel.where({ store: storeDetail._id, active: true, postableByPrice: true });
       if (ruleDetail.type == 'old') {
@@ -33,30 +33,42 @@ module.exports = {
         query = query.limit(-1).skip(Math.random() * ProductModel.count())
       }
 
-      // query = query.where('_id').nin()
-      query = query.limit(100);
-      products = await query;
+      if (ruleDetail.collectionOption === COLLECTION_OPTION_SELECTED) {
+        const collectionRecrods = await CollectionModel.where('_id').in(ruleDetail.collections);
+        const collectionProducts = [].concat.apply([], collectionRecrods.map(collection => collection.products)).filter((v, i, a) => a.indexOf(v) === i);;
+        includeProducts = [...includeProducts, ...collectionProducts];
+      } else if (ruleDetail.collectionOption === COLLECTION_OPTION_NOT_SELECTED) {
+        const collectionRecrods = await CollectionModel.where('_id').in(ruleDetail.collections);
+        const collectionProducts = [].concat.apply([], collectionRecrods.map(collection => collection.products)).filter((v, i, a) => a.indexOf(v) === i);;
+        excludeProducts = [...excludeProducts, ...collectionProducts];
+      }
 
       await Promise.all(ruleDetail.profiles.map(async profile => {
-        0
-        existingUpdates = await UpdateModel.find(
+        const existingUpdates = await UpdateModel.find(
           {
             profile: profile,
             scheduleState: SCHEDULED,
             scheduleType: SCHEDULE_TYPE_PRODUCT,
           }
-        ).where('product').exists();
-        existingUpdateProducts = existingUpdates.map(product => product);
+        ).where('product').exists().where('rule').exists();
+        const existingUpdateProducts = existingUpdates.map(product => product);
+        excludeProducts = [...excludeProducts, ...existingUpdateProducts];
+        if (excludeProducts.length > 0) {
+          query = query.where('_id').nin(excludeProducts);
+        }
+        if (includeProducts.length > 0) {
+          query = query.where('_id').in(includeProducts);
+        }
         updates = await UpdateModel.find({ rule: ruleDetail._id, profile: profile, scheduleState: NOT_SCHEDULED, scheduleTime: { $gt: moment.utc() }, scheduleType: SCHEDULE_TYPE_PRODUCT }).sort({ scheduleTime: 1 });
-        // console.log('updates', updates);
         if (updates.length > 0) {
+          query = query.limit(updates.length);
+          products = await query;
           counter = 0;
           await Promise.all(products.map(async product => {
             update = updates[counter];
             update.product = product._id;
             update.scheduleState = SCHEDULED;
             counter++;
-            // console.log('--------------', update);
             await update.save();
 
           }));

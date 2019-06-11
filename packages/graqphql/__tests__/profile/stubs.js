@@ -25,8 +25,8 @@ const createFBPageProfileStub = async (storeId, isConnected, numberOfProfiles) =
   }
   const parentInstance = await ProfileModel.create(parentParams);
   await storeDetail.profiles.push(parentInstance);
-  await storeDetail.save();
-  const storeDetailUpdated = await StoreModel.findById(storeId);
+  // await storeDetail.save();
+  // const storeDetailUpdated = await StoreModel.findById(storeId);
   let childParams = {}
   let child;
   for (let i = 1; i <= numberOfProfiles; i++) {
@@ -50,10 +50,10 @@ const createFBPageProfileStub = async (storeId, isConnected, numberOfProfiles) =
     };
 
     child = await ProfileModel.create(childParams);
-    await storeDetailUpdated.profiles.push(child);
+    await storeDetail.profiles.push(child);
     await parentInstance.children.push(child);
   }
-  await storeDetailUpdated.save();
+  await storeDetail.save();
   await parentInstance.save();
   return parentInstance.children;
 }
