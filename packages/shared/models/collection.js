@@ -52,7 +52,7 @@ collectionSchema.set('timestamps', true);
 
 
 if (process.env.IS_OFFLINE) {
-  delete mongoose.connection.models.Product;
+  delete mongoose.connection.models.Collection;
 }
 
-module.exports = mongoose.model('Product', collectionSchema);
+module.exports = mongoose.model('Collection', collectionSchema);

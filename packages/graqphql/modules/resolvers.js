@@ -2,6 +2,7 @@ const storeResolvers = require('./Store/resolvers');
 const profileResolvers = require('./Profile/resolvers');
 const ruleResolvers = require('./Rule/resolvers');
 const productResolvers = require('./Product/resolvers');
+const updateResolvers = require('./Update/resolvers');
 
 module.exports = {
   Query: {
@@ -9,7 +10,8 @@ module.exports = {
     listStores: storeResolvers.listStores,
     listProfiles: profileResolvers.listProfiles,
     listRules: ruleResolvers.listRules,
-    listProducts: productResolvers.listProducts
+    listProducts: productResolvers.listProducts,
+    listUpdates: updateResolvers.listUpdates
   },
   Mutation: {
     createStore: storeResolvers.createStore,

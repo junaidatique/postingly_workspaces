@@ -5,6 +5,8 @@ const schema = require('../executableSchema').schema;
 const storeStub = require("../store/stubs");
 const profileStub = require("../profile/stubs");
 
+const { CUSTOM_TIMINGS } = require('shared/constants');
+
 describe('Rule Model', () => {
   let storeId, profiles, ruleId;
   const service = 'Facebook';
@@ -23,7 +25,7 @@ describe('Rule Model', () => {
     done();
   });
 
-  test(`Create Rule with customTimings Option `, async () => {
+  test(`Create Rule with ${CUSTOM_TIMINGS} Option `, async () => {
     createRuleInput = {
       store: storeId,
       service: service,
@@ -32,7 +34,7 @@ describe('Rule Model', () => {
         profiles[0]._id,
         profiles[1]._id
       ],
-      postingTimeOption: 'customTimings',
+      postingTimeOption: CUSTOM_TIMINGS,
       postTimings: [
         {
           postingHour: 15,
@@ -69,7 +71,7 @@ describe('Rule Model', () => {
 
     let createRuleInputJson = JSON.stringify(createRuleInput).replace(/\"([^(\")"]+)\":/g, "$1:")
     createRuleInputJson = createRuleInputJson.replace('"Facebook"', 'Facebook');
-    createRuleInputJson = createRuleInputJson.replace('"customTimings"', 'customTimings');
+    createRuleInputJson = createRuleInputJson.replace(`"${CUSTOM_TIMINGS}"`, CUSTOM_TIMINGS);
     createRuleInputJson = createRuleInputJson.replace('"facebookPostAsAlbum"', 'facebookPostAsAlbum');
     createRuleInputJson = createRuleInputJson.replace('"selectProductsFromAll"', 'selectProductsFromAll');
     createRuleInputJson = createRuleInputJson.replace('"random"', 'random');
@@ -95,8 +97,8 @@ describe('Rule Model', () => {
     expect(result.data.manageRule.service).toEqual(service);
     ruleId = result.data.manageRule.id;
   }, 30000);
-  test(`Update Rule with customTimings Option `, async () => {
-    createRuleInput = {
+  test(`Update Rule with ${CUSTOM_TIMINGS} Option `, async () => {
+    updateRuleInput = {
       id: ruleId,
       store: storeId,
       service: service,
@@ -105,7 +107,7 @@ describe('Rule Model', () => {
         profiles[0]._id,
         profiles[1]._id
       ],
-      postingTimeOption: 'customTimings',
+      postingTimeOption: CUSTOM_TIMINGS,
       postTimings: {
         postingInterval: 30
       },
@@ -125,19 +127,19 @@ describe('Rule Model', () => {
 
     }
 
-    let createRuleInputJson = JSON.stringify(createRuleInput).replace(/\"([^(\")"]+)\":/g, "$1:")
-    createRuleInputJson = createRuleInputJson.replace('"Facebook"', 'Facebook');
-    createRuleInputJson = createRuleInputJson.replace('"customTimings"', 'customTimings');
-    createRuleInputJson = createRuleInputJson.replace('"facebookPostAsLink"', 'facebookPostAsLink');
-    createRuleInputJson = createRuleInputJson.replace('"selectProductsFromAll"', 'selectProductsFromAll');
-    createRuleInputJson = createRuleInputJson.replace('"random"', 'random');
-    createRuleInputJson = createRuleInputJson.replace('"old"', 'old');
-    createRuleInputJson = createRuleInputJson.replace('"pause"', 'pause');
-    const createRuleTestCase = {
+    let updateRuleInputJson = JSON.stringify(updateRuleInput).replace(/\"([^(\")"]+)\":/g, "$1:")
+    updateRuleInputJson = updateRuleInputJson.replace('"Facebook"', 'Facebook');
+    updateRuleInputJson = updateRuleInputJson.replace(`"${CUSTOM_TIMINGS}"`, CUSTOM_TIMINGS);
+    updateRuleInputJson = updateRuleInputJson.replace('"facebookPostAsLink"', 'facebookPostAsLink');
+    updateRuleInputJson = updateRuleInputJson.replace('"selectProductsFromAll"', 'selectProductsFromAll');
+    updateRuleInputJson = updateRuleInputJson.replace('"random"', 'random');
+    updateRuleInputJson = updateRuleInputJson.replace('"old"', 'old');
+    updateRuleInputJson = updateRuleInputJson.replace('"pause"', 'pause');
+    const updateRuleTestCase = {
       id: 'Update Rule',
       query: `
         mutation {
-          manageRule(input: ${createRuleInputJson})
+          manageRule(input: ${updateRuleInputJson})
           {
             service
           }
@@ -145,9 +147,9 @@ describe('Rule Model', () => {
       `,
       variables: {},
       context: {},
-      expected: { data: { manageRule: [createRuleInput] } }
+      expected: { data: { manageRule: [updateRuleInput] } }
     };
-    const result = await graphql(schema, createRuleTestCase.query, null, createRuleTestCase.context, createRuleTestCase.variables);
+    const result = await graphql(schema, updateRuleTestCase.query, null, updateRuleTestCase.context, updateRuleTestCase.variables);
     console.log('result', result);
     expect(result.data.manageRule.service).toEqual(service);
   }, 30000);

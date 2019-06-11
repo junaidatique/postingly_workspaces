@@ -4,8 +4,8 @@ const StoreModel = require('shared').StoreModel;
 
 
 const createFBPageProfileStub = async (storeId, isConnected, numberOfProfiles) => {
-  const storeDetail = await StoreModel.findById(storeId);
-
+  let storeDetail = await StoreModel.findById(storeId);
+  // console.log('storedetail in profile model stub', storeDetail);
   let serviceUserId = faker.random.number({ min: 10000000 });
   let uniqKey = `facebookProfile-${serviceUserId}`;
   const parentParams = {
@@ -25,8 +25,8 @@ const createFBPageProfileStub = async (storeId, isConnected, numberOfProfiles) =
   }
   const parentInstance = await ProfileModel.create(parentParams);
   await storeDetail.profiles.push(parentInstance);
-
-
+  await storeDetail.save();
+  const storeDetailUpdated = await StoreModel.findById(storeId);
   let childParams = {}
   let child;
   for (let i = 1; i <= numberOfProfiles; i++) {
@@ -50,10 +50,10 @@ const createFBPageProfileStub = async (storeId, isConnected, numberOfProfiles) =
     };
 
     child = await ProfileModel.create(childParams);
-    await storeDetail.profiles.push(child);
+    await storeDetailUpdated.profiles.push(child);
     await parentInstance.children.push(child);
   }
-  await storeDetail.save();
+  await storeDetailUpdated.save();
   await parentInstance.save();
   return parentInstance.children;
 }

@@ -5,6 +5,7 @@ type Query {
   listRules(filter: ModelRuleFilterInput, limit: Int, skip: Int): [Rule]
   getRule(id: ID!): Rule
   listProducts(filter: ModelProductFilterInput!, limit: Int, skip: Int): [Product]
+  listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): [Update]
 }
 
 

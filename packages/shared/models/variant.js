@@ -11,7 +11,7 @@ const variantSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Product'
   },
-  // images: [IMAGE_SCHEMA],
+  images: [IMAGE_SCHEMA],
   title: {
     type: String,
     required: true,

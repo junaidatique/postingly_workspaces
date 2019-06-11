@@ -56,21 +56,16 @@ const ruleSchema = new mongoose.Schema({
       ref: 'Profile'
     }
   ],
-  updates: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Update'
-    }
-  ],
+
   postingTimeOption: {
     type: String,
-    enum: POSTING_TIME_OPTIONS,
+    enum: POSTING_TIME_OPTIONS, // POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS
     index: true
   },
-  postTimings: [POST_TIMING],
+  postTimings: [POST_TIMING], // actual timings. 
   postAsOption: {
     type: String,
-    enum: POST_AS_OPTION
+    enum: POST_AS_OPTION // post as link, phtot etc.
   },
   collectionOption: {
     type: String,
@@ -102,7 +97,7 @@ const ruleSchema = new mongoose.Schema({
   },
   queueOption: {
     type: String,
-    enum: QUEUE_OPTIONS
+    enum: QUEUE_OPTIONS // 'pause', 'replace'
   },
   captions: [CAPTION],
   startDate: {

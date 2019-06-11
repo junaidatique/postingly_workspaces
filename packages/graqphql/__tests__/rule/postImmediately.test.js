@@ -5,6 +5,8 @@ const schema = require('../executableSchema').schema;
 const storeStub = require("../store/stubs");
 const profileStub = require("../profile/stubs");
 
+const { POST_IMMEDIATELY } = require('shared/constants');
+
 describe('Rule Model', () => {
   let storeId, profiles, ruleId;
   const service = 'Facebook';
@@ -30,9 +32,8 @@ describe('Rule Model', () => {
       type: type,
       profiles: [
         profiles[0]._id,
-        profiles[1]._id
       ],
-      postingTimeOption: 'postImmediately',
+      postingTimeOption: POST_IMMEDIATELY,
       postTimings: [
         {
           postingInterval: 120,
@@ -93,9 +94,8 @@ describe('Rule Model', () => {
       type: type,
       profiles: [
         profiles[0]._id,
-        profiles[1]._id
       ],
-      postingTimeOption: 'postImmediately',
+      postingTimeOption: POST_IMMEDIATELY,
       postTimings: [
         {
           postingInterval: 180,

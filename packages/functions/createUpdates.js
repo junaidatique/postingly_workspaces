@@ -1,9 +1,12 @@
 const shared = require('shared');
 const moment = require('moment');
+const { NOT_SCHEDULED, SCHEDULED, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
 
 module.exports = {
   createUpdates: async function (event, context) {
     try {
+      let updateTimes = [];
+      let startTime, endTime;
       const RuleModel = shared.RuleModel;
       const StoreModel = shared.StoreModel;
       const UpdateModel = shared.UpdateModel;
@@ -12,7 +15,7 @@ module.exports = {
         throw new Error(`rule not found for ${event.id}`);
       }
       const storeDetail = await StoreModel.findById(ruleDetail.store);
-      if (ruleDetail.postingTimeOption === 'postImmediately') {
+      if (ruleDetail.postingTimeOption === POST_IMMEDIATELY) {
         let startOfWeek;
         if (event.scheduleWeek == 'next') {
           startOfWeek = moment().utc().startOf('isoWeek');
@@ -20,40 +23,19 @@ module.exports = {
           startOfWeek = moment.unix(moment().unix() - (moment().unix() % (ruleDetail.postTimings[0].postingInterval * 60)));
         }
         const endOfWeek = moment().utc().endOf('isoWeek');
-        const r = await UpdateModel.deleteMany(
-          {
-            store: storeDetail._id,
-            rule: ruleDetail._id,
-            scheduleTime: { $gte: startOfWeek.toDate(), $lte: endOfWeek.toDate() },
-            scheduleState: { $in: ['not_scheduled', 'scheduled'] }
-          }
-        );
+        startTime = startOfWeek;
+        endTime = endOfWeek;
         for (let loopTime = startOfWeek; loopTime.isBefore(endOfWeek); loopTime = loopTime.add(ruleDetail.postTimings[0].postingInterval, 'minute')) {
           if (loopTime.isAfter(moment.utc())) {
-            UpdateModel.create(
-              {
-                store: storeDetail._id,
-                rule: ruleDetail._id,
-                service: ruleDetail.service,
-                postAsOption: ruleDetail.postAsOption,
-                scheduleTime: loopTime.toISOString(),
-                scheduleState: 'not_scheduled',
-                postType: ruleDetail.type,
-              })
+            updateTimes.push(loopTime.toISOString());
           }
         }
-      } else if (ruleDetail.postingTimeOption === 'postBetweenWithInterval') {
+      } else if (ruleDetail.postingTimeOption === POST_BETWEEN_WITH_INTERVAL) {
         const startOfWeek = moment().startOf('isoWeek').unix();
         const endOfWeek = moment().endOf('isoWeek').unix();
-        const r = await UpdateModel.deleteMany(
-          {
-            store: storeDetail._id,
-            rule: ruleDetail._id,
-            scheduleTime: { $gte: moment().utc().toDate(), $lte: moment().endOf('isoWeek').toDate() },
-            scheduleState: { $in: ['not_scheduled', 'scheduled'] }
-          }
-        );
-        // console.log(r);
+        startTime = startOfWeek;
+        endTime = endOfWeek;
+
         let currentDay;
         for (let day = startOfWeek; day <= endOfWeek; day = day + 86400) {
           currentDay = moment.unix(day);
@@ -61,47 +43,49 @@ module.exports = {
           const endHour = moment().year(currentDay.year()).month(currentDay.month()).date(currentDay.date()).hour(ruleDetail.postTimings[0].endPostingHour).minute(0).second(0);
           for (let hour = startHour; hour <= endHour; hour = hour.add(ruleDetail.postTimings[0].postingInterval, 'minute')) {
             if (hour.isAfter(moment.utc())) {
-              UpdateModel.create(
-                {
-                  store: storeDetail._id,
-                  rule: ruleDetail._id,
-                  service: ruleDetail.service,
-                  postAsOption: ruleDetail.postAsOption,
-                  scheduleTime: hour.toISOString(),
-                  scheduleState: 'not_scheduled',
-                  postType: ruleDetail.type,
-                })
+              updateTimes.push(hour.toISOString());
             }
           }
         }
-      } else if (ruleDetail.postingTimeOption === 'customTimings') {
-        const r = await UpdateModel.deleteMany(
-          {
-            store: storeDetail._id,
-            rule: ruleDetail._id,
-            scheduleTime: { $gte: moment().utc().toDate(), $lte: moment().endOf('isoWeek').toDate() },
-            scheduleState: { $in: ['not_scheduled', 'scheduled'] }
-          }
-        );
+      } else if (ruleDetail.postingTimeOption === CUSTOM_TIMINGS) {
+        startTime = moment().utc().toDate();
+        endTime = moment().endOf('isoWeek').toDate();
+
         const startOfWeek = moment().startOf('isoWeek').unix();
         let postDay, hour;
         ruleDetail.postTimings.forEach((postTime) => {
           postTime.postingDays.forEach((postDay) => {
             postDay = moment.unix(startOfWeek + (86400 * (postDay - 1)));
             hour = moment().year(postDay.year()).month(postDay.month()).date(postDay.date()).hour(postTime.postingHour).minute(postTime.postingMinute).second(0);
-            UpdateModel.create(
-              {
-                store: storeDetail._id,
-                rule: ruleDetail._id,
-                service: ruleDetail.service,
-                postAsOption: ruleDetail.postAsOption,
-                scheduleTime: hour.toISOString(),
-                scheduleState: 'not_scheduled',
-                postType: ruleDetail.type,
-              })
+            updateTimes.push(hour.toISOString());
+
           })
         });
       }
+      const r = await UpdateModel.deleteMany(
+        {
+          store: storeDetail._id,
+          rule: ruleDetail._id,
+          scheduleTime: { $gte: startTime, $lte: endTime },
+          scheduleState: { $in: [NOT_SCHEDULED, SCHEDULED] }
+        }
+      );
+      await Promise.all(updateTimes.map(async loopTime => {
+        await Promise.all(ruleDetail.profiles.map(async profile => {
+          await UpdateModel.create(
+            {
+              store: storeDetail._id,
+              rule: ruleDetail._id,
+              profile: profile,
+              service: ruleDetail.service,
+              postAsOption: ruleDetail.postAsOption,
+              scheduleTime: loopTime,
+              scheduleState: NOT_SCHEDULED,
+              postType: ruleDetail.type,
+              scheduleType: SCHEDULE_TYPE_PRODUCT
+            })
+        }));
+      }));
     } catch (error) {
       console.error(error.message);
     }

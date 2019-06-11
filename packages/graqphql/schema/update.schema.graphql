@@ -11,12 +11,10 @@ type Update {
   profile: Profile
   variant: Variant
   bufferId: String
-  scheduleOn: String
-  utcScheduleTime: String
-  userScheduleTime: String
-  formattedUtcScheduleTime: String
-  formattedUserScheduleTime: String
-  scheduledAt: String
+
+  
+  scheduleTime: String
+  scheduleState: ScheduleState!
   images: [UpdateImages]
 }
 type UpdateImages {
@@ -26,8 +24,27 @@ type UpdateImages {
 }
 enum ScheduleType {
   product
+  variant
   feed
   upload
   link
   blog
+}
+
+enum ScheduleState {
+  scheduled
+  posted
+  failed
+  paused
+}
+
+input ModelUpdateFilterInput {
+  store: ModelIDFilterInput!
+  service: ModelStringFilterInput!
+  profile: ModelIDFilterInput
+  type: ModelStringFilterInput
+  postType: ModelStringFilterInput
+  scheduleType: ModelStringFilterInput
+  scheduleTime: ModelStringFilterInput
+  scheduleState: ScheduleState
 }

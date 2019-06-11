@@ -78,6 +78,6 @@ type Collection {
 
 
 input ModelProductFilterInput {
-  store: ModelStringFilterInput!
+  store: ModelIDFilterInput!
   title: ModelStringFilterInput
 }

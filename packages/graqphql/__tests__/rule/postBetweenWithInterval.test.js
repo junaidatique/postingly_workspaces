@@ -5,6 +5,8 @@ const schema = require('../executableSchema').schema;
 const storeStub = require("../store/stubs");
 const profileStub = require("../profile/stubs");
 
+const { POST_BETWEEN_WITH_INTERVAL } = require('shared/constants');
+
 describe('Rule Model', () => {
   let storeId, profiles, ruleId;
   const service = 'Facebook';
@@ -23,7 +25,7 @@ describe('Rule Model', () => {
     done();
   });
 
-  test(`Create Rule with postBetweenWithInterval Option `, async () => {
+  test(`Create Rule with ${POST_BETWEEN_WITH_INTERVAL} Option `, async () => {
     createRuleInput = {
       store: storeId,
       service: service,
@@ -32,7 +34,7 @@ describe('Rule Model', () => {
         profiles[0]._id,
         profiles[1]._id
       ],
-      postingTimeOption: 'postBetweenWithInterval',
+      postingTimeOption: POST_BETWEEN_WITH_INTERVAL,
       postTimings: [
         {
           postingInterval: 120,
@@ -60,7 +62,7 @@ describe('Rule Model', () => {
 
     let createRuleInputJson = JSON.stringify(createRuleInput).replace(/\"([^(\")"]+)\":/g, "$1:")
     createRuleInputJson = createRuleInputJson.replace('"Facebook"', 'Facebook');
-    createRuleInputJson = createRuleInputJson.replace('"postBetweenWithInterval"', 'postBetweenWithInterval');
+    createRuleInputJson = createRuleInputJson.replace(`"${POST_BETWEEN_WITH_INTERVAL}"`, `${POST_BETWEEN_WITH_INTERVAL}`);
     createRuleInputJson = createRuleInputJson.replace('"facebookPostAsAlbum"', 'facebookPostAsAlbum');
     createRuleInputJson = createRuleInputJson.replace('"selectProductsFromAll"', 'selectProductsFromAll');
     createRuleInputJson = createRuleInputJson.replace('"random"', 'random');
@@ -86,7 +88,7 @@ describe('Rule Model', () => {
     expect(result.data.manageRule.service).toEqual(service);
     ruleId = result.data.manageRule.id;
   }, 30000);
-  test(`Update Rule with postBetweenWithInterval Option `, async () => {
+  test(`Update Rule with ${POST_BETWEEN_WITH_INTERVAL} Option `, async () => {
     updateRuleInput = {
       id: ruleId,
       store: storeId,
@@ -96,7 +98,7 @@ describe('Rule Model', () => {
         profiles[0]._id,
         profiles[1]._id
       ],
-      postingTimeOption: 'postBetweenWithInterval',
+      postingTimeOption: POST_BETWEEN_WITH_INTERVAL,
       postTimings: [
         {
           postingInterval: 60,
@@ -125,7 +127,7 @@ describe('Rule Model', () => {
 
     let updateRuleInputJson = JSON.stringify(updateRuleInput).replace(/\"([^(\")"]+)\":/g, "$1:")
     updateRuleInputJson = updateRuleInputJson.replace('"Facebook"', 'Facebook');
-    updateRuleInputJson = updateRuleInputJson.replace('"postBetweenWithInterval"', 'postBetweenWithInterval');
+    updateRuleInputJson = updateRuleInputJson.replace(`"${POST_BETWEEN_WITH_INTERVAL}"`, `${POST_BETWEEN_WITH_INTERVAL}`);
     updateRuleInputJson = updateRuleInputJson.replace('"facebookPostAsLink"', 'facebookPostAsLink');
     updateRuleInputJson = updateRuleInputJson.replace('"selectProductsFromAll"', 'selectProductsFromAll');
     updateRuleInputJson = updateRuleInputJson.replace('"random"', 'random');
