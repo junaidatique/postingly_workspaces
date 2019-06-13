@@ -10,6 +10,7 @@ const ScheduleProductUpdates = {
       const RuleModel = shared.RuleModel;
       const UpdateModel = shared.UpdateModel;
       const ProductModel = shared.ProductModel;
+      const VariantModel = shared.VariantModel;
 
       // define vars
       let products, counter = 0, updates, update;
@@ -22,34 +23,47 @@ const ScheduleProductUpdates = {
       await Promise.all(ruleDetail.profiles.map(async profile => {
         updates = await UpdateModel.find({ rule: ruleDetail._id, profile: profile, scheduleState: NOT_SCHEDULED, scheduleTime: { $gt: moment.utc() }, scheduleType: SCHEDULE_TYPE_PRODUCT }).sort({ scheduleTime: 1 });
         if (updates.length > 0) {
-          products = await ScheduleProductUpdates.getProductsForSchedule(ruleDetail._id, profile, updates.length);
+          if (ruleDetail.postAsVariants) {
+            postItems = await ScheduleProductUpdates.getVariantsForSchedule(ruleDetail._id, profile, updates.length);
+          } else {
+            postItems = await ScheduleProductUpdates.getProductsForSchedule(ruleDetail._id, profile, updates.length);
+          }
+
 
           counter = 0;
-          await Promise.all(products.map(async product => {
+          await Promise.all(postItems.map(async item => {
             update = updates[counter];
-            update.product = product._id;
+            update.item = item._id;
             update.scheduleState = SCHEDULED;
             counter++;
             await update.save();
 
-            profileHistory = await product.shareHistory.map(history => {
+            profileHistory = await item.shareHistory.map(history => {
               if (history.profile.toString() == profile.toString()) {
                 return history
               }
             });
 
             if (_.isEmpty(profileHistory)) {
-              product.shareHistory = { profile: update.profile, counter: 1 };
-              await product.save();
+              item.shareHistory = { profile: update.profile, counter: 1 };
+              await item.save();
             } else {
-              // console.log(product.shareHistory[0]);
-              r = await ProductModel.updateOne({ _id: product._id, 'shareHistory.profile': profile },
-                {
-                  '$set': {
-                    'shareHistory.$.counter': profileHistory[0].counter + 1
-                  }
-                });
-              // console.log(r);
+              if (!ruleDetail.postAsVariants) {
+                r = await ProductModel.updateOne({ _id: item._id, 'shareHistory.profile': profile },
+                  {
+                    '$set': {
+                      'shareHistory.$.counter': profileHistory[0].counter + 1
+                    }
+                  });
+              } else {
+                r = await VariantModel.updateOne({ _id: item._id, 'shareHistory.profile': profile },
+                  {
+                    '$set': {
+                      'shareHistory.$.counter': profileHistory[0].counter + 1
+                    }
+                  });
+              }
+
             }
 
           }));
@@ -73,6 +87,7 @@ const ScheduleProductUpdates = {
     if (ruleDetail.type == RULE_TYPE_OLD) {
       query = query.where({ postableIsNew: false })
     } else if (ruleDetail.type == RULE_TYPE_NEW) {
+      query = query.where({ postableIsNew: true });
     }
     // if zero quantity is not allowed than only select in stock products 
     if (!ruleDetail.allowZeroQuantity) {
@@ -108,11 +123,12 @@ const ScheduleProductUpdates = {
 
     let query;
     const ruleDetail = await RuleModel.findById(ruleId);
-    query = ProductModel.find({ store: ruleDetail.store, active: true, postableByPrice: true });
+    query = VariantModel.find({ store: ruleDetail.store, active: true, postableByPrice: true });
     // if the rule is of type old than don't schedule new products
     if (ruleDetail.type == RULE_TYPE_OLD) {
       query = query.where({ postableIsNew: false })
     } else if (ruleDetail.type == RULE_TYPE_NEW) {
+      query = query.where({ postableIsNew: true });
     }
     // if zero quantity is not allowed than only select in stock products 
     if (!ruleDetail.allowZeroQuantity) {
@@ -126,7 +142,7 @@ const ScheduleProductUpdates = {
     if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
       query = query.sort({ partnerCreatedAt: desc })
     } else {
-      query = query.limit(-1).skip(Math.random() * ProductModel.count())
+      query = query.limit(-1).skip(Math.random() * VariantModel.count())
     }
     query = query.limit(limit);
     const notSharedOnThisProfile = query.find({ "shareHistory.profile": { $ne: profileId } });

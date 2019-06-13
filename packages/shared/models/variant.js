@@ -16,6 +16,12 @@ const variantSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Store'
   },
+  collections: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Collection'
+    }
+  ],
   product: {
     type: Schema.Types.ObjectId,
     ref: 'Product'
@@ -86,6 +92,7 @@ const variantSchema = new Schema({
     default: false,
     index: true
   },
+  shareHistory: [SHARE_HISTORY]
 });
 
 variantSchema.set('timestamps', true);

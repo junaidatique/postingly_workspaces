@@ -84,7 +84,7 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
       await collectionDetail.save();
 
       // variant
-      for (let j = 0; j <= 5; j++) {
+      for (let j = 1; j <= 5; j++) {
         title = faker.commerce.productName();
         partnerId = faker.random.number({ min: 10000000 });
         uniqKey = `${storeDetail.partner}-${partnerId}`
@@ -106,7 +106,10 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
           postableByQuantity,
           postableBySale,
           postableIsNew,
-          images: images
+          images: images,
+          collections: [
+            collectionId
+          ]
         };
         variant = await VariantModel.create(variantParams);
         t = await product.variants.push(variant);
