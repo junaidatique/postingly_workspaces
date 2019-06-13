@@ -8,7 +8,7 @@ const ruleStub = require("graqphql/__tests__/rule/stubs");
 const productStub = require("graqphql/__tests__/product/stubs");
 
 const scheduleProducts = require('functions').scheduleProducts.schedule;
-const { POST_IMMEDIATELY, COLLECTION_OPTION_ALL } = require('shared/constants');
+const { POST_IMMEDIATELY, COLLECTION_OPTION_ALL, POST_AS_OPTION_FB_ALBUM, POSTING_SORTORDER_RANDOM, QUEUE_OPTIONS_PAUSE, FACEBOOK_DEFAULT_TEXT } = require('shared/constants');
 
 describe('Rule Model', () => {
   let storeId, profiles, rule;
@@ -38,20 +38,25 @@ describe('Rule Model', () => {
         }
       ]
       ,
-      postAsOption: 'facebookPostAsAlbum',
+      postAsOption: POST_AS_OPTION_FB_ALBUM,
       collectionOption: COLLECTION_OPTION_ALL,
       allowZeroQuantity: true,
       postAsVariants: false,
       repeatFrequency: 0,
-      postingProductOrder: 'random',
-      queueOption: 'pause',
+      postingProductOrder: POSTING_SORTORDER_RANDOM,
+      queueOption: QUEUE_OPTIONS_PAUSE,
       captions: [
         {
-          text: 'Same Text 1'
-        },
-        {
-          text: 'Same Text 2'
-        },
+          collectionOption: COLLECTION_OPTION_ALL,
+          captionTexts: [
+            {
+              text: FACEBOOK_DEFAULT_TEXT
+            },
+            {
+              text: FACEBOOK_DEFAULT_TEXT
+            },
+          ]
+        }
       ]
     }
     rule = await ruleStub.createRuleStub(ruleParams);

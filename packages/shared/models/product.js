@@ -12,6 +12,13 @@ const SHORT_LINK = {
   }
 }
 
+const SHARE_HISTORY = {
+  profile: {
+    type: Schema.Types.ObjectId,
+    ref: 'Profile'
+  },
+  counter: Number
+}
 
 const productSchema = new Schema({
   store: {
@@ -104,6 +111,7 @@ const productSchema = new Schema({
     default: false,
     index: true
   },
+  shareHistory: [SHARE_HISTORY]
 
 });
 

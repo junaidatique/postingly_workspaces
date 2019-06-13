@@ -30,7 +30,7 @@ const createCollectionStub = async (storeId, numberOfCollections) => {
   }
 
 }
-const createProductStub = async (storeId, numberOfProducts, collectionId) => {
+const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQuantity = false) => {
   try {
     const storeDetail = await StoreModel.findById(storeId);
     let productParams, title, partnerId, uniqKey, quantity, minimumPrice,
@@ -43,7 +43,7 @@ const createProductStub = async (storeId, numberOfProducts, collectionId) => {
       title = faker.commerce.productName();
       partnerId = faker.random.number({ min: 10000000 });
       uniqKey = `${storeDetail.partner}-${partnerId}`;
-      quantity = faker.random.number({ min: 0, max: 10 });
+      quantity = (zeroQuantity) ? 0 : faker.random.number({ min: 1, max: 10 });
       minimumPrice = faker.random.number({ min: 2, max: 10 });
       maximumPrice = minimumPrice + faker.random.number({ min: 2, max: 5 });
       postableByQuantity = (quantity > 0) ? true : false;
@@ -71,7 +71,10 @@ const createProductStub = async (storeId, numberOfProducts, collectionId) => {
         postableByQuantity,
         postableBySale,
         postableIsNew,
-        images: images
+        images: images,
+        collections: [
+          collectionId
+        ]
       };
       product = await ProductModel.create(productParams);
 

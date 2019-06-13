@@ -12,6 +12,12 @@ provider:
   region: ${env:AWS_REGION}
 
 functions:
+  post-updates:
+    handler: postUpdates.share
+    events:
+      - schedule:
+          rate: cron(*/5 * * * ? *)
+          enabled: true
   data-seed:
     handler: seeddata.createStore
   data-test:

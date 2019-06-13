@@ -64,11 +64,6 @@ const updateSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  isFailed: {
-    type: Boolean,
-    default: false,
-    index: true
-  },
   failedMessage: {
     type: String
   }

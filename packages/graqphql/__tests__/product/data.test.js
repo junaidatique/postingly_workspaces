@@ -18,7 +18,8 @@ describe('Product Model', () => {
     }
     const storeDetail = await storeStub.createStoreStub();
     storeId = storeDetail._id;
-    products = await productStub.createProductStub(storeId, 10);
+    collections = await productStub.createCollectionStub(storeId, 3);
+    products = await productStub.createProductStub(storeId, 10, collections[0]._id);
     done();
   });
 

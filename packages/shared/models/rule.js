@@ -21,12 +21,11 @@ const POST_TIMING = {
   postingDays: [Number]
 };
 
-
-
-const CAPTION = {
+CAPTION_TEXT = {
   text: {
     type: String,
   },
+
   startDate: {
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,
@@ -35,6 +34,24 @@ const CAPTION = {
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
+}
+
+const CAPTION = {
+  collectionOption: {
+    type: String,
+    enum: COLLECTION_OPTION
+  },
+  collections: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Collection'
+    }
+  ],
+  isDefault: {
+    type: Boolean,
+    default: false,
+  },
+  captionTexts: [CAPTION_TEXT]
 }
 
 const ruleSchema = new mongoose.Schema({

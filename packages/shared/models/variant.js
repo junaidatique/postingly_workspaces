@@ -2,6 +2,15 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const { IMAGE_SCHEMA } = require('shared/constants');
 
+
+const SHARE_HISTORY = {
+  profile: {
+    type: Schema.Types.ObjectId,
+    ref: 'Profile'
+  },
+  counter: Number
+}
+
 const variantSchema = new Schema({
   store: {
     type: Schema.Types.ObjectId,
