@@ -1,6 +1,6 @@
 const shared = require('shared');
 const moment = require('moment');
-const { NOT_SCHEDULED, SCHEDULED, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
+const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
 
 module.exports = {
   createUpdates: async function (event, context) {
@@ -67,7 +67,7 @@ module.exports = {
           store: storeDetail._id,
           rule: ruleDetail._id,
           scheduleTime: { $gte: startTime, $lte: endTime },
-          scheduleState: { $in: [NOT_SCHEDULED, SCHEDULED] }
+          scheduleState: { $in: [NOT_SCHEDULED, PENDING] }
         }
       );
       await Promise.all(updateTimes.map(async loopTime => {

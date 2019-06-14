@@ -19,8 +19,7 @@ type Update {
 }
 type UpdateImages {
   id: ID!
-  update: Update
-  imageUrl: String
+  url: String
 }
 enum ScheduleType {
   product
@@ -32,7 +31,8 @@ enum ScheduleType {
 }
 
 enum ScheduleState {
-  scheduled
+  pending
+  approved
   posted
   failed
   paused
@@ -46,5 +46,5 @@ input ModelUpdateFilterInput {
   postType: ModelStringFilterInput
   scheduleType: ModelStringFilterInput
   scheduleTime: ModelStringFilterInput
-  scheduleState: ScheduleState
+  scheduleState: [ScheduleState]
 }

@@ -50,6 +50,7 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
       postableByPrice = (minimumPrice > 0) ? true : false;
       postableIsNew = false;
       postableBySale = false;
+      postableByImage = true;
       images = await createImageStub(storeDetail.partner, 'product');
       productParams = {
         store: storeId,
@@ -71,6 +72,7 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
         postableByQuantity,
         postableBySale,
         postableIsNew,
+        postableByImage,
         images: images,
         collections: [
           collectionId
@@ -106,6 +108,7 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
           postableByQuantity,
           postableBySale,
           postableIsNew,
+          postableByImage,
           images: images,
           collections: [
             collectionId
@@ -130,7 +133,7 @@ const createImageStub = async (partner, ref) => {
     uniqKey = `${ref}-${partner}-${partnerId}`
     images.push({
       partnerId: partnerId,
-      partnerSpecificUrl: faker.image.imageUrl(),
+      partnerSpecificUrl: faker.image.imageUrl(faker.random.number({ min: 10 * i, max: 10 * (i + 1) }), faker.random.number({ min: 10 * i, max: 10 * (i + 1) })),
       thumbnailUrl: faker.image.imageUrl(100, 100),
       partnerCreatedAt: faker.date.past().toISOString(),
       imgUniqKey: uniqKey,

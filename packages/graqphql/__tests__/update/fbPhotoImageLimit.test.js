@@ -1,4 +1,3 @@
-// this test case tests that the system should schedule those products which are not already scheduled.
 const graphql = require('graphql').graphql;
 const mongoose = require('mongoose');
 const schema = require('graqphql/__tests__/executableSchema').schema;
@@ -10,22 +9,12 @@ const productStub = require("graqphql/__tests__/product/stubs");
 
 const scheduleProducts = require('functions').scheduleProducts.schedule;
 const cronUpdates = require('functions').cronUpdates.share;
-const {
-  POST_IMMEDIATELY,
-  PENDING, APPROVED,
-  COLLECTION_OPTION_ALL,
-  FACEBOOK_SERVICE,
-  RULE_TYPE_OLD,
-  POST_AS_OPTION_FB_ALBUM,
-  POSTING_SORTORDER_RANDOM,
-  QUEUE_OPTIONS_PAUSE,
-  FACEBOOK_DEFAULT_TEXT
-} = require('shared/constants');
+const { POST_IMMEDIATELY, PENDING, APPROVED, COLLECTION_OPTION_ALL, POST_AS_OPTION_FB_PHOTO, POSTING_SORTORDER_RANDOM, QUEUE_OPTIONS_PAUSE, FACEBOOK_DEFAULT_TEXT } = require('shared/constants');
 
 describe('Rule Model', () => {
   let storeId, profiles, rule;
-  const service = FACEBOOK_SERVICE;
-  const type = RULE_TYPE_OLD;
+  const service = 'Facebook';
+  const type = 'old';
   beforeAll(async (done) => {
     if (mongoose.connection.readyState === 2) {
       mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useCreateIndex: true }, async function () {
@@ -50,17 +39,18 @@ describe('Rule Model', () => {
         }
       ]
       ,
-      postAsOption: POST_AS_OPTION_FB_ALBUM,
+      postAsOption: POST_AS_OPTION_FB_PHOTO,
       collectionOption: COLLECTION_OPTION_ALL,
       allowZeroQuantity: true,
       postAsVariants: false,
+      rotateImages: true,
+      rotateImageLimit: 3,
       repeatFrequency: 0,
       postingProductOrder: POSTING_SORTORDER_RANDOM,
       queueOption: QUEUE_OPTIONS_PAUSE,
       captions: [
         {
           collectionOption: COLLECTION_OPTION_ALL,
-          isDefault: true,
           captionTexts: [
             {
               text: FACEBOOK_DEFAULT_TEXT
@@ -74,12 +64,20 @@ describe('Rule Model', () => {
     }
     rule = await ruleStub.createRuleStub(ruleParams);
     collections = await productStub.createCollectionStub(storeId, 3);
-    // console.log('collections', collections)
-    products = await productStub.createProductStub(storeId, 3, collections[0]._id);
-    products = await productStub.createProductStub(storeId, 3, collections[1]._id);
-    products = await productStub.createProductStub(storeId, 4, collections[2]._id);
-    await scheduleProducts({ ruleId: rule._id });
-
+    products = await productStub.createProductStub(storeId, 1, collections[0]._id);
+    await scheduleProducts({ ruleId: rule._id })
+    await cronUpdates();
+    await scheduleProducts({ ruleId: rule._id })
+    await cronUpdates();
+    await scheduleProducts({ ruleId: rule._id })
+    await cronUpdates();
+    await scheduleProducts({ ruleId: rule._id })
+    await cronUpdates();
+    await scheduleProducts({ ruleId: rule._id })
+    await cronUpdates();
+    await scheduleProducts({ ruleId: rule._id })
+    await cronUpdates();
+    await scheduleProducts({ ruleId: rule._id })
     done();
   });
   test(`List Updates`, async () => {
@@ -90,6 +88,9 @@ describe('Rule Model', () => {
       query {
         listUpdates(filter: { store: { eq: "${storeId}"}, service: { eq: "${service}"}, scheduleState: [${PENDING}, ${APPROVED}]}) {
           scheduleTime
+          images{
+            url
+          }
         }
       }
     `,
@@ -98,9 +99,9 @@ describe('Rule Model', () => {
       expected: { data: { listUpdates: [UpdatesExpected] } }
     };
     const result = await graphql(schema, listUpdatesTestCase.query, null, listUpdatesTestCase.context, listUpdatesTestCase.variables);
-    // console.log('result', result);
-    // console.log('result', result.data.listUpdates.length);
-    expect(result.data.listUpdates.length).toBe(10);
+    console.log('result', result);
+    console.log('result', result.data.listUpdates[0]);
+    expect(result.data.listUpdates[0].images.length).toBe(1);
     // expect(result).not.toBeNull();
   }, 30000);
 

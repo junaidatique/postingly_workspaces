@@ -5,7 +5,7 @@ module.exports = {
   listUpdates: async (obj, args, context, info) => {
     try {
       searchQuery = query.createSearchQuery(UpdateModel, args);
-      searchQuery = searchQuery.where('scheduleState', args.filter.scheduleState);
+      searchQuery = searchQuery.where('scheduleState').in(args.filter.scheduleState);
       const updates = await searchQuery;
       return updatesList = updates.map(update => {
         return formattedUpdate(update)

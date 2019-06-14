@@ -105,6 +105,10 @@ const ruleSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  rotateImageLimit: {
+    type: Number,
+    default: 0,
+  },
   repeatFrequency: {
     type: Number
   },

@@ -91,6 +91,11 @@ const productSchema = new Schema({
     default: false,
     index: true
   },
+  postableByImage: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
   postableByQuantity: {
     type: Boolean,
     default: false,

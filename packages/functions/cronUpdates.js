@@ -1,7 +1,7 @@
 const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
-const { SCHEDULED, FACEBOOK_SERVICE } = require('shared/constants');
+const { APPROVED, FACEBOOK_SERVICE } = require('shared/constants');
 let facebookUpdates;
 if (process.env.IS_OFFLINE) {
   facebookUpdates = require('functions/facebookUpdates');
@@ -13,10 +13,10 @@ module.exports = {
       const UpdateModel = shared.UpdateModel;
       let updates;
       if (process.env.IS_OFFLINE) {
-        updates = await UpdateModel.where('scheduleState').equals(SCHEDULED);
+        updates = await UpdateModel.where('scheduleState').equals(APPROVED);
       } else {
         const next_five_minutes = getRoundedDate(5);
-        updates = await UpdateModel.find({ scheduleState: SCHEDULED, scheduleTime: { $lt: next_five_minutes } });
+        updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $lt: next_five_minutes } });
       }
       await Promise.all(updates.map(async update => {
         if (process.env.IS_OFFLINE) {

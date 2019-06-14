@@ -8,7 +8,7 @@ const ruleStub = require("graqphql/__tests__/rule/stubs");
 const productStub = require("graqphql/__tests__/product/stubs");
 
 const scheduleProducts = require('functions').scheduleProducts.schedule;
-const { POST_IMMEDIATELY, COLLECTION_OPTION_NOT_SELECTED } = require('shared/constants');
+const { POST_IMMEDIATELY, PENDING, APPROVED, COLLECTION_OPTION_NOT_SELECTED } = require('shared/constants');
 
 describe('Rule Model', () => {
   let storeId, profiles, rule;
@@ -74,7 +74,7 @@ describe('Rule Model', () => {
       id: 'List Not Connected Updates',
       query: `
       query {
-        listUpdates(filter: { store: { eq: "${storeId}"}, service: { eq: "${service}"}, scheduleState: scheduled}) {
+        listUpdates(filter: { store: { eq: "${storeId}"}, service: { eq: "${service}"}, scheduleState: [${PENDING}, ${APPROVED}]}) {
           scheduleTime
         }
       }

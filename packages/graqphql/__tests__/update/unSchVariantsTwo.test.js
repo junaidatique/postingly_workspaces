@@ -12,6 +12,7 @@ const scheduleProducts = require('functions').scheduleProducts.schedule;
 const cronUpdates = require('functions').cronUpdates.share;
 const {
   POST_IMMEDIATELY,
+  PENDING, APPROVED,
   COLLECTION_OPTION_ALL,
   FACEBOOK_SERVICE,
   RULE_TYPE_OLD,
@@ -86,7 +87,7 @@ describe('Rule Model', () => {
       id: 'List Not Connected Updates',
       query: `
       query {
-        listUpdates(filter: { store: { eq: "${storeId}"}, service: { eq: "${service}"}, scheduleState: scheduled}) {
+        listUpdates(filter: { store: { eq: "${storeId}"}, service: { eq: "${service}"}, scheduleState: [${PENDING}, ${APPROVED}]}) {
           scheduleTime
         }
       }
