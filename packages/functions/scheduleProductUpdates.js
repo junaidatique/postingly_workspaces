@@ -13,13 +13,12 @@ const ScheduleProductUpdates = {
       const VariantModel = shared.VariantModel;
 
       // define vars
-      let postItems, itemModel, counter = 0, count = 0, updates, update, imageLimit, itemImages, imagesForPosting;
+      let postItems, itemModel, itemType, counter = 0, count = 0, updates, update, imageLimit, itemImages, imagesForPosting;
       // get rule and store
       const ruleDetail = await RuleModel.findById(event.ruleId);
       if (ruleDetail === null) {
         throw new Error(`rule not found for ${event.ruleId}`);
       }
-
       if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
         imageLimit = 4;
       } else {
@@ -40,9 +39,11 @@ const ScheduleProductUpdates = {
           if (ruleDetail.postAsVariants) {
             postItems = await ScheduleProductUpdates.getVariantsForSchedule(ruleDetail._id, profile, updates.length);
             itemModel = VariantModel;
+            itemType = 'variant';
           } else {
             postItems = await ScheduleProductUpdates.getProductsForSchedule(ruleDetail._id, profile, updates.length);
             itemModel = ProductModel;
+            itemType = 'product';
           }
 
           counter = 0;
@@ -108,7 +109,8 @@ const ScheduleProductUpdates = {
             }
 
             update = updates[counter];
-            update.item = item._id;
+
+            update[itemType] = item._id;
             update.scheduleState = PENDING;
             update.images = imagesForPosting;
             counter++;

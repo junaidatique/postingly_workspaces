@@ -1,6 +1,6 @@
 const faker = require('faker');
 const StoreModel = require('shared').StoreModel;
-
+const { LINK_SHORTNER_SERVICES_NONE, LINK_SHORTNER_SERVICES_POOOST } = require('shared/constants');
 
 const createStoreStub = async () => {
   const partner = 'shopify';
@@ -16,7 +16,13 @@ const createStoreStub = async () => {
     partner: partner,
     partnerId: partnerStoreId,
     uniqKey: storeKey,
-    timezone: "America/New_York"
+    timezone: "America/New_York",
+    autoApproveUpdates: true,
+    autoAddCaptionOfUpdates: true,
+    linkSettings: {
+      service: LINK_SHORTNER_SERVICES_POOOST,
+      isDefault: true
+    }
   };
 
   const storeInstance = await StoreModel.create(shopCreateStoreParams);

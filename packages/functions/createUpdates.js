@@ -82,7 +82,9 @@ module.exports = {
               scheduleTime: loopTime,
               scheduleState: NOT_SCHEDULED,
               postType: ruleDetail.type,
-              scheduleType: SCHEDULE_TYPE_PRODUCT
+              scheduleType: SCHEDULE_TYPE_PRODUCT,
+              autoApproveUpdates: storeDetail.autoApproveUpdates,
+              autoAddCaptionOfUpdates: storeDetail.autoAddCaptionOfUpdates,
             })
         }));
       }));

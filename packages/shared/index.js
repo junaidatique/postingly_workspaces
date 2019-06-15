@@ -4,6 +4,7 @@ exports.http_helper = require('./helpers/http');
 exports.jwt_helper = require('./helpers/jwt');
 exports.string_helper = require('./helpers/string');
 exports.query = require('./helpers/query');
+exports.shortLink = require('./helpers/shortLinks');
 
 // models
 

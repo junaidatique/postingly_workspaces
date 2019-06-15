@@ -8,7 +8,7 @@ const ruleStub = require("graqphql/__tests__/rule/stubs");
 const productStub = require("graqphql/__tests__/product/stubs");
 
 const scheduleProducts = require('functions').scheduleProducts.schedule;
-const cronUpdates = require('functions').cronUpdates.share;
+const postUpdates = require('functions').postUpdates.share;
 const { POST_IMMEDIATELY, PENDING, APPROVED, COLLECTION_OPTION_ALL, POST_AS_OPTION_FB_PHOTO, POSTING_SORTORDER_RANDOM, QUEUE_OPTIONS_PAUSE, FACEBOOK_DEFAULT_TEXT } = require('shared/constants');
 
 describe('Rule Model', () => {
@@ -65,17 +65,17 @@ describe('Rule Model', () => {
     collections = await productStub.createCollectionStub(storeId, 3);
     products = await productStub.createProductStub(storeId, 1, collections[0]._id);
     await scheduleProducts({ ruleId: rule._id })
-    await cronUpdates();
+    await postUpdates();
     await scheduleProducts({ ruleId: rule._id })
-    await cronUpdates();
+    await postUpdates();
     await scheduleProducts({ ruleId: rule._id })
-    await cronUpdates();
+    await postUpdates();
     await scheduleProducts({ ruleId: rule._id })
-    await cronUpdates();
+    await postUpdates();
     await scheduleProducts({ ruleId: rule._id })
-    await cronUpdates();
+    await postUpdates();
     await scheduleProducts({ ruleId: rule._id })
-    await cronUpdates();
+    await postUpdates();
     await scheduleProducts({ ruleId: rule._id })
     done();
   });

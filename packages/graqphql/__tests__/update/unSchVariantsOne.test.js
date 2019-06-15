@@ -9,7 +9,7 @@ const ruleStub = require("graqphql/__tests__/rule/stubs");
 const productStub = require("graqphql/__tests__/product/stubs");
 
 const scheduleProducts = require('functions').scheduleProducts.schedule;
-const cronUpdates = require('functions').cronUpdates.share;
+const postUpdates = require('functions').postUpdates.share;
 const {
   POST_IMMEDIATELY,
   PENDING, APPROVED,

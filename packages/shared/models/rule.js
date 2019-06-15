@@ -26,14 +26,14 @@ CAPTION_TEXT = {
     type: String,
   },
 
-  startDate: {
-    type: Date,
-    get: date => (date !== undefined) ? date.toISOString() : null,
-  },
-  endDate: {
-    type: Date,
-    get: date => (date !== undefined) ? date.toISOString() : null,
-  },
+  // startDate: {
+  //   type: Date,
+  //   get: date => (date !== undefined) ? date.toISOString() : null,
+  // },
+  // endDate: {
+  //   type: Date,
+  //   get: date => (date !== undefined) ? date.toISOString() : null,
+  // },
 }
 
 const CAPTION = {

@@ -8,7 +8,7 @@ const ruleStub = require("graqphql/__tests__/rule/stubs");
 const productStub = require("graqphql/__tests__/product/stubs");
 
 const scheduleProducts = require('functions').scheduleProducts.schedule;
-const { POST_IMMEDIATELY, PENDING, APPROVED, COLLECTION_OPTION_ALL, POST_AS_OPTION_FB_ALBUM, POSTING_SORTORDER_RANDOM, QUEUE_OPTIONS_PAUSE, FACEBOOK_DEFAULT_TEXT } = require('shared/constants');
+const { POST_IMMEDIATELY, PENDING, APPROVED, COLLECTION_OPTION_ALL, COLLECTION_OPTION_SELECTED, POST_AS_OPTION_FB_ALBUM, POSTING_SORTORDER_RANDOM, QUEUE_OPTIONS_PAUSE, FACEBOOK_DEFAULT_TEXT } = require('shared/constants');
 
 describe('Rule Model', () => {
   let storeId, profiles, rule;
@@ -26,6 +26,7 @@ describe('Rule Model', () => {
     storeId = storeDetail._id;
     profiles = await profileStub.createFBPageProfileStub(storeId, true, 1);
     const profileIds = profiles.map(profile => profile._id);
+    const collections = await productStub.createCollectionStub(storeId, 3);
     const ruleParams = {
       store: storeId,
       service: service,
@@ -48,6 +49,7 @@ describe('Rule Model', () => {
       captions: [
         {
           collectionOption: COLLECTION_OPTION_ALL,
+          isDefault: true,
           captionTexts: [
             {
               text: FACEBOOK_DEFAULT_TEXT
@@ -56,15 +58,27 @@ describe('Rule Model', () => {
               text: FACEBOOK_DEFAULT_TEXT
             },
           ]
+        },
+        {
+          collectionOption: COLLECTION_OPTION_SELECTED,
+          collections: [
+            collections[0]._id
+          ],
+          isDefault: false,
+          captionTexts: [
+            {
+              text: FACEBOOK_DEFAULT_TEXT
+            },
+          ]
         }
       ]
     }
     rule = await ruleStub.createRuleStub(ruleParams);
-    collections = await productStub.createCollectionStub(storeId, 3);
+
     // console.log('collections', collections)
-    products = await productStub.createProductStub(storeId, 3, collections[0]._id);
-    products = await productStub.createProductStub(storeId, 3, collections[1]._id);
-    products = await productStub.createProductStub(storeId, 4, collections[2]._id);
+    products = await productStub.createProductStub(storeId, 1, collections[0]._id);
+    // products = await productStub.createProductStub(storeId, 3, collections[1]._id);
+    // products = await productStub.createProductStub(storeId, 4, collections[2]._id);
     // TODO
     await scheduleProducts({ ruleId: rule._id })
     done();
@@ -85,10 +99,7 @@ describe('Rule Model', () => {
       expected: { data: { listUpdates: [UpdatesExpected] } }
     };
     const result = await graphql(schema, listUpdatesTestCase.query, null, listUpdatesTestCase.context, listUpdatesTestCase.variables);
-    // console.log('result', result);
-    // console.log('result', result.data.listUpdates.length);
     expect(result.data.listUpdates.length).toBe(10);
-    // expect(result).not.toBeNull();
   }, 30000);
 
 

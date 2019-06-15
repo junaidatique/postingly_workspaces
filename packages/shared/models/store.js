@@ -11,7 +11,11 @@ const LINK_SHORTNER = {
   },
   api_key: {
     type: String,
-  }
+  },
+  isDefault: {
+    type: Boolean,
+    default: false,
+  },
 }
 
 const storeSchema = new mongoose.Schema({
@@ -134,10 +138,19 @@ const storeSchema = new mongoose.Schema({
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
-  isUninstalled: {
-    type: Boolean
-  },
   linkSettings: [LINK_SHORTNER],
+  autoApproveUpdates: {
+    type: Boolean,
+    default: false,
+  },
+  autoAddCaptionOfUpdates: {
+    type: Boolean,
+    default: false,
+  },
+  isUninstalled: {
+    type: Boolean,
+    default: false,
+  },
   uninstalledDate: {
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,

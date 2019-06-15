@@ -171,18 +171,15 @@ exports.IMAGE_SCHEMA = {
 }
 
 exports.FACEBOOK_DEFAULT_TEXT = '[product-title]' + "\n"
-  + '➤ [product-currency] [product-price].' + "\n"
+  + '➤ USD [product-price].' + "\n"
   + '➤ [product-url]' + "\n"
-  + '[short-description] ' + "\n"
   + '[product-description] ';
 exports.LINKEDIN_DEFAULT_TEXT = '[product-title]' + "\n"
-  + '➤ [product-currency] [product-price].' + "\n"
+  + '➤ USD [product-price].' + "\n"
   + '➤ [product-url]' + "\n"
-  + '[short-description] ' + "\n"
   + '[product-description] ';
 exports.INSTAGRAM_DEFAULT_TEXT = '[product-title]' + "\n"
-  + '➤ [product-currency] [product-price].' + "\n"
+  + '➤ USD [product-price].' + "\n"
   + '➤ [product-url]' + "\n"
-  + '[short-description] ' + "\n"
   + '[product-description] ';
-exports.TW_DEFAULT_TEXT = '[product-title] [product-currency] [product-price]' + "\n" + '[product-url]';
+exports.TW_DEFAULT_TEXT = '[product-title] USD [product-price]' + "\n" + '[product-url]';

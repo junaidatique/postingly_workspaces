@@ -55,10 +55,10 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
       productParams = {
         store: storeId,
         title: title,
-        url: {
-          service: 'Pooo.st',
-          url: `https://pooo.st/${faker.helpers.slugify(title)}`
-        },
+        // url: {
+        //   service: 'Pooo.st',
+        //   url: `https://pooo.st/${faker.helpers.slugify(title)}`
+        // },
         description: faker.lorem.sentences(5),
         partner: storeDetail.partner,
         partnerId: partnerId,

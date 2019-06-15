@@ -12,8 +12,20 @@ provider:
   region: ${env:AWS_REGION}
 
 functions:
-  post-updates:
-    handler: postUpdates.share
+  cron-post-updates:
+    handler: cronPostUpdates.share
+    events:
+      - schedule:
+          rate: cron(*/5 * * * ? *)
+          enabled: true
+  cron-this-week-rules:
+    handler: cronThisWeekRulesForUpdates.excute
+    events:
+      - schedule:
+          rate: cron(0 0 * * ? *)
+          enabled: true
+  cron-add-captions:
+    handler: cronAddCaptions.execute
     events:
       - schedule:
           rate: cron(*/5 * * * ? *)

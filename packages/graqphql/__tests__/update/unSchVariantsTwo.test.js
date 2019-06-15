@@ -9,7 +9,7 @@ const ruleStub = require("graqphql/__tests__/rule/stubs");
 const productStub = require("graqphql/__tests__/product/stubs");
 
 const scheduleProducts = require('functions').scheduleProducts.schedule;
-const cronUpdates = require('functions').cronUpdates.share;
+const postUpdates = require('functions').postUpdates.share;
 const {
   POST_IMMEDIATELY,
   PENDING, APPROVED,
@@ -77,7 +77,7 @@ describe('Rule Model', () => {
     // console.log('collections', collections)
     products = await productStub.createProductStub(storeId, 3, collections[0]._id);
     await scheduleProducts({ ruleId: rule._id });
-    await cronUpdates();
+    await postUpdates();
     await scheduleProducts({ ruleId: rule._id })
     done();
   });

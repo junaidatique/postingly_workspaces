@@ -43,8 +43,14 @@ const updateSchema = new mongoose.Schema({
     type: String,
     enum: SERVICES
   },
-
-
+  autoApproveUpdates: {
+    type: Boolean,
+    default: false,
+  },
+  autoAddCaptionOfUpdates: {
+    type: Boolean,
+    default: false,
+  },
   postAsOption: {
     type: String,
     enum: POST_AS_OPTION
@@ -54,7 +60,7 @@ const updateSchema = new mongoose.Schema({
     required: true,
   },
   text: {
-    Type: String
+    type: String
   },
   scheduleState: {
     type: String,
@@ -66,6 +72,10 @@ const updateSchema = new mongoose.Schema({
   },
   failedMessage: {
     type: String
+  },
+  userEdited: {
+    type: Boolean,
+    default: false
   }
 });
 
