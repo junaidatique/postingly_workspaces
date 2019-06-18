@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const { IMAGE_SCHEMA } = require('shared/constants');
 
+const { PARTNERS } = require('shared/constants');
 
 const SHARE_HISTORY = {
   profile: {
@@ -26,7 +26,12 @@ const variantSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Product'
   },
-  images: [IMAGE_SCHEMA],
+  images: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Image'
+    }
+  ],
   title: {
     type: String,
     required: true,
@@ -34,7 +39,8 @@ const variantSchema = new Schema({
   partner: {
     type: String,
     required: true,
-    index: true
+    index: true,
+    enum: PARTNERS
   },
   partnerId: {
     type: String,
@@ -71,6 +77,9 @@ const variantSchema = new Schema({
     type: Boolean,
     default: false,
     index: true
+  },
+  position: {
+    type: Number,
   },
   postableByImage: {
     type: Boolean,

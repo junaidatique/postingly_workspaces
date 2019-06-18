@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const { LINK_SHORTNER_SERVICES, IMAGE_SCHEMA, PARTNERS } = require('shared/constants');
+const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
 
 const SHORT_LINK = {
   service: {
@@ -42,7 +42,12 @@ const productSchema = new Schema({
     required: true,
   },
   url: [SHORT_LINK],
-  images: [IMAGE_SCHEMA],
+  images: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Image'
+    }
+  ],
   description: {
     type: String
   },

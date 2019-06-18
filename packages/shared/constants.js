@@ -1,5 +1,3 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
 exports.FACEBOOK_GRPAHAPI_URL = 'https://graph.facebook.com/v3.2/'
 exports.DEV = 'dev'
@@ -127,48 +125,7 @@ exports.QUEUE_OPTIONS = [QUEUE_OPTIONS_PAUSE, QUEUE_OPTIONS_REPLACE];
 exports.LINK_SHORTNER_SERVICES = [LINK_SHORTNER_SERVICES_NONE, LINK_SHORTNER_SERVICES_POOOST, LINK_SHORTNER_SERVICES_BITLY];
 exports.SCHEDULE_TYPE = [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT, SCHEDULE_TYPE_FEED, SCHEDULE_TYPE_UPLOAD, SCHEDULE_TYPE_LINK, SCHEDULE_TYPE_BLOG];
 
-const SHARE_HISTORY = {
-  profile: {
-    type: Schema.Types.ObjectId,
-    ref: 'Profile'
-  },
-  counter: Number
-}
 
-exports.IMAGE_SCHEMA = {
-  partnerId: {
-    type: String,
-    required: true,
-  },
-  partnerSpecificUrl: {
-    type: String
-  },
-  thumbnailUrl: {
-    type: String
-  },
-  partnerCreatedAt: {
-    type: Date,
-    get: date => (date !== undefined) ? date.toISOString() : null,
-  },
-  partnerUpdatedAt: {
-    type: Date,
-    get: date => (date !== undefined) ? date.toISOString() : null,
-  },
-  imgUniqKey: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  position: {
-    type: Number,
-  },
-  active: {
-    type: Boolean,
-    default: true,
-    index: true
-  },
-  shareHistory: [SHARE_HISTORY]
-}
 
 exports.FACEBOOK_DEFAULT_TEXT = '[product-title]' + "\n"
   + '➤ USD [product-price].' + "\n"

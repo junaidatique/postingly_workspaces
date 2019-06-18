@@ -1,38 +1,36 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const { PARTNERS } = require('shared/constants');
-const collectionSchema = new Schema({
+
+
+const SHARE_HISTORY = {
+  profile: {
+    type: Schema.Types.ObjectId,
+    ref: 'Profile'
+  },
+  counter: Number
+}
+
+const imageSchema = new Schema({
   store: {
     type: Schema.Types.ObjectId,
     ref: 'Store'
   },
-  products: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Product'
-    }
-  ],
-  variants: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Variant'
-    }
-  ],
-  title: {
-    type: String,
-    required: true,
+  product: {
+    type: Schema.Types.ObjectId,
+    ref: 'Product'
   },
-  partner: {
-    type: String,
-    required: true,
-    index: true,
-    enum: PARTNERS
+  variant: {
+    type: Schema.Types.ObjectId,
+    ref: 'Variant'
   },
   partnerId: {
     type: String,
     required: true,
   },
   partnerSpecificUrl: {
+    type: String
+  },
+  thumbnailUrl: {
     type: String
   },
   partnerCreatedAt: {
@@ -43,23 +41,27 @@ const collectionSchema = new Schema({
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
-  uniqKey: {
+  imgUniqKey: {
     type: String,
     required: true,
     unique: true
+  },
+  position: {
+    type: Number,
   },
   active: {
     type: Boolean,
     default: true,
     index: true
   },
+  shareHistory: [SHARE_HISTORY]
 });
 
-collectionSchema.set('timestamps', true);
+imageSchema.set('timestamps', true);
 
 
 if (process.env.IS_OFFLINE) {
-  delete mongoose.connection.models.Collection;
+  delete mongoose.connection.models.Image;
 }
 
-module.exports = mongoose.model('Collection', collectionSchema);
+module.exports = mongoose.model('Image', imageSchema);

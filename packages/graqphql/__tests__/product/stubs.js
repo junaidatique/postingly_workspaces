@@ -3,6 +3,7 @@ const StoreModel = require('shared').StoreModel;
 const ProductModel = require('shared').ProductModel;
 const VariantModel = require('shared').VariantModel;
 const CollectionModel = require('shared').CollectionModel;
+const ImageModel = require('shared').ImageModel;
 
 const createCollectionStub = async (storeId, numberOfCollections) => {
   try {
@@ -51,14 +52,10 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
       postableIsNew = false;
       postableBySale = false;
       postableByImage = true;
-      images = await createImageStub(storeDetail.partner, 'product');
+      // 
       productParams = {
         store: storeId,
         title: title,
-        // url: {
-        //   service: 'Pooo.st',
-        //   url: `https://pooo.st/${faker.helpers.slugify(title)}`
-        // },
         description: faker.lorem.sentences(5),
         partner: storeDetail.partner,
         partnerId: partnerId,
@@ -73,12 +70,15 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
         postableBySale,
         postableIsNew,
         postableByImage,
-        images: images,
         collections: [
           collectionId
         ]
       };
       product = await ProductModel.create(productParams);
+      images = await createImageStub(storeDetail.partner, 'product', product._id);
+      await Promise.all(images.map(async image => {
+        await product.images.push(image._id);
+      }));
 
       await storeDetail.products.push(product);
       await collectionDetail.products.push(product);
@@ -88,12 +88,12 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
       // variant
       for (let j = 1; j <= 5; j++) {
         title = faker.commerce.productName();
-        partnerId = faker.random.number({ min: 10000000 });
+        const random = faker.random.number({ min: 10000000 });
+        partnerId = faker.random.number({ min: random });
         uniqKey = `${storeDetail.partner}-${partnerId}`
         quantity = faker.random.number({ min: 0, max: 10 });
         postableByQuantity = (quantity > 0) ? true : false;
         postableByPrice = (minimumPrice > 0) ? true : false;
-        images = await createImageStub(storeDetail.partner, 'variant');
         variantParams = {
           store: storeId,
           product: product._id,
@@ -115,6 +115,10 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
           ]
         };
         variant = await VariantModel.create(variantParams);
+        images = await createImageStub(storeDetail.partner, 'variant', variant._id);
+        await Promise.all(images.map(async image => {
+          await variant.images.push(image._id);
+        }));
         t = await product.variants.push(variant);
         await product.save();
       }
@@ -126,20 +130,26 @@ const createProductStub = async (storeId, numberOfProducts, collectionId, zeroQu
   }
 }
 
-const createImageStub = async (partner, ref) => {
-  let images = [], partnerId;
+const createImageStub = async (partner, ref, reference_id) => {
+  let images = [], partnerId, image, imageParams;
   for (let i = 1; i <= 5; i++) {
-    partnerId = faker.random.number({ min: 10000000 });
-    uniqKey = `${ref}-${partner}-${partnerId}`
-    images.push({
+    const partnerId = faker.random.number({ min: 10000000 });
+    const uniqKey = `${ref}-${partner}-${partnerId}`;
+    imageParams = {
       partnerId: partnerId,
       partnerSpecificUrl: faker.image.imageUrl(faker.random.number({ min: 10 * i, max: 10 * (i + 1) }), faker.random.number({ min: 10 * i, max: 10 * (i + 1) })),
       thumbnailUrl: faker.image.imageUrl(100, 100),
       partnerCreatedAt: faker.date.past().toISOString(),
       imgUniqKey: uniqKey,
       position: i,
-
-    });
+    };
+    if (ref === 'product') {
+      imageParams['product'] = reference_id;
+    } else {
+      imageParams['variant'] = reference_id;
+    }
+    image = await ImageModel.create(imageParams);
+    images.push(image);
   }
   return images;
 }

@@ -76,9 +76,9 @@ describe('Rule Model', () => {
     rule = await ruleStub.createRuleStub(ruleParams);
 
     // console.log('collections', collections)
-    products = await productStub.createProductStub(storeId, 1, collections[0]._id);
-    // products = await productStub.createProductStub(storeId, 3, collections[1]._id);
-    // products = await productStub.createProductStub(storeId, 4, collections[2]._id);
+    products = await productStub.createProductStub(storeId, 3, collections[0]._id);
+    products = await productStub.createProductStub(storeId, 3, collections[1]._id);
+    products = await productStub.createProductStub(storeId, 4, collections[2]._id);
     // TODO
     await scheduleProducts({ ruleId: rule._id })
     done();

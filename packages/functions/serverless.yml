@@ -30,6 +30,14 @@ functions:
       - schedule:
           rate: cron(*/5 * * * ? *)
           enabled: true
+  sync-collections:
+    handler: syncStoreData.syncCollections
+  sync-collection-page:
+    handler: syncStoreData.syncCollectionPage
+  sync-products:
+    handler: syncStoreData.syncProducts
+  sync-product-page:
+    handler: syncStoreData.syncProductPage
   data-seed:
     handler: seeddata.createStore
   data-test:

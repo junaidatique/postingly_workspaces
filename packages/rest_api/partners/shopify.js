@@ -121,7 +121,7 @@ module.exports = {
         partnerId: shop.id,
         partnerPlan: shop.plan_name,
         title: shop.name,
-        storeUrl: shop.domain,
+        url: shop.domain,
         partnerSpecificUrl: shop.myshopify_domain,
         partnerCreatedAt: shop.created_at,
         partnerUpdatedAt: shop.updated_at,
@@ -349,7 +349,7 @@ module.exports = {
   getCharge: async function (shop, charge_id, accessToken) {
     console.log("getCharge shop", shop);
     console.log("getCharge charge_id", charge_id);
-    const resp = await fetch(`https://${shop}/admin/api/2019-04/recurring_application_charges/${charge_id}.json`, {
+    const resp = await fetch(`https://${shop}/admin/api/${process.env.SHOPIFY_API_VERSION}/recurring_application_charges/${charge_id}.json`, {
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
