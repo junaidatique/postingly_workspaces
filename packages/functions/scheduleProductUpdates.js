@@ -86,19 +86,14 @@ const ScheduleProductUpdates = {
                 itemImages = _.orderBy(itemImages, ['counter', 'position'], ['asc', 'asc']);
                 const postingImage = itemImages[0];
                 imagesForPosting = [{ url: postingImage.url }];
-                const dbImage = await item.images.id(postingImage.imageId);
+                const dbImage = await ImageModel.findById(postingImage.imageId);
                 if (_.isNull(postingImage.historyId)) {
-                  r = await itemModel.updateOne({ _id: item._id, 'images._id': postingImage.imageId },
-                    {
-                      '$push': {
-                        'images.$.shareHistory': { profile: profile, counter: 1 }
-                      }
-                    });
-
+                  dbImage.shareHistory = { profile: profile, counter: 1 };
+                  await dbImage.save();
                 } else {
                   const dbhistory = await dbImage.shareHistory.id(postingImage.historyId);
                   r = await dbhistory.set({ counter: dbhistory.counter + 1 });
-                  await item.save();
+                  await dbImage.save();
                 }
               } else {
                 imagesForPosting = [{ url: itemImages[0].partnerSpecificUrl }];
@@ -171,12 +166,12 @@ const ScheduleProductUpdates = {
     query = query.limit(limit);
     const notSharedOnThisProfile = query.find({ "shareHistory.profile": { $ne: profileId } });
 
-    let products = await notSharedOnThisProfile;
+    let products = await notSharedOnThisProfile.populate('images');
     if (products.length > 0) {
       return products;
     }
     lessSharedOnThisProfile = query.find({ "shareHistory.profile": profileId }).sort({ "shareHistory.counter": 1 });
-    products = await lessSharedOnThisProfile;
+    products = await lessSharedOnThisProfile.populate('images');
     if (products.length > 0) {
       return products;
     }
@@ -212,12 +207,12 @@ const ScheduleProductUpdates = {
     query = query.limit(limit);
     const notSharedOnThisProfile = query.find({ "shareHistory.profile": { $ne: profileId } });
 
-    let products = await notSharedOnThisProfile;
+    let products = await notSharedOnThisProfile.populate('images');
     if (products.length > 0) {
       return products;
     }
     lessSharedOnThisProfile = query.find({ "shareHistory.profile": profileId }).sort({ "shareHistory.counter": 1 });
-    products = await lessSharedOnThisProfile;
+    products = await lessSharedOnThisProfile.populate('images');
     if (products.length > 0) {
       return products;
     }

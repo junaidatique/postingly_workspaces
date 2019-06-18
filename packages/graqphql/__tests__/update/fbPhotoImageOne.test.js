@@ -1,3 +1,4 @@
+// this test case test fb photos test with rotating images. this only schedules and does not post. first part of the series. 
 const graphql = require('graphql').graphql;
 const mongoose = require('mongoose');
 const schema = require('graqphql/__tests__/executableSchema').schema;

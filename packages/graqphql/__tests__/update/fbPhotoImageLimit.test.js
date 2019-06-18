@@ -44,7 +44,7 @@ describe('Rule Model', () => {
       allowZeroQuantity: true,
       postAsVariants: false,
       rotateImages: true,
-      rotateImageLimit: 3,
+      rotateImageLimit: 2,
       repeatFrequency: 0,
       postingProductOrder: POSTING_SORTORDER_RANDOM,
       queueOption: QUEUE_OPTIONS_PAUSE,
