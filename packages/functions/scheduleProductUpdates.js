@@ -11,6 +11,7 @@ const ScheduleProductUpdates = {
       const UpdateModel = shared.UpdateModel;
       const ProductModel = shared.ProductModel;
       const VariantModel = shared.VariantModel;
+      const ImageModel = shared.ImageModel;
 
       // define vars
       let postItems, itemModel, itemType, counter = 0, count = 0, updates, update, imageLimit, itemImages, imagesForPosting;

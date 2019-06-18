@@ -7,7 +7,6 @@ exports.query = require('./helpers/query');
 exports.shortLink = require('./helpers/shortLinks');
 
 // models
-
 exports.StoreModel = require('./models/store');
 exports.ProfileModel = require('./models/profile');
 exports.RuleModel = require('./models/rule');
@@ -18,3 +17,5 @@ exports.CollectionModel = require('./models/collection');
 exports.ImageModel = require('./models/image');
 
 
+// partners
+exports.PartnerShopify = require('./partners/shopify')

@@ -30,6 +30,8 @@ functions:
       - schedule:
           rate: cron(*/5 * * * ? *)
           enabled: true
+  sync-store-data:
+    handler: syncStoreData.syncStoreData
   sync-collections:
     handler: syncStoreData.syncCollections
   sync-collection-page:

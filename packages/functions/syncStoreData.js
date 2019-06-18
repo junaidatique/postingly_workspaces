@@ -1,9 +1,15 @@
 const shared = require('shared');
 const { PARTNERS_SHOPIFY } = require('shared/constants');
-const shopifyAPI = require('./partners/shopify');
 module.exports = {
+  syncStoreData: async function (event) {
+    if (event.partnerStore == PARTNERS_SHOPIFY) {
+      const shopifyAPI = shared.PartnerShopify;
+      await shopifyAPI.syncStoreData(event);
+    }
+  },
   syncCollections: async function (event) {
     if (event.partnerStore == PARTNERS_SHOPIFY) {
+      const shopifyAPI = shared.PartnerShopify;
       await shopifyAPI.syncCollections(event);
     }
   },
@@ -14,6 +20,7 @@ module.exports = {
   },
   syncProducts: async function (event) {
     if (event.partnerStore == PARTNERS_SHOPIFY) {
+      const shopifyAPI = shared.PartnerShopify;
       await shopifyAPI.syncProducts(event);
     }
   },
