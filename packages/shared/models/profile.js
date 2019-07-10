@@ -51,13 +51,16 @@ const profileSchema = new mongoose.Schema({
     type: String
   },
   isConnected: {
-    type: Boolean
+    type: Boolean,
+    default: true,
   },
   isTokenExpired: {
-    type: Boolean
+    type: Boolean,
+    default: false,
   },
   isSharePossible: {
-    type: Boolean
+    type: Boolean,
+    default: true,
   },
 });
 

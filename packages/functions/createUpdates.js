@@ -26,7 +26,7 @@ module.exports = {
         startTime = startOfWeek;
         endTime = endOfWeek;
         for (let loopTime = startOfWeek; loopTime.isBefore(endOfWeek); loopTime = loopTime.add(ruleDetail.postTimings[0].postingInterval, 'minute')) {
-          if (loopTime.isAfter(moment.utc())) {
+          if (loopTime.isAfter(moment.utc()) && ruleDetail.postTimings[0].postingDays.includes(moment.weekdays(loopTime.weekday()))) {
             updateTimes.push(loopTime.toISOString());
           }
         }
@@ -42,7 +42,8 @@ module.exports = {
           const startHour = moment().year(currentDay.year()).month(currentDay.month()).date(currentDay.date()).hour(ruleDetail.postTimings[0].startPostingHour).minute(0).second(0);
           const endHour = moment().year(currentDay.year()).month(currentDay.month()).date(currentDay.date()).hour(ruleDetail.postTimings[0].endPostingHour).minute(0).second(0);
           for (let hour = startHour; hour <= endHour; hour = hour.add(ruleDetail.postTimings[0].postingInterval, 'minute')) {
-            if (hour.isAfter(moment.utc())) {
+            if (hour.isAfter(moment.utc()) && ruleDetail.postTimings[0].postingDays.includes(moment.weekdays(hour.weekday()))) {
+              // if (hour.isAfter(moment.utc())) {
               updateTimes.push(hour.toISOString());
             }
           }
@@ -70,24 +71,42 @@ module.exports = {
           scheduleState: { $in: [NOT_SCHEDULED, PENDING] }
         }
       );
-      await Promise.all(updateTimes.map(async loopTime => {
-        await Promise.all(ruleDetail.profiles.map(async profile => {
-          await UpdateModel.create(
-            {
-              store: storeDetail._id,
-              rule: ruleDetail._id,
-              profile: profile,
-              service: ruleDetail.service,
-              postAsOption: ruleDetail.postAsOption,
-              scheduleTime: loopTime,
-              scheduleState: NOT_SCHEDULED,
-              postType: ruleDetail.type,
-              scheduleType: SCHEDULE_TYPE_PRODUCT,
-              autoApproveUpdates: storeDetail.autoApproveUpdates,
-              autoAddCaptionOfUpdates: storeDetail.autoAddCaptionOfUpdates,
-            })
-        }));
-      }));
+      const bulkUpdatesWrite = updateTimes.map(updateTime => {
+        return ruleDetail.profiles.map(profile => {
+          return {
+            updateOne: {
+              filter: { uniqKey: `${ruleDetail.id}-${profile}-${updateTime}` },
+              update: {
+                store: storeDetail._id,
+                rule: ruleDetail._id,
+                profile: profile,
+                service: ruleDetail.service,
+                postAsOption: ruleDetail.postAsOption,
+                scheduleTime: updateTime,
+                postType: ruleDetail.type,
+                scheduleType: SCHEDULE_TYPE_PRODUCT,
+                autoApproveUpdates: storeDetail.autoApproveUpdates,
+                autoAddCaptionOfUpdates: storeDetail.autoAddCaptionOfUpdates,
+              },
+              upsert: true
+            }
+          }
+        });
+      });
+      const updates = await UpdateModel.bulkWrite([].concat.apply([], bulkUpdatesWrite));
+      if (updates.result.nUpserted > 0) {
+        const bulkUpdate = updates.result.upserted.map(updateTime => {
+          return {
+            updateOne: {
+              filter: { _id: updateTime._id },
+              update: {
+                scheduleState: NOT_SCHEDULED
+              }
+            }
+          }
+        });
+        const updateUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+      }
     } catch (error) {
       console.error(error.message);
     }

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const { SERVICES, SCHEDULE_STATE, POST_AS_OPTION, RULE_TYPE, SCHEDULE_TYPE } = require('shared/constants');
+const { SERVICES, SCHEDULE_STATE, POST_AS_OPTION, RULE_TYPE, SCHEDULE_TYPE, NOT_SCHEDULED } = require('shared/constants');
 
 const IMAGE = {
   url: {
@@ -29,6 +29,11 @@ const updateSchema = new mongoose.Schema({
   profile: {
     type: Schema.Types.ObjectId,
     ref: 'Profile'
+  },
+  uniqKey: {
+    type: String,
+    required: true,
+    unique: true
   },
   images: [IMAGE],
   scheduleType: {
@@ -64,7 +69,8 @@ const updateSchema = new mongoose.Schema({
   },
   scheduleState: {
     type: String,
-    enum: SCHEDULE_STATE // NOT_SCHEDULED, SCHEDULED, POSTED, FAILED, PAUSED
+    enum: SCHEDULE_STATE, // NOT_SCHEDULED, SCHEDULED, POSTED, FAILED, PAUSED
+    default: NOT_SCHEDULED
   },
   isPaused: {
     type: Boolean,

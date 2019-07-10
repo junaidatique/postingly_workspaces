@@ -63,6 +63,29 @@ exports.LINKEDIN_SERVICE = LINKEDIN_SERVICE;
 exports.PINTEREST_SERVICE = PINTEREST_SERVICE;
 exports.BUFFER_SERVICE = BUFFER_SERVICE;
 
+// service Profiles
+exports.FACEBOOK_PROFILE = 'facebookProfile';
+exports.FACEBOOK_PAGE = 'facebookPage';
+exports.FACEBOOK_GROUP = 'facebookGroup';
+exports.TWITTER_PROFILE = 'twitterProfile';
+exports.LINKEDIN_PROFILE = 'linkedinProfile';
+exports.LINKEDIN_PAGE = 'linkedinPage';
+exports.LINKEDIN_GROUP = 'linkedinGroup';
+exports.PINTEREST_PROFILE = 'pinterestProfile';
+exports.INSTAGRAM_PROFILE = 'instagramProfile';
+exports.INSTAGRAM_BUSINESS = 'instagramBusiness';
+exports.BUFFER_INSTAGRAM_PROFILE = 'bufferInstagramProfile';
+exports.BUFFER_INSTAGRAM_BUSINESS = 'bufferInstagramBusiness';
+exports.BUFFER_PROFILE = 'bufferProfile';
+exports.BUFFER_TWITTER_PROFILE = 'bufferTwitterProfile';
+exports.BUFFER_FACEBOOK_PROFILE = 'bufferFacebookProfile';
+exports.BUFFER_FACEBOOK_PAGE = 'bufferFacebookPage';
+exports.BUFFER_FACEBOOK_GROUP = 'bufferFacebookGroup';
+exports.BUFFER_LINKEDIN_PROFILE = 'bufferLinkedinProfile';
+exports.BUFFER_LINKEDIN_PAGE = 'bufferLinkedinPage';
+exports.BUFFER_LINKEDIN_GROUP = 'bufferLinkedinGroup';
+exports.BUFFER_PINTEREST_PROFILE = 'bufferPinterestProfile';
+
 // service posting options
 const POST_AS_OPTION_NONE = 'none'
 const POST_AS_OPTION_FB_ALBUM = 'facebookPostAsAlbum'

@@ -69,15 +69,21 @@ type ProductImage {
 
 type Collection {
   id: ID!
-  name: String!
   store: Store
-  products: [Product]
+  title: String!
+  partner: Partner
+  partnerId: String
+  partnerSpecificUrl: String
+  partnerCreatedAt: String
+  partnerUpdatedAt: String
+  uniqKey: String!
 }
 
-
-
-
 input ModelProductFilterInput {
+  store: ModelIDFilterInput!
+  title: ModelStringFilterInput
+}
+input ModelCollectionFilterInput {
   store: ModelIDFilterInput!
   title: ModelStringFilterInput
 }

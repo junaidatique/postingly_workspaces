@@ -18,29 +18,41 @@ const POST_TIMING = {
   postingMinute: {
     type: Number
   },
-  postingDays: [Number]
+  postingDays: [String]
 };
 
-CAPTION_TEXT = {
-  text: {
-    type: String,
+const SELECTED_POST_TIMES = {
+  dayName: {
+    type: String
   },
-
-  // startDate: {
-  //   type: Date,
-  //   get: date => (date !== undefined) ? date.toISOString() : null,
-  // },
-  // endDate: {
-  //   type: Date,
-  //   get: date => (date !== undefined) ? date.toISOString() : null,
-  // },
+  dayKey: {
+    type: String
+  },
+  postingTimesTotal: {
+    type: Number
+  },
+  isPaused: {
+    type: Boolean,
+    default: false
+  },
+  times: [
+    {
+      hour: {
+        type: String
+      },
+      minute: {
+        type: String
+      }
+    }
+  ]
 }
 
+
 const CAPTION = {
-  collectionOption: {
-    type: String,
-    enum: COLLECTION_OPTION
-  },
+  // collectionOption: {
+  //   type: String,
+  //   enum: COLLECTION_OPTION
+  // },
   collections: [
     {
       type: Schema.Types.ObjectId,
@@ -51,7 +63,7 @@ const CAPTION = {
     type: Boolean,
     default: false,
   },
-  captionTexts: [CAPTION_TEXT]
+  captionTexts: [{ type: String }]
 }
 
 const ruleSchema = new mongoose.Schema({
@@ -79,6 +91,7 @@ const ruleSchema = new mongoose.Schema({
     enum: POSTING_TIME_OPTIONS, // POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS
     index: true
   },
+  // selectedPostTimes: [SELECTED_POST_TIMES],
   postTimings: [POST_TIMING], // actual timings. 
   postAsOption: {
     type: String,

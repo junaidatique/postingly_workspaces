@@ -1,52 +1,4 @@
-type Rule {
-  id: ID!
-  store: Store!
-  service: Service!
-  type: RuleTypes!,
-  profiles: [Profile]
-  postingTimeOption: RulePostingTimeOptions # one of the option from the publish timing option (post between timings or custom timing sections)
-  postTimings: [RulePostTimings]
-  postAsOption: ProfilePostingOptions
-  collectionOption: collectionOptions
-  collections: [Collection]
-  allowZeroQuantity: Boolean
-  postAsVariants: Boolean
-  postingProductOrder: PostingSortOrder
-  repeatFrequency: Int
-  captions: [Caption]
-  queueOption: RuleQueueOption
-}
-type Caption {
-  rule: Rule
-  text: String
-  startDate: String
-  endDate: String
-}
-input RuleInput {
-  id: ID
-  store: ID!
-  service: Service!
-  type: RuleTypes!,
-  profiles: [ID!]
-  postingTimeOption: RulePostingTimeOptions
-  postTimings: [RulePostTimingsInput]
-  postAsOption: ProfilePostingOptions
-  collectionOption: collectionOptions
-  collections: [ID!]
-  allowZeroQuantity: Boolean
-  postAsVariants: Boolean
-  postingProductOrder: PostingSortOrder
-  repeatFrequency: Int
-  captions: [CreateCaptionInput]
-  queueOption: RuleQueueOption
-}
-
-input CreateCaptionInput {
-  text: String
-  startDate: String
-  endDate: String
-}
-
+# enum
 enum RuleTypes {
   old
   new
@@ -56,15 +8,6 @@ enum RuleTypes {
 enum RuleQueueOption {
   pause
   replace
-}
-
-input RulePostTimingsInput {
-  postingInterval: Int #number of seconds.
-  startPostingHour: Int
-  endPostingHour: Int
-  postingHour: Int
-  postingMinute: Int
-  postingDays: [Int]
 }
 
 enum RulePostingTimeOptions {
@@ -84,14 +27,6 @@ enum PostingSortOrder {
   newest
 }
 
-type RulePostTimings {
-  postingInterval: Int
-  startPostingHour: Int
-  endPostingHour: Int
-  postingHour: Int
-  postingMinute: Int
-}
-
 enum ProfilePostingOptions {
   none
   facebookPostAsAlbum
@@ -101,6 +36,107 @@ enum ProfilePostingOptions {
   twitterPostAsMultiplePhoto
   twitterPostAsLink
 }
+# Type
+type Rule {
+  id: ID!
+  store: Store!
+  service: Service!
+  type: RuleTypes!,
+  profiles: [Profile]
+  postingTimeOption: RulePostingTimeOptions # one of the option from the publish timing option (post between timings or custom timing sections)
+  postTimings: [RulePostTimings]
+  postAsOption: ProfilePostingOptions
+  collectionOption: collectionOptions
+  collections: [Collection]
+  allowZeroQuantity: Boolean
+  postAsVariants: Boolean
+  postingProductOrder: PostingSortOrder
+  repeatFrequency: Int
+  rotateImages: Boolean
+  rotateImageLimit: Int
+  # selectedPostTimes: SelectedPostTimes
+  captions: [Caption]
+  active: Boolean
+}
+type Caption {  
+  # collectionOption: collectionOptions
+  collections: [Collection]
+  isDefault: Boolean
+  captionTexts: [String]
+}
+
+type SelectedPostTimes {
+  dayName: String  
+  dayKey: String  
+  postingTimesTotal: Int
+  isPaused: Boolean
+  times: [Times]
+}
+type Times {
+  hour: Int
+  minute: Int
+}
+type RulePostTimings {
+  postingInterval: Int
+  startPostingHour: Int
+  endPostingHour: Int
+  postingHour: Int
+  postingMinute: Int
+  postingDays: [String]
+}
+# types
+
+input RuleInput {
+  id: ID
+  store: ID!
+  service: Service!
+  type: RuleTypes!,
+  profiles: [ID!]
+  postingTimeOption: RulePostingTimeOptions
+  postTimings: [RulePostTimingsInput]
+  postAsOption: ProfilePostingOptions
+  collectionOption: collectionOptions
+  collections: [ID!]
+  allowZeroQuantity: Boolean
+  postAsVariants: Boolean
+  postingProductOrder: PostingSortOrder
+  repeatFrequency: Int
+  rotateImages: Boolean
+  rotateImageLimit: Int
+  # selectedPostTimes: SelectedPostTimesInput
+  captions: [CreateCaptionInput]  
+  active: Boolean
+}
+
+input CreateCaptionInput {  
+  # collectionOption: collectionOptions
+  collections: [ID!]
+  isDefault: Boolean
+  captionTexts: [String]
+}
+
+
+input RulePostTimingsInput {
+  postingInterval: Int #number of seconds.
+  startPostingHour: Int
+  endPostingHour: Int
+  postingHour: Int
+  postingMinute: Int
+  postingDays: [String]
+}
+
+input SelectedPostTimesInput {
+  dayName: String  
+  dayKey: String    
+  postingTimesTotal: Int 
+  isPaused: Boolean
+  times: [TimesInput]
+}
+input TimesInput {
+  hour: Int
+  minute: Int
+}
+
 
 input ModelRuleFilterInput {
   storeId: ID!

@@ -112,6 +112,10 @@ const storeSchema = new mongoose.Schema({
   numberOfProducts: {
     type: Number
   },
+  numberOfConnectedProfiles: {
+    type: Number,
+    default: 0
+  },
   noOfActiveProducts: {
     type: Number
   },

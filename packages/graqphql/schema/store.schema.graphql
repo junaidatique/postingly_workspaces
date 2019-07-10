@@ -19,6 +19,7 @@ type Store {
   noOfActiveProducts: Int
   numberOfScheduledPosts: Int
   numberOfPosted: Int
+  numberOfConnectedProfiles: Int
   productsLastUpdated: String
   isCharged: Boolean
   chargedMethod: String
@@ -28,7 +29,7 @@ type Store {
   uninstalledDate: String
   createdAt: String
   updatedAt: String
-  profiles(service: Service!, isConnected: Boolean): [Profile]
+  profiles(service: Service, isConnected: Boolean): [Profile]
   products: [Product]
   collections: [Collection]
   variants(productId: String!): [Variant]

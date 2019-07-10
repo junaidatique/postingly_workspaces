@@ -1,10 +1,11 @@
 type Query {
   listStores(filter: ModelStoreFilterInput, limit: Int, skip: Int, sort: ModelStoreSortInput): [Store]
-  listProfiles(storeId: String!, service: Service!, isConnected: Boolean): [Profile]
+  listProfiles(storeId: String!, service: Service!, parent: String, isConnected: Boolean): [Profile]
   getStore(uniqKey: ID!): Store
   listRules(filter: ModelRuleFilterInput, limit: Int, skip: Int): [Rule]
   getRule(id: ID!): Rule
   listProducts(filter: ModelProductFilterInput!, limit: Int, skip: Int): [Product]
+  listCollections(filter: ModelCollectionFilterInput!, limit: Int, skip: Int): [Collection]
   listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): [Update]
 }
 
@@ -12,7 +13,7 @@ type Query {
 type Mutation {
   createStore(input: CreateStoreInput!): Store
   updateStore(input: UpdateStoreInput!): Store
-  connectProfile(input: connectProfileInput!): [Profile]
+  connectProfile(input: connectProfileInput!): Profile
   updateProfile(input: [updateProfileInput]!): [Profile]
   manageRule(input: RuleInput!): Rule
 }

@@ -3,14 +3,14 @@ const querystring = require('querystring')
 const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
 
-const { FACEBOOK_GRPAHAPI_URL } = require('shared/constants');
+const { FACEBOOK_SERVICE, FACEBOOK_GRPAHAPI_URL, FACEBOOK_PROFILE, FACEBOOK_PAGE } = require('shared/constants');
 module.exports = {
   login: async function (storeId, code, serviceProfile) {
     console.log(" -- FB Login Start -- ");
     try {
       const accessToken = await this.getAccessToken(code);
       const response = await this.getProfile(storeId, accessToken, serviceProfile);
-
+      return response;
       console.log(" -- FB Login End -- ");
     } catch (error) {
       console.log(" -- FB Login Error -- ");
@@ -96,25 +96,31 @@ module.exports = {
       const userResponse = await userDetailResponse.json();
       if (userDetailResponse.status === 200) {
         console.log("FB getUserDetail Recieved");
-        const userParams = {
-          uniqKey: `facebookProfile-${userResponse.id}`,
-          name: userResponse.name,
-          avatarUrl: userResponse.picture.data.url,
-          serviceUserId: userResponse.id,
-          profileURL: userResponse.link,
-          accessToken: accessToken,
-          service: "Facebook",
-          serviceProfile: "facebookProfile",
-          isConnected: true,
-          isTokenExpired: false,
-          isSharePossible: false,
-          store: storeId
-        };
-        console.log("userparams", userParams);
-        const profileInstance = new ProfileModel(userParams);
-        const profile = await profileInstance.save();
-        const storeDetail = await StoreModel.findById(storeId);
-        await storeDetail.profiles.push(profile);
+        const uniqKey = `${FACEBOOK_PROFILE}-${storeId}-${userResponse.id}`;
+        let profile = await ProfileModel.findOne({ uniqKey: uniqKey });
+        console.log("TCL: getUserDetail profile", profile)
+        if (profile === null) {
+          const userParams = {
+            uniqKey: `${FACEBOOK_PROFILE}-${storeId}-${userResponse.id}`,
+            name: userResponse.name,
+            avatarUrl: userResponse.picture.data.url,
+            serviceUserId: userResponse.id,
+            profileURL: userResponse.link,
+            accessToken: accessToken,
+            service: FACEBOOK_SERVICE,
+            serviceProfile: FACEBOOK_PROFILE,
+            isConnected: true,
+            isTokenExpired: false,
+            isSharePossible: false,
+            store: storeId
+          };
+          console.log("userparams", userParams);
+          const profileInstance = new ProfileModel(userParams);
+          profile = await profileInstance.save();
+          const storeDetail = await StoreModel.findById(storeId);
+          await storeDetail.profiles.push(profile);
+        }
+
         console.log(" -- FB getUserDetail End -- ");
         return profile;
       } else {
@@ -131,26 +137,28 @@ module.exports = {
   getProfile: async function (storeId, accessToken, serviceProfile) {
     try {
       const userDetail = await this.getUserDetail(storeId, accessToken);
-      let profiles;
-      if (serviceProfile === 'facebookPage') {
-        profiles = await this.getPages(storeId, userDetail.id, accessToken);
-
+      let profile;
+      if (serviceProfile === FACEBOOK_PAGE) {
+        profile = await this.getPages(storeId, userDetail._id, accessToken);
       } else {
 
       }
-      return profiles;
+      console.log("TCL: profile", profile)
+      return profile;
     } catch (error) {
       throw new Error(error.message);
     }
   },
   getPages: async function (storeId, parentId, accessToken) {
+    console.log("TCL: storeId", storeId)
+    console.log("TCL: parentId", parentId)
     console.log(" -- FB getPages Start -- ");
     console.log("FB getPages ", accessToken);
-    const store = await StoreModel.findById(storeId);
+
     const parent = await ProfileModel.findById(parentId);
     try {
       const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me?fields=accounts.limit(5000){access_token,description,is_published,username,name,picture,link,id}`;
-      console.log("FB getPages graphApiUrl", graphApiUrl);
+      console.log("TCL: graphApiUrl -> graphApiUrl", graphApiUrl);
       getPagesQuery = querystring.stringify({ access_token: accessToken });
       const pagesDetailResponse = await fetch(`${graphApiUrl}&${getPagesQuery}`, {
         headers: {
@@ -160,36 +168,39 @@ module.exports = {
         method: "GET",
       });
       const pageResponse = await pagesDetailResponse.json();
-      let pageInstance;
-      let page;
       if (pagesDetailResponse.status === 200) {
         console.log("FB getPages Recieved", pageResponse);
-        for (pageProfile of pageResponse.accounts.data) {
-          const pageParams = {
-            uniqKey: `facebookPage-${pageProfile.id}`,
-            name: pageProfile.name,
-            avatarUrl: pageProfile.picture.data.url,
-            serviceUserId: pageProfile.id,
-            profileURL: pageProfile.link,
-            accessToken: accessToken,
-            service: "Facebook",
-            serviceProfile: "facebookPage",
-            isConnected: true,
-            isTokenExpired: false,
-            isSharePossible: true,
-            store: storeId,
-            parent: parentId
-          };
-          // console.log("pageParams", pageParams);
-          pageInstance = new ProfileModel(pageParams);
-          page = await pageInstance.save();
-          // console.log('store', store);
-          await store.profiles.push(page);
-          await store.save();
-          await parent.children.push(page);
-          await parent.save();
-        }
-        return parent.children;
+        const bulkProfileInsert = pageResponse.accounts.data.map(pageProfile => {
+          const uniqKey = `${FACEBOOK_PAGE}-${storeId}-${pageProfile.id}`;
+          return {
+            updateOne: {
+              filter: { uniqKey: uniqKey },
+              update: {
+                name: pageProfile.name,
+                avatarUrl: pageProfile.picture.data.url,
+                serviceUserId: pageProfile.id,
+                profileURL: pageProfile.link,
+                accessToken: accessToken,
+                service: FACEBOOK_SERVICE,
+                serviceProfile: FACEBOOK_PAGE,
+                store: storeId,
+                parent: parentId,
+                isSharePossible: true
+              },
+              upsert: true
+            }
+          }
+        });
+        const pageProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
+        const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
+        const store = await StoreModel.findById(storeId);
+        store.profiles = storeProfiles;
+        await store.save();
+        const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
+        parent.childrent = childProfiles;
+        await parent.save();
+        console.log("TCL: parent", parent)
+        return parent;
       } else {
         console.log("Fb getPages Not Recieved");
         throw new Error(userDetailResponse.statusText);

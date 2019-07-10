@@ -7,7 +7,7 @@ module.exports = {
   listStores: async (obj, args, context, info) => {
     try {
       searchQuery = query.createSearchQuery(StoreModel, args);
-      const stores = await searchQuery;
+      const stores = await searchQuery.populate('profiles');
       return storesList = stores.map(store => {
         return formattedStore(store)
       });

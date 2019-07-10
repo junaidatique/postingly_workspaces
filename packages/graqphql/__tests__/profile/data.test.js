@@ -4,6 +4,7 @@ const schema = require('../executableSchema').schema;
 
 const storeStub = require("../store/stubs");
 const profileStub = require("./stubs");
+const { FACEBOOK_SERVICE } = require('shared/constants')
 
 describe('Profile Model', () => {
   let storeId, profiles;
@@ -29,7 +30,7 @@ describe('Profile Model', () => {
       id: 'List Not Connected Profiles',
       query: `
       query {
-        listProfiles(storeId: "${storeId}", service: Facebook) {
+        listProfiles(storeId: "${storeId}", service: ${FACEBOOK_SERVICE}, isConnected: false) {
           id
           name
           avatarUrl
@@ -51,6 +52,7 @@ describe('Profile Model', () => {
       expected: { data: { listProfiles: [profilesExpected] } }
     };
     const result = await graphql(schema, listNotConnectedProfilesTestCase.query, null, listNotConnectedProfilesTestCase.context, listNotConnectedProfilesTestCase.variables);
+    // console.log("TCL: result", result.data.listProfiles);
     expect(result.data.listProfiles.length).toBe(8);
   }, 30000);
 
@@ -70,7 +72,7 @@ describe('Profile Model', () => {
       mutation {
         updateProfile(input: ${updatedProfileParams}) {
           id
-          
+
         }
       }
     `,
