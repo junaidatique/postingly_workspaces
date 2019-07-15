@@ -4,6 +4,7 @@ const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CU
 
 module.exports = {
   createUpdates: async function (event, context) {
+    console.log("TCL: createUpdates event", event)
     try {
       let updateTimes = [];
       let startTime, endTime;

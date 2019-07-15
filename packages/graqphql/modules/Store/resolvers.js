@@ -42,16 +42,15 @@ module.exports = {
   },
   updateStore: async (obj, args, context, info) => {
     try {
-      storeKey = `${args.input.uniqKey}`;
+      storeKey = args.input.id;
       let shopParams = {};
       for (item in args.input) {
-        if (item !== "id" || item !== "uniqKey") {
+        if (item !== 'id' && item !== "uniqKey") {
           shopParams[item] = args.input[item];
         }
-        // console.log(item, args.input[item]);
       }
-      store = await StoreModel.updateOne({ uniqKey: storeKey }, shopParams)
-      const storeDetail = await StoreModel.findOne({ uniqKey: storeKey });
+      store = await StoreModel.updateOne({ _id: storeKey }, shopParams)
+      const storeDetail = await StoreModel.findById(storeKey);
       return formattedStore(storeDetail);
     } catch (error) {
       throw error;

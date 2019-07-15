@@ -65,8 +65,8 @@ input CreateStoreInput {
 }
 
 input UpdateStoreInput { 
-  id: ID 
-  uniqKey: String!
+  id: ID!
+  uniqKey: String
   partnerPlan: String
   title: String
   url: String

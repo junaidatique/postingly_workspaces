@@ -14,5 +14,12 @@ const getCollectionById = async collectionId => {
   }
   return formattedCollection(collectionDetail)
 }
+const getCollections = async collectionIds => {
+  const collections = await CollectionModel.find({ _id: { $in: collectionIds } });
+  return collections.map(collection => {
+    return formattedCollection(collection)
+  });
+}
 exports.formattedCollection = formattedCollection;;
 exports.getCollectionById = getCollectionById
+exports.getCollections = getCollections

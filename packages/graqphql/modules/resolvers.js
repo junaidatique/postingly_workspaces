@@ -11,6 +11,7 @@ module.exports = {
     listStores: storeResolvers.listStores,
     listProfiles: profileResolvers.listProfiles,
     listRules: ruleResolvers.listRules,
+    getRule: ruleResolvers.getRule,
     listProducts: productResolvers.listProducts,
     listCollections: collectionResolvers.listCollections,
     listUpdates: updateResolvers.listUpdates
@@ -20,6 +21,7 @@ module.exports = {
     updateStore: storeResolvers.updateStore,
     connectProfile: profileResolvers.connectProfile,
     updateProfile: profileResolvers.updateProfile,
-    manageRule: ruleResolvers.manageRule
+    manageRule: ruleResolvers.manageRule,
+    deleteRule: ruleResolvers.deleteRule
   },
 }

@@ -80,10 +80,10 @@ type Collection {
 }
 
 input ModelProductFilterInput {
-  store: ModelIDFilterInput!
+  storeId: ID!
   title: ModelStringFilterInput
 }
 input ModelCollectionFilterInput {
-  store: ModelIDFilterInput!
+  storeId: ID!
   title: ModelStringFilterInput
 }

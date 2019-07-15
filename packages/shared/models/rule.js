@@ -49,10 +49,6 @@ const SELECTED_POST_TIMES = {
 
 
 const CAPTION = {
-  // collectionOption: {
-  //   type: String,
-  //   enum: COLLECTION_OPTION
-  // },
   collections: [
     {
       type: Schema.Types.ObjectId,

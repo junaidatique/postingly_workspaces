@@ -5,9 +5,9 @@ const query = require('shared').query;
 
 module.exports = {
   listCollections: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
     try {
-      const searchQuery = query.createSearchQuery(CollectionModel, args);
+      let searchQuery = query.createSearchQuery(CollectionModel, args);
+      searchQuery = searchQuery.find({ store: args.filter.storeId })
       const collections = await searchQuery;
       return collections.map(collection => {
         return formattedCollection(collection);

@@ -25,7 +25,6 @@ module.exports = {
 
   },
   listProfiles: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
     try {
       let query = ProfileModel.find({ store: args.storeId, service: args.service });
       if (args.isConnected === true) {
@@ -35,7 +34,6 @@ module.exports = {
       }
       query = query.where('isSharePossible').equals(true);
       if (!_.isUndefined(args.parent)) {
-        console.log("TCL: args.parent", args.parent)
         query = query.where('parent').equals(args.parent);
       }
       const profiles = await query;

@@ -39,7 +39,7 @@ enum ScheduleState {
 }
 
 input ModelUpdateFilterInput {
-  store: ModelIDFilterInput!
+  store: ID!
   service: ModelStringFilterInput!
   profile: ModelIDFilterInput
   type: ModelStringFilterInput
