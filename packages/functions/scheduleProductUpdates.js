@@ -16,7 +16,7 @@ const ScheduleProductUpdates = {
       const ImageModel = shared.ImageModel;
 
       // define vars
-      let postItems, itemModel, itemType, counter = 0, count = 0, updates, update, imageLimit, itemImages, imagesForPosting;
+      let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting;
       // get rule and store
       const ruleDetail = await RuleModel.findById(event.ruleId);
       if (ruleDetail === null) {
@@ -28,10 +28,11 @@ const ScheduleProductUpdates = {
       } else {
         imageLimit = 1;
       }
+      let bulkUpdate = [];
       // loop on all the profiles of the rule
       await Promise.all(ruleDetail.profiles.map(async profile => {
         // get all the updaets of this rule that are not scheduled yet. 
-        updates = await UpdateModel.find(
+        const updates = await UpdateModel.find(
           {
             rule: ruleDetail._id,
             profile: profile,
@@ -113,12 +114,22 @@ const ScheduleProductUpdates = {
             }
 
             update = updates[counter];
-
-            update[itemType] = item._id;
-            update.scheduleState = PENDING;
-            update.images = imagesForPosting;
+            let updateData = {};
+            updateData[itemType] = item._id;
+            updateData.scheduleState = PENDING;
+            updateData.images = imagesForPosting;
+            bulkUpdate.push({
+              updateOne: {
+                filter: { uniqKey: update.uniqKey },
+                update: updateData,
+                upsert: true
+              }
+            })
             counter++;
-            await update.save();
+            // update[itemType] = item._id;
+            // update.scheduleState = PENDING;
+            // update.images = imagesForPosting;
+            // await update.save();
 
             profileHistory = await item.shareHistory.map(history => {
               if (history.profile.toString() == profile.toString()) {
@@ -140,6 +151,8 @@ const ScheduleProductUpdates = {
           }));
         }
       }));
+      const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+
     } catch (error) {
       console.error(error.message);
     }

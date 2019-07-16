@@ -53,3 +53,5 @@ functions:
 
   create-updates:
     handler: createUpdates.createUpdates
+  schedule-updates:
+    handler: ScheduleProductUpdates.schedule

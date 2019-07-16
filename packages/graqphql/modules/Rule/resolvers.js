@@ -5,7 +5,7 @@ const _ = require('lodash');
 const moment = require('moment')
 const query = require('shared').query;
 let createUpdates;
-const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED } = require('shared/constants');
+const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
 if (process.env.IS_OFFLINE || process.env.STAGE == TEST) {
   createUpdates = require('functions').createUpdates.createUpdates;
   schedule = require('functions').scheduleProducts.schedule;
@@ -33,7 +33,8 @@ module.exports = {
           {
             rule: args.input.id,
             scheduleState: { $in: [NOT_SCHEDULED, PENDING, APPROVED] },
-            scheduleTime: { $gte: moment().utc() }
+            scheduleTime: { $gte: moment().utc() },
+            scheduleType: SCHEDULE_TYPE_PRODUCT
           })
       }
       await createUpdates({ ruleId: ruleDetail._id });
