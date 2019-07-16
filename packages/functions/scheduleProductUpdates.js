@@ -6,7 +6,9 @@ const { NOT_SCHEDULED, PENDING, SCHEDULE_TYPE_PRODUCT, COLLECTION_OPTION_SELECTE
 
 const ScheduleProductUpdates = {
   schedule: async function (event, context) {
+    console.log("TCL: event", event)
     try {
+      // load models
       const RuleModel = shared.RuleModel;
       const UpdateModel = shared.UpdateModel;
       const ProductModel = shared.ProductModel;
@@ -20,13 +22,15 @@ const ScheduleProductUpdates = {
       if (ruleDetail === null) {
         throw new Error(`rule not found for ${event.ruleId}`);
       }
+      // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
       if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
         imageLimit = 4;
       } else {
         imageLimit = 1;
       }
-
+      // loop on all the profiles of the rule
       await Promise.all(ruleDetail.profiles.map(async profile => {
+        // get all the updaets of this rule that are not scheduled yet. 
         updates = await UpdateModel.find(
           {
             rule: ruleDetail._id,
@@ -36,7 +40,9 @@ const ScheduleProductUpdates = {
             scheduleType: SCHEDULE_TYPE_PRODUCT
           }
         ).sort({ scheduleTime: 1 });
+        // if there are any updates that are not scheduled yet. 
         if (updates.length > 0) {
+          // get variants or products based on the rule settings. 
           if (ruleDetail.postAsVariants) {
             postItems = await ScheduleProductUpdates.getVariantsForSchedule(ruleDetail._id, profile, updates.length);
             itemModel = VariantModel;
@@ -85,6 +91,8 @@ const ScheduleProductUpdates = {
                 });
                 itemImages = _.orderBy(itemImages, ['counter', 'position'], ['asc', 'asc']);
                 const postingImage = itemImages[0];
+                console.log("TCL: itemImages", itemImages)
+                console.log("TCL: postingImage", postingImage)
                 imagesForPosting = [{ url: postingImage.url }];
                 const dbImage = await ImageModel.findById(postingImage.imageId);
                 if (_.isNull(postingImage.historyId)) {
@@ -118,7 +126,7 @@ const ScheduleProductUpdates = {
               }
             });
 
-            if (_.isEmpty(profileHistory)) {
+            if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory[0])) {
               item.shareHistory = { profile: update.profile, counter: 1 };
               await item.save();
             } else {
@@ -159,7 +167,7 @@ const ScheduleProductUpdates = {
       query = query.where('collections').nin(ruleDetail.collections);
     }
     if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
-      query = query.sort({ partnerCreatedAt: desc })
+      query = query.sort({ partnerCreatedAt: -1 })
     } else {
       query = query.limit(-1).skip(Math.random() * ProductModel.count())
     }
@@ -200,7 +208,7 @@ const ScheduleProductUpdates = {
       query = query.where('collections').nin(ruleDetail.collections);
     }
     if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
-      query = query.sort({ partnerCreatedAt: desc })
+      query = query.sort({ partnerCreatedAt: -1 })
     } else {
       query = query.limit(-1).skip(Math.random() * VariantModel.count())
     }

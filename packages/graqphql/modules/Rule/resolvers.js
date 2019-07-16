@@ -2,11 +2,13 @@ const RuleModel = require('shared').RuleModel;
 const UpdateModel = require('shared').UpdateModel;
 const formattedRule = require('./functions').formattedRule
 const _ = require('lodash');
+const moment = require('moment')
 const query = require('shared').query;
 let createUpdates;
-const { TEST, POSTED, FAILED } = require('shared/constants');
-if (process.env.IS_OFFLINE == true || process.env.STAGE == TEST) {
+const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED } = require('shared/constants');
+if (process.env.IS_OFFLINE || process.env.STAGE == TEST) {
   createUpdates = require('functions').createUpdates.createUpdates;
+  schedule = require('functions').scheduleProducts.schedule;
 }
 
 module.exports = {
@@ -25,8 +27,17 @@ module.exports = {
       await RuleModel.updateOne({ _id: args.input.id }, ruleParams, { upsert: true });
       ruleDetail = await RuleModel.findOne({ _id: args.input.id });
     }
-    if (process.env.IS_OFFLINE == true || process.env.STAGE == TEST) {
-      createUpdates({ id: ruleDetail._id });
+    if (process.env.IS_OFFLINE || process.env.STAGE === TEST) {
+      if (_.has(args.input, 'id')) {
+        const updatesDeleted = await UpdateModel.deleteMany(
+          {
+            rule: args.input.id,
+            scheduleState: { $in: [NOT_SCHEDULED, PENDING, APPROVED] },
+            scheduleTime: { $gte: moment().utc() }
+          })
+      }
+      await createUpdates({ ruleId: ruleDetail._id });
+      await schedule({ ruleId: ruleDetail._id });
     }
     const ruleResult = formattedRule(ruleDetail);
     return ruleResult;

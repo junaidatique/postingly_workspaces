@@ -16,7 +16,10 @@ const createStoreStub = async () => {
     partner: partner,
     partnerId: partnerStoreId,
     uniqKey: storeKey,
-    timezone: "America/New_York",
+    // timezone: "America/New_York",
+    // timezone: "America/Thule",
+    // timezone: "Europe/London",
+    timezone: "Asia/Karachi",
     autoApproveUpdates: true,
     autoAddCaptionOfUpdates: true,
     linkSettings: {

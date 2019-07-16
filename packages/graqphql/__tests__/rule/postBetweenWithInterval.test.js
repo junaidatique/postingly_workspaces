@@ -39,7 +39,8 @@ describe('Rule Model', () => {
         {
           postingInterval: 120,
           startPostingHour: 6,
-          endPostingHour: 18
+          endPostingHour: 20,
+          postingDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
         }
       ]
       ,
@@ -49,15 +50,27 @@ describe('Rule Model', () => {
       postAsVariants: true,
       repeatFrequency: 2,
       postingProductOrder: 'random',
-      queueOption: 'pause',
       captions: [
         {
-          text: 'Same Text 1'
+          captionTexts: 'Same Text 1',
+          isDefault: true,
+          collections: []
         },
         {
-          text: 'Same Text 2'
+          captionTexts: 'Same Text 2',
+          isDefault: false,
+          collections: []
         },
       ]
+      // queueOption: 'pause',
+      // captions: [
+      //   {
+      //     text: 'Same Text 1'
+      //   },
+      //   {
+      //     text: 'Same Text 2'
+      //   },
+      // ]
     }
 
     let createRuleInputJson = JSON.stringify(createRuleInput).replace(/\"([^(\")"]+)\":/g, "$1:")
@@ -103,7 +116,8 @@ describe('Rule Model', () => {
         {
           postingInterval: 60,
           startPostingHour: 9,
-          endPostingHour: 21
+          endPostingHour: 21,
+          postingDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
         }
       ]
       ,
@@ -113,15 +127,27 @@ describe('Rule Model', () => {
       postAsVariants: true,
       repeatFrequency: 2,
       postingProductOrder: 'random',
-      queueOption: 'pause',
       captions: [
         {
-          text: 'Same Text 3'
+          captionTexts: 'Same Text 1',
+          isDefault: true,
+          collections: []
         },
         {
-          text: 'Same Text 4'
+          captionTexts: 'Same Text 2',
+          isDefault: false,
+          collections: []
         },
       ]
+      // queueOption: 'pause',
+      // captions: [
+      //   {
+      //     text: 'Same Text 3'
+      //   },
+      //   {
+      //     text: 'Same Text 4'
+      //   },
+      // ]
 
     }
 
