@@ -12,7 +12,7 @@ const formattedProfile = async (profile) => {
 }
 const getProfileById = async profileId => {
   const profileDetail = await ProfileModel.findOne(profileId);
-  if (storeDetail === null) {
+  if (profileDetail === null) {
     throw new UserInputError('Profile not found.');
   }
   return formattedProfile(profileDetail)

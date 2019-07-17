@@ -2,6 +2,7 @@ const storeFunctions = require('../Store/functions');
 const profileFunctions = require('../Profile/functions');
 const ruleFunctions = require('../Rule/functions');
 const productFunctions = require('../Product/functions');
+const moment = require('moment');
 const formattedUpdate = async (update) => {
   return {
     ...update._doc,
@@ -10,6 +11,7 @@ const formattedUpdate = async (update) => {
     profile: profileFunctions.getProfileById.bind(this, update._doc.profile),
     rule: ruleFunctions.getRuleById.bind(this, update._doc.rule),
     product: productFunctions.getProductById.bind(this, update._doc.product),
+    scheduleTime: (update.scheduleTime !== undefined) ? moment(update.scheduleTime).toISOString() : null,
   }
 }
 exports.formattedUpdate = formattedUpdate

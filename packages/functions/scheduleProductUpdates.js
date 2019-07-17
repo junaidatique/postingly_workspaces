@@ -68,6 +68,7 @@ const ScheduleProductUpdates = {
                       return {
                         'imageId': image._id,
                         'url': image.partnerSpecificUrl,
+                        'thumbnailUrl': image.thumbnailUrl,
                         'position': image.position,
                         'historyId': history._id,
                         'counter': history.counter,
@@ -81,6 +82,7 @@ const ScheduleProductUpdates = {
                     return {
                       'imageId': itemImages[count]._id,
                       'url': itemImages[count].partnerSpecificUrl,
+                      'thumbnailUrl': itemImages[count].thumbnailUrl,
                       'position': itemImages[count++].position,
                       'historyId': null,
                       'counter': 0
@@ -105,11 +107,11 @@ const ScheduleProductUpdates = {
                   await dbImage.save();
                 }
               } else {
-                imagesForPosting = [{ url: itemImages[0].partnerSpecificUrl }];
+                imagesForPosting = [{ url: itemImages[0].partnerSpecificUrl, thumbnailUrl: itemImages[0].thumbnailUrl }];
               }
             } else {
               imagesForPosting = itemImages.slice(0, 4).map(image => {
-                return { url: image.partnerSpecificUrl }
+                return { url: image.partnerSpecificUrl, thumbnailUrl: image.thumbnailUrl }
               });
             }
 

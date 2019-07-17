@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const { SERVICES, SCHEDULE_STATE, POST_AS_OPTION, RULE_TYPE, SCHEDULE_TYPE, NOT_SCHEDULED } = require('shared/constants');
+const { SERVICES, SCHEDULE_STATE, POST_AS_OPTION, RULE_TYPE, SCHEDULE_TYPE, NOT_SCHEDULED, SERVICE_PROFILES } = require('shared/constants');
 
 const IMAGE = {
   url: {
+    type: String
+  },
+  thumbnailUrl: {
     type: String
   }
 }
@@ -38,7 +41,7 @@ const updateSchema = new mongoose.Schema({
   images: [IMAGE],
   scheduleType: {
     type: String,
-    enum: SCHEDULE_TYPE
+    enum: SCHEDULE_TYPE // product, blog etc
   },
   postType: {
     type: String,
@@ -47,6 +50,10 @@ const updateSchema = new mongoose.Schema({
   service: {
     type: String,
     enum: SERVICES
+  },
+  serviceProfile: {
+    type: String,
+    enum: SERVICE_PROFILES
   },
   autoApproveUpdates: {
     type: Boolean,
@@ -63,6 +70,7 @@ const updateSchema = new mongoose.Schema({
   scheduleTime: {
     type: Date,
     required: true,
+    get: date => (date !== undefined) ? date.toISOString() : null,
   },
   text: {
     type: String

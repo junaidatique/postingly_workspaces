@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const { SERVICES, SERVICE_PROFILES } = require('shared/constants');
 const profileSchema = new mongoose.Schema({
   store: {
     type: Schema.Types.ObjectId,
@@ -42,10 +43,12 @@ const profileSchema = new mongoose.Schema({
     type: String
   },
   service: {
-    type: String
+    type: String,
+    enum: SERVICES
   },
   serviceProfile: {
-    type: String
+    type: String,
+    enum: SERVICE_PROFILES
   },
   bufferId: {
     type: String

@@ -11,15 +11,13 @@ type Update {
   profile: Profile
   variant: Variant
   bufferId: String
-
-  
   scheduleTime: String
   scheduleState: ScheduleState!
   images: [UpdateImages]
 }
-type UpdateImages {
-  id: ID!
+type UpdateImages {  
   url: String
+  thumbnailUrl: String
 }
 enum ScheduleType {
   product
@@ -39,12 +37,12 @@ enum ScheduleState {
 }
 
 input ModelUpdateFilterInput {
-  store: ID!
-  service: ModelStringFilterInput!
-  profile: ModelIDFilterInput
+  storeId: ID!
+  service: Service!
+  profile: [ID]
   type: ModelStringFilterInput
   postType: ModelStringFilterInput
-  scheduleType: ModelStringFilterInput
+  scheduleType: ScheduleType
   scheduleTime: ModelStringFilterInput
-  scheduleState: [ScheduleState]
+  scheduleState: [ScheduleState]!
 }
