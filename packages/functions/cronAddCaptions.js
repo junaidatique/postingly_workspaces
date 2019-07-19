@@ -19,17 +19,20 @@ module.exports = {
           scheduleTime: { $gt: moment.utc() },
           scheduleType: SCHEDULE_TYPE_PRODUCT,
           rule: { $exists: true },
-          autoApproveUpdates: true,
-          autoAddCaptionOfUpdates: true,
-          userEdited: false
+          autoApproveUpdates: { $ne: false },
+          autoAddCaptionOfUpdates: { $ne: false },
+          userEdited: false,
+          captionsUpdated: false,
         }
       );
+      // console.log("TCL: services", services)
       await Promise.all(services.map(async service => {
-        if (_.isEmpty(event) && _.isNull(event.storeId)) {
+        if (!_.isEmpty(event) && !_.isUndefined(event) && !_.isNull(event.storeId)) {
           storeId = event.storeId;
         }
-
-        await changeCaption.update({ service, storeId });
+        if (process.env.IS_OFFLINE) {
+          await changeCaption.update({ service, storeId });
+        }
       }));
     } catch (error) {
       console.error(error.message);

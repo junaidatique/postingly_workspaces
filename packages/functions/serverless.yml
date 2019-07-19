@@ -55,3 +55,5 @@ functions:
     handler: createUpdates.createUpdates
   schedule-updates:
     handler: ScheduleProductUpdates.schedule
+  drop-collection:
+    handler: dropCollections.execute

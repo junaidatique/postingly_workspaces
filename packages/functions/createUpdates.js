@@ -58,7 +58,6 @@ module.exports = {
           scheduleState: { $in: [NOT_SCHEDULED, PENDING] }
         }
       );
-      // console.log("TCL: updateTimes", updateTimes)
       if (updateTimes.length > 0) {
         const bulkUpdatesWrite = updateTimes.map(updateTime => {
           return ruleDetail.profiles.map(profile => {
@@ -76,6 +75,8 @@ module.exports = {
                   scheduleType: SCHEDULE_TYPE_PRODUCT,
                   autoApproveUpdates: storeDetail.autoApproveUpdates,
                   autoAddCaptionOfUpdates: storeDetail.autoAddCaptionOfUpdates,
+                  captionsUpdated: false,
+                  userEdited: false
                 },
                 upsert: true
               }

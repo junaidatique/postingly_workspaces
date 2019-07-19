@@ -63,6 +63,10 @@ const updateSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  captionsUpdated: {
+    type: Boolean,
+    default: false,
+  },
   postAsOption: {
     type: String,
     enum: POST_AS_OPTION

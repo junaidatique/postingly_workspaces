@@ -15,6 +15,7 @@ module.exports = {
   },
   syncCollectionPage: async function (event) {
     if (event.partnerStore == PARTNERS_SHOPIFY) {
+      const shopifyAPI = shared.PartnerShopify;
       await shopifyAPI.syncCollections(event);
     }
   },
@@ -26,6 +27,7 @@ module.exports = {
   },
   syncProductPage: async function (event) {
     if (event.partnerStore == PARTNERS_SHOPIFY) {
+      const shopifyAPI = shared.PartnerShopify;
       await shopifyAPI.syncProductPage(event);
     }
   },

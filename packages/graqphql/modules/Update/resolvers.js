@@ -10,9 +10,8 @@ module.exports = {
       searchQuery = searchQuery.where('service').equals(args.filter.service);
       searchQuery = searchQuery.where('scheduleState').in(args.filter.scheduleState);
       searchQuery = searchQuery.where('scheduleTime').gte(moment().utc())
-      const updates = await searchQuery;
+      const updates = await searchQuery.sort({ scheduleTime: 1 });
       return updatesList = updates.map(update => {
-        // console.log("TCL: update", update.scheduleTime.toDate().toISOString())
         return formattedUpdate(update)
       });
     } catch (error) {

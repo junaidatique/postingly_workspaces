@@ -145,11 +145,11 @@ const storeSchema = new mongoose.Schema({
   linkSettings: [LINK_SHORTNER],
   autoApproveUpdates: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   autoAddCaptionOfUpdates: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   isUninstalled: {
     type: Boolean,
