@@ -1,4 +1,5 @@
 const shared = require('shared');
+const str = require('shared').string_helper
 let syncStoreData;
 let createUpdates;
 let schedule;
@@ -17,25 +18,28 @@ module.exports = {
     const ProductModel = shared.ProductModel;
     const UpdateModel = shared.UpdateModel;
     const VariantModel = shared.VariantModel;
-    // const StoreModel = shared.StoreModel;
-    const RuleModel = shared.RuleModel;
-    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
 
-    // await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
-    // await ImageModel.collection.deleteMany({ _id: { $exists: true } });
-    // await ProductModel.collection.deleteMany({ _id: { $exists: true } });
-    // await VariantModel.collection.deleteMany({ _id: { $exists: true } });
-    // await syncStoreData({
-    //   "storeId": storeId,
-    //   "partnerStore": "shopify",
-    //   "collectionId": null
-    // })
+    const RuleModel = shared.RuleModel;
+    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+
+    await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
+    await ImageModel.collection.deleteMany({ _id: { $exists: true } });
+    await ProductModel.collection.deleteMany({ _id: { $exists: true } });
+    await VariantModel.collection.deleteMany({ _id: { $exists: true } });
+    await syncStoreData({
+      "storeId": storeId,
+      "partnerStore": "shopify",
+      "collectionId": null
+    })
 
     const ruleDetail = await RuleModel.findOne({ store: storeId });
     await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: 'next' });
     await schedule({ ruleId: ruleDetail._id });
     await addCaptions();
     // await postUpdates();
+
+
+
 
   }
 }

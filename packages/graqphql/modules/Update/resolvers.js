@@ -17,5 +17,14 @@ module.exports = {
     } catch (error) {
       throw error;
     }
+  },
+  deleteUpdate: async (obj, args, context, info) => {
+    try {
+      const updateDetail = await UpdateModel.findById(args.updateId);
+      const updateDeleted = await UpdateModel.findByIdAndDelete(args.updateId);
+      return formattedUpdate(updateDetail);
+    } catch (error) {
+      throw error;
+    }
   }
 }

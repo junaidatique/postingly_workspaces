@@ -4,6 +4,8 @@ const _ = require('lodash');
 const moment = require('moment');
 const { PARTNERS_SHOPIFY } = require('shared/constants');
 
+const str = require('shared').string_helper
+
 module.exports = {
   syncStoreData: async function (event) {
     console.log('syncStoreData event', event);
@@ -83,7 +85,7 @@ module.exports = {
             partnerUpdatedAt: collection.updated_at,
             partner: PARTNERS_SHOPIFY,
             uniqKey: `${PARTNERS_SHOPIFY}-${collection.id}`,
-            description: collection.body_html,
+            description: str.stripTags(collection.body_html),
             active: (collection.published_at.blank) ? true : false,
             store: event.storeId,
           },
@@ -167,7 +169,7 @@ module.exports = {
           filter: { uniqKey: `${PARTNERS_SHOPIFY}-${product.id}` },
           update: {
             title: product.title,
-            description: product.body_html,
+            description: str.stripTags(product.body_html),
             partnerSpecificUrl: `://${storeDetail.url}/${product.handle}`,
             partner: PARTNERS_SHOPIFY,
             partnerId: product.id,

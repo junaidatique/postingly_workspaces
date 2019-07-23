@@ -17,5 +17,6 @@ type Mutation {
   updateProfile(input: [updateProfileInput]!): [Profile]
   manageRule(input: RuleInput!): Rule
   deleteRule(ruleId: ID!): Rule
+  deleteUpdate(updateId: ID!): Update
 }
 

@@ -22,6 +22,7 @@ module.exports = {
     connectProfile: profileResolvers.connectProfile,
     updateProfile: profileResolvers.updateProfile,
     manageRule: ruleResolvers.manageRule,
-    deleteRule: ruleResolvers.deleteRule
+    deleteRule: ruleResolvers.deleteRule,
+    deleteUpdate: updateResolvers.deleteUpdate
   },
 }
