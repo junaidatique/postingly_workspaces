@@ -1,7 +1,21 @@
 const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
-const { NOT_SCHEDULED, PENDING, SCHEDULE_TYPE_PRODUCT, COLLECTION_OPTION_SELECTED, COLLECTION_OPTION_NOT_SELECTED, RULE_TYPE_OLD, RULE_TYPE_NEW, POSTING_SORTORDER_NEWEST, POST_AS_OPTION_FB_ALBUM, POST_AS_OPTION_TW_ALBUM, POST_AS_OPTION_FB_PHOTO, POST_AS_OPTION_TW_PHOTO } = require('shared/constants');
+const {
+  NOT_SCHEDULED,
+  PENDING,
+  SCHEDULE_TYPE_PRODUCT,
+  SCHEDULE_TYPE_VARIANT,
+  COLLECTION_OPTION_SELECTED,
+  COLLECTION_OPTION_NOT_SELECTED,
+  RULE_TYPE_OLD,
+  RULE_TYPE_NEW,
+  POSTING_SORTORDER_NEWEST,
+  POST_AS_OPTION_FB_ALBUM,
+  POST_AS_OPTION_TW_ALBUM,
+  POST_AS_OPTION_FB_PHOTO,
+  POST_AS_OPTION_TW_PHOTO
+} = require('shared/constants');
 
 
 const ScheduleProductUpdates = {
@@ -13,6 +27,7 @@ const ScheduleProductUpdates = {
       const ProductModel = shared.ProductModel;
       const VariantModel = shared.VariantModel;
       const ImageModel = shared.ImageModel;
+      const StoreModel = shared.StoreModel;
 
       // define vars
       let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting;
@@ -21,6 +36,15 @@ const ScheduleProductUpdates = {
       if (ruleDetail === null) {
         throw new Error(`rule not found for ${event.ruleId}`);
       }
+
+      const StoreDetail = await StoreModel.findById(ruleDetail.store);
+
+      const defaultLinkSettings = StoreDetail.linkSettings.map(linkSetting => {
+        if (linkSetting.isDefault) {
+          return linkSetting;
+        }
+      });
+
       // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
       if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
         imageLimit = 4;
@@ -37,7 +61,7 @@ const ScheduleProductUpdates = {
             profile: profile,
             scheduleState: NOT_SCHEDULED,
             scheduleTime: { $gt: moment.utc() },
-            scheduleType: SCHEDULE_TYPE_PRODUCT
+            scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
           }
         ).sort({ scheduleTime: 1 });
         // if there are any updates that are not scheduled yet. 
@@ -46,11 +70,11 @@ const ScheduleProductUpdates = {
           if (ruleDetail.postAsVariants) {
             postItems = await ScheduleProductUpdates.getVariantsForSchedule(ruleDetail._id, profile, updates.length);
             itemModel = VariantModel;
-            itemType = 'variant';
+            itemType = SCHEDULE_TYPE_VARIANT;
           } else {
             postItems = await ScheduleProductUpdates.getProductsForSchedule(ruleDetail._id, profile, updates.length);
             itemModel = ProductModel;
-            itemType = 'product';
+            itemType = SCHEDULE_TYPE_PRODUCT;
           }
 
 
@@ -105,19 +129,20 @@ const ScheduleProductUpdates = {
                   await dbImage.save();
                 }
               } else {
-                imagesForPosting = [{ url: itemImages[0].partnerSpecificUrl, thumbnailUrl: itemImages[0].thumbnailUrl }];
+                imagesForPosting = [{ url: itemImages[0].partnerSpecificUrl, thumbnailUrl: itemImages[0].thumbnailUrl, imageId: itemImages[0]._id }];
               }
             } else {
               imagesForPosting = itemImages.slice(0, 4).map(image => {
-                return { url: image.partnerSpecificUrl, thumbnailUrl: image.thumbnailUrl }
+                return { url: image.partnerSpecificUrl, thumbnailUrl: image.thumbnailUrl, imageId: image._id }
               });
             }
 
-            update = updates[counter];
             let updateData = {};
+            updateData.images = imagesForPosting;
+            updateData.suggestedText = await ScheduleProductUpdates.getSuggestedText(ruleDetail, defaultLinkSettings[0], item, itemType);
+            update = updates[counter];
             updateData[itemType] = item._id;
             updateData.scheduleState = PENDING;
-            updateData.images = imagesForPosting;
             bulkUpdate.push({
               updateOne: {
                 filter: { uniqKey: update.uniqKey },
@@ -126,10 +151,6 @@ const ScheduleProductUpdates = {
               }
             })
             counter++;
-            // update[itemType] = item._id;
-            // update.scheduleState = PENDING;
-            // update.images = imagesForPosting;
-            // await update.save();
 
             profileHistory = await item.shareHistory.map(history => {
               if (history.profile.toString() == profile.toString()) {
@@ -152,7 +173,6 @@ const ScheduleProductUpdates = {
         }
       }));
       const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
-
     } catch (error) {
       console.error(error.message);
     }
@@ -254,6 +274,29 @@ const ScheduleProductUpdates = {
       query = query.where('collections').nin(ruleDetail.collections);
     }
     return query;
+  },
+  getSuggestedText: async function (ruleDetail, defaultLinkSettings, item, itemType) {
+    const ProductModel = shared.ProductModel;
+    const shortLink = shared.shortLink;
+    const stringHelper = shared.stringHelper;
+
+    const captionsForUpdate = ruleDetail.captions.filter(caption => {
+      if (caption.isDefault) {
+        return caption;
+      }
+    });
+    let productDetail;
+    if (itemType === SCHEDULE_TYPE_VARIANT) {
+      productDetail = await ProductModel.findById(item.product);
+    } else {
+      productDetail = item;
+    }
+    const title = productDetail.title;
+    const price = productDetail.minimumPrice;
+    const description = productDetail.description;
+    const url = await shortLink.getItemShortLink(defaultLinkSettings, productDetail.partnerSpecificUrl, productDetail.url);
+    const captionText = stringHelper.formatCaptionText(captionsForUpdate[0].captionTexts[0], title, url, price, description);
+    return captionText;
   }
 
 }

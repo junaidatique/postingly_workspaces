@@ -15,12 +15,15 @@ type Update {
   scheduleState: ScheduleState!
   images: [UpdateImages]
   text: String
+  suggestedText: String
   postAsOption: String
 }
 type UpdateImages {  
   url: String
   thumbnailUrl: String
+  imageId: ID
 }
+
 enum ScheduleType {
   product
   variant
@@ -47,4 +50,15 @@ input ModelUpdateFilterInput {
   scheduleType: ScheduleType
   scheduleTime: ModelStringFilterInput
   scheduleState: [ScheduleState]!
+}
+input editUpdateInput {
+ text: String 
+ scheduleTime: String
+ postAsOption: String
+ images: [UpdateImagesInput]
+}
+input UpdateImagesInput {  
+  url: String
+  thumbnailUrl: String
+  imageId: ID
 }

@@ -26,5 +26,20 @@ module.exports = {
     } catch (error) {
       throw error;
     }
+  },
+  editUpdate: async (obj, args, context, info) => {
+    console.log("TCL: args", args)
+    try {
+      const updateDetail = await UpdateModel.findById(args.updateId);
+      updateDetail.postAsOption = args.input.postAsOption;
+      updateDetail.text = args.input.text;
+      updateDetail.scheduleTime = args.input.scheduleTime;
+      updateDetail.images = args.input.images;
+      await updateDetail.save();
+      return formattedUpdate(updateDetail);
+    } catch (error) {
+      throw error;
+    }
+
   }
 }

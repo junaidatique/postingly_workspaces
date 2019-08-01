@@ -1,8 +1,8 @@
-exports.cognito_helper = require('./helpers/cognito');
+exports.cognitoHelper = require('./helpers/cognito');
 exports.mongodb = require('shared/helpers/db');
-exports.http_helper = require('./helpers/http');
-exports.jwt_helper = require('./helpers/jwt');
-exports.string_helper = require('./helpers/string');
+exports.httpHelper = require('./helpers/http');
+exports.jwtHelper = require('./helpers/jwt');
+exports.stringHelper = require('./helpers/string');
 exports.query = require('./helpers/query');
 exports.shortLink = require('./helpers/shortLinks');
 

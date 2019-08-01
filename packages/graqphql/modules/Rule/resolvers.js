@@ -9,7 +9,7 @@ const query = require('shared').query;
 let createUpdates;
 let schedule;
 let addCaptions;
-const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
+const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
 if (process.env.IS_OFFLINE || process.env.STAGE == TEST) {
   createUpdates = require('functions').createUpdates.createUpdates;
   schedule = require('functions').scheduleProducts.schedule;
@@ -86,7 +86,7 @@ module.exports = {
             rule: args.input.id,
             scheduleState: { $in: [NOT_SCHEDULED, PENDING, APPROVED] },
             scheduleTime: { $gte: moment().utc() },
-            scheduleType: SCHEDULE_TYPE_PRODUCT
+            scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
           })
       }
     }

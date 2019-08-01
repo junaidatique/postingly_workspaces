@@ -1,7 +1,7 @@
 const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
-const { SCHEDULE_TYPE_PRODUCT, PENDING } = require('shared/constants');
+const { SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT, PENDING } = require('shared/constants');
 let changeCaption;
 if (process.env.IS_OFFLINE) {
   changeCaption = require('functions/changeCaption');
@@ -17,7 +17,7 @@ module.exports = {
         {
           scheduleState: PENDING,
           scheduleTime: { $gt: moment.utc() },
-          scheduleType: SCHEDULE_TYPE_PRODUCT,
+          scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
           rule: { $exists: true },
           autoApproveUpdates: { $ne: false },
           autoAddCaptionOfUpdates: { $ne: false },

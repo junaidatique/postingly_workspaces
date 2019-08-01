@@ -1,7 +1,7 @@
-const http_helper = require('shared').http_helper
-const cognito_helper = require('shared').cognito_helper
-const str = require('shared').string_helper
-const jwt = require('shared').jwt_helper
+const httpHelper = require('shared').httpHelper
+const cognitoHelper = require('shared').cognitoHelper
+const str = require('shared').stringHelper;
+const jwt = require('shared').jwtHelper;
 const StoreModel = require('shared').StoreModel
 
 const querystring = require('querystring')
@@ -20,29 +20,29 @@ module.exports = {
       const shopifyScope = process.env.SHOPIFY_SCOPE;
 
       if (!shopifyApiKey) {
-        return http_helper.badRequest("SHOPIFY_API_KEY environment variable not set", res);
+        return httpHelper.badRequest("SHOPIFY_API_KEY environment variable not set", res);
       }
 
       if (!shopifyScope) {
-        return http_helper.badRequest("SHOPIFY_SCOPE environment variable not set", res);
+        return httpHelper.badRequest("SHOPIFY_SCOPE environment variable not set", res);
       }
 
       if (!event.query) {
-        return http_helper.badRequest("No query string paramters found", res);
+        return httpHelper.badRequest("No query string paramters found", res);
       }
 
       const { "callback-url": callbackUrl, "per-user": perUser, shop } = event.query;
 
       if (!callbackUrl) {
-        return http_helper.badRequest("'callback-url' parameter missing", res);
+        return httpHelper.badRequest("'callback-url' parameter missing", res);
       }
 
       if (!shop) {
-        return http_helper.badRequest("'shop' parameter missing", res);
+        return httpHelper.badRequest("'shop' parameter missing", res);
       }
 
       if (!shop.match(/[a-z0-9][a-z0-9\-]*\.myshopify\.com/i)) {
-        return http_helper.badRequest("'shop' parameter must end with .myshopify.com and may only contain a-z, 0-9, - and .", res);
+        return httpHelper.badRequest("'shop' parameter must end with .myshopify.com and may only contain a-z, 0-9, - and .", res);
       }
 
       // Build our authUrl
@@ -57,7 +57,7 @@ module.exports = {
 
       console.log("-----------------------------getAuthURL Completed-----------------------------")
       // Return the authURL
-      return http_helper.ok(
+      return httpHelper.ok(
         {
           authUrl,
           token: jwt.createJWT(shop, eNonce, now, 600)
@@ -67,35 +67,35 @@ module.exports = {
 
     } catch (e) {
       console.log("-----------------------------getAuthURL Error-----------------------------", e);
-      return http_helper.internalError(res);
+      return httpHelper.internalError(res);
     }
   },
 
   verifyCallback: async function (event, now, res) {
     console.log("-----------------------------verifyCallback Start-----------------------------");
     if (!event.body) {
-      return http_helper.badRequest("body is empty", res);
+      return httpHelper.badRequest("body is empty", res);
     }
     const json = JSON.parse(event.body);
     const { token, params } = json;
     if (!token) {
-      return http_helper.badRequest("'token' is missing", res);
+      return httpHelper.badRequest("'token' is missing", res);
     }
     if (!params) {
-      return http_helper.badRequest("'params' is missing", res);
+      return httpHelper.badRequest("'params' is missing", res);
     }
     console.log("verifyCallback params", params);
     const { code, shop: shopDomain } = params;
     if (!this.validateNonce(token, params)
       || !this.validateShopDomain(shopDomain)
     ) {
-      return http_helper.badRequest("Invalid 'token'", res);
+      return httpHelper.badRequest("Invalid 'token'", res);
     }
     let response;
     try {
       response = await this.exchangeToken(shopDomain, code);
     } catch (err) {
-      return http_helper.badRequest("autherization code is already used.", res);
+      return httpHelper.badRequest("autherization code is already used.", res);
     }
 
     const accessToken = response.access_token;
@@ -104,7 +104,7 @@ module.exports = {
       throw new Error("response[\"access_token\"] is undefined");
     }
     const shop = await this.getShop(shopDomain, accessToken);
-    const userName = await cognito_helper.createUser(shop.email, shopDomain);
+    const userName = await cognitoHelper.createUser(shop.email, shopDomain);
 
     storeKey = `shopify-${shop.id}`;
 
@@ -148,7 +148,7 @@ module.exports = {
     console.log("chargeAuthorizationUrl:", chargeAuthorizationUrl)
     nonce = str.getRandomString(32);
     console.log("-----------------------------verifyCallback Completed-----------------------------");
-    return http_helper.ok({
+    return httpHelper.ok({
       chargeURL: chargeAuthorizationUrl,
       userName: userName,
       token: jwt.createJWT(userName, nonce, now, 600),
@@ -294,20 +294,20 @@ module.exports = {
   activatePayment: async function (event, now, res) {
     console.log("-----------------------------activatePayment Start-----------------------------");
     if (!event.body) {
-      return http_helper.badRequest("body is empty", res);
+      return httpHelper.badRequest("body is empty", res);
     }
     const json = JSON.parse(event.body);
     const { token, params } = json;
     if (!token) {
-      return http_helper.badRequest("'token' is missing", res);
+      return httpHelper.badRequest("'token' is missing", res);
     }
     if (!params) {
-      return http_helper.badRequest("'params' is missing", res);
+      return httpHelper.badRequest("'params' is missing", res);
     }
     console.log("activatePayment params", params);
     const { charge_id, shop } = params;
     if (!this.validateShopDomain(shop)) {
-      return http_helper.badRequest("Invalid 'shop'", res);
+      return httpHelper.badRequest("Invalid 'shop'", res);
     }
     storeKey = `shopify-${shop}`;
     console.log("activatePayment storeKey", storeKey);
@@ -321,14 +321,14 @@ module.exports = {
       chargeResponse = await this.getCharge(shop, charge_id, accessToken)
     } catch (err) {
       console.log("get charge error", err);
-      return http_helper.badRequest("charge not found.", res);
+      return httpHelper.badRequest("charge not found.", res);
     }
 
     try {
       const activateResponse = await this.activateCharge(shop, chargeResponse, accessToken);
     } catch (err) {
       console.log("activate charge erro", err);
-      return http_helper.badRequest("charge not activated.", res);
+      return httpHelper.badRequest("charge not activated.", res);
     }
     store.isCharged = true;
     store.chargedMethod = 'shopify';
@@ -341,7 +341,7 @@ module.exports = {
     }
     console.log("-----------------------------activatePayment Completed-----------------------------");
 
-    return http_helper.ok({
+    return httpHelper.ok({
       message: "Done",
     }, res);
 

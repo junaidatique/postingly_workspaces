@@ -1,7 +1,7 @@
 const shared = require('shared');
 const moment = require('moment-timezone');
 // const momentTz = require('moment-timezone');
-const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
+const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
 
 module.exports = {
   createUpdates: async function (event, context) {
@@ -72,7 +72,7 @@ module.exports = {
                   postAsOption: ruleDetail.postAsOption,
                   scheduleTime: updateTime,
                   postType: ruleDetail.type,
-                  scheduleType: SCHEDULE_TYPE_PRODUCT,
+                  scheduleType: (ruleDetail.postAsVariants) ? SCHEDULE_TYPE_VARIANT : SCHEDULE_TYPE_PRODUCT,
                   autoApproveUpdates: storeDetail.autoApproveUpdates,
                   autoAddCaptionOfUpdates: storeDetail.autoAddCaptionOfUpdates,
                   captionsUpdated: false,

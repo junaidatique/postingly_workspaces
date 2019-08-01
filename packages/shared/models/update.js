@@ -4,6 +4,9 @@ const Schema = mongoose.Schema;
 const { SERVICES, SCHEDULE_STATE, POST_AS_OPTION, RULE_TYPE, SCHEDULE_TYPE, NOT_SCHEDULED, SERVICE_PROFILES } = require('shared/constants');
 
 const IMAGE = {
+  imageId: {
+    type: Schema.Types.ObjectId,
+  },
   url: {
     type: String
   },
@@ -77,6 +80,9 @@ const updateSchema = new mongoose.Schema({
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
   text: {
+    type: String
+  },
+  suggestedText: {
     type: String
   },
   scheduleState: {

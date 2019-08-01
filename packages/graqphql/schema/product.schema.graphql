@@ -64,7 +64,7 @@ type ProductImage {
   partnerCreatedAt: String
   partnerUpdatedAt: String
   url: String
-  thumbnail_url: String
+  thumbnailUrl: String
 }
 
 type Collection {

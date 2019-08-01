@@ -25,6 +25,14 @@ module.exports = {
     formatedText = striptags(formatedText);
     formatedText = formatedText.replace('#cb-yzsehx-detail-wrap *{max-width: 100% !important;box-sizing: border-box;}', '');
     return formatedText;
+  },
+  formatCaptionText: function (captionText, title, url, price, description) {
+    let formattedCaption = captionText;
+    formattedCaption = formattedCaption.replace('[product-title]', title);
+    formattedCaption = formattedCaption.replace('[product-price]', price);
+    formattedCaption = formattedCaption.replace('[product-url]', url);
+    formattedCaption = formattedCaption.replace('[product-description]', description);
+    return formattedCaption;
   }
 
 }

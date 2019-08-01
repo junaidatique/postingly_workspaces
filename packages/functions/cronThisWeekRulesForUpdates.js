@@ -1,7 +1,7 @@
 const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
-const { SCHEDULE_TYPE_PRODUCT, NOT_SCHEDULED } = require('shared/constants');
+const { SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT, NOT_SCHEDULED } = require('shared/constants');
 if (process.env.IS_OFFLINE) {
   facebookUpdates = require('functions/facebookUpdates');
 }
@@ -15,7 +15,7 @@ module.exports = {
         {
           scheduleState: NOT_SCHEDULED,
           scheduleTime: { $gt: moment.utc() },
-          scheduleType: SCHEDULE_TYPE_PRODUCT,
+          scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
           rule: { $exists: true }
         }
       );

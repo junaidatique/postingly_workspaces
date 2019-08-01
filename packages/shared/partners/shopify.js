@@ -4,7 +4,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const { PARTNERS_SHOPIFY } = require('shared/constants');
 
-const str = require('shared').string_helper
+const str = require('shared').stringHelper;
 
 module.exports = {
   syncStoreData: async function (event) {
