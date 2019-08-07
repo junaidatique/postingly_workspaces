@@ -13,6 +13,7 @@ type Product {
   partnerUpdatedAt: String
   uniqKey: String!
   description: String
+  suggestedCaption: String
   position: String
   isPublished: Boolean
   quantity: Int

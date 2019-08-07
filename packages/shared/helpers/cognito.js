@@ -1,6 +1,6 @@
 const AWS = require("aws-sdk");;
 module.exports = {
-  createUser: async function (email, shopDomain) {
+  createUser: async function (username, email, shopDomain) {
     console.log("createUser email", email);
     console.log("createUser shopDomain", shopDomain);
     AWS.config.update({ accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, region: process.env.AWS_REGION });
@@ -20,7 +20,7 @@ module.exports = {
 
       ],
       UserPoolId: userPoolId,
-      Username: email,
+      Username: username,
     };
     console.log("createUser userParams", userParams);
     try {
@@ -31,10 +31,11 @@ module.exports = {
       }
       throw Error("No username!!");
     } catch (err) {
+      console.log("TCL: err", err.message)
       if (err.code === "UsernameExistsException") {
         const user = await identityProvider.adminGetUser({
           UserPoolId: userPoolId,
-          Username: email,
+          Username: username,
         }).promise();
         console.log("createUser adminGetUser User", user);
         return user.Username;

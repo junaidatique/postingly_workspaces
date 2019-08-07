@@ -51,6 +51,9 @@ const productSchema = new Schema({
   description: {
     type: String
   },
+  suggestedCaption: {
+    type: String
+  },
   partner: {
     type: String,
     required: true,

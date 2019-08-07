@@ -19,5 +19,6 @@ type Mutation {
   deleteRule(ruleId: ID!): Rule
   deleteUpdate(updateId: ID!): Update
   editUpdate(updateId: ID!, input: editUpdateInput!): Update
+  createUpdate(input: createUpdateInput!): Update
 }
 

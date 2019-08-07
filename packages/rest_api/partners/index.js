@@ -1,4 +1,4 @@
-const shopify = require('./shopify');
+const shopify = require('shared').PartnerShopify;
 module.exports = {
   getPartner: function (req) {
     partner = req.params.partner_slug;

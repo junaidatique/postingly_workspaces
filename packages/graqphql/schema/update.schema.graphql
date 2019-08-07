@@ -62,3 +62,10 @@ input UpdateImagesInput {
   thumbnailUrl: String
   imageId: ID
 }
+input createUpdateInput {
+ text: String 
+ scheduleTime: String
+ postAsOption: String
+ profiles: [ID]
+ images: [UpdateImagesInput]
+}
