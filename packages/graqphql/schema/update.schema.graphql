@@ -75,3 +75,7 @@ input createUpdateInput {
  store: ID
 }
 
+type ListUpdateResponse {
+  totalRecords: Int,
+  updates: [Update]
+}

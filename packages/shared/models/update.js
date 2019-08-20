@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
+var mongoosePaginate = require('mongoose-paginate');
 const { SERVICES, SCHEDULE_STATE, POST_AS_OPTION, RULE_TYPE, SCHEDULE_TYPE, NOT_SCHEDULED, SERVICE_PROFILES } = require('shared/constants');
 
 const IMAGE = {
@@ -110,5 +110,7 @@ updateSchema.set('timestamps', true);
 if (process.env.IS_OFFLINE) {
   delete mongoose.connection.models.Update;
 }
+
+updateSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('Update', updateSchema);

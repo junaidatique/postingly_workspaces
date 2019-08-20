@@ -6,7 +6,7 @@ type Query {
   getRule(storeId: ID!, ruleId: ID!): Rule
   listProducts(filter: ModelProductFilterInput!, limit: Int, skip: Int): [Product]
   listCollections(filter: ModelCollectionFilterInput!, limit: Int, skip: Int): [Collection]
-  listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): [Update]
+  listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): ListUpdateResponse
 }
 
 

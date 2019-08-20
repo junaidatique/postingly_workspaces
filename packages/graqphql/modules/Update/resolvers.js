@@ -6,16 +6,26 @@ const { APPROVED } = require('shared/constants');
 module.exports = {
   listUpdates: async (obj, args, context, info) => {
     try {
-      searchQuery = query.createSearchQuery(UpdateModel, args);
-      searchQuery = searchQuery.where('store').equals(args.filter.storeId);
-      searchQuery = searchQuery.where('service').equals(args.filter.service);
-      searchQuery = searchQuery.where('scheduleState').in(args.filter.scheduleState);
-      searchQuery = searchQuery.where('scheduleTime').gte(moment().utc())
-      const updates = await searchQuery.sort({ scheduleTime: 1 });
-      console.log("TCL: updates", updates)
-      return updatesList = updates.map(update => {
+
+      searchQuery = {
+        store: args.filter.storeId,
+        service: args.filter.service,
+        scheduleState: args.filter.scheduleState,
+        scheduleTime: { "$gte": moment().utc() },
+      }
+      searchOptions = {
+        sort: { scheduleTime: 1 },
+        offset: args.skip,
+        limit: args.limit
+      }
+      const updates = await UpdateModel.paginate(searchQuery, searchOptions);
+      const updatesList = updates.docs.map(update => {
         return formattedUpdate(update)
       });
+      return {
+        updates: updatesList,
+        totalRecords: updates.total
+      }
     } catch (error) {
       throw error;
     }
