@@ -1,7 +1,7 @@
 const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
-const { APPROVED, PENDING, SCHEDULE_TYPE_VARIANT, LINK_SHORTNER_SERVICES_NONE, LINK_SHORTNER_SERVICES_POOOST, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
+const { APPROVED, PENDING, SCHEDULE_TYPE_VARIANT, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
 
 module.exports = {
   update: async function (event, context) {
@@ -48,12 +48,8 @@ module.exports = {
           const title = productDetail.title;
           const price = productDetail.minimumPrice;
           const description = productDetail.description;
-          const defaultLinkSettings = StoreDetail.linkSettings.map(linkSetting => {
-            if (linkSetting.isDefault) {
-              return linkSetting;
-            }
-          });
-          const url = await shortLink.getItemShortLink(defaultLinkSettings[0], productDetail.partnerSpecificUrl, productDetail.url);
+          const defaultShortLinkService = StoreDetail.shortLinkService;
+          const url = await shortLink.getItemShortLink(defaultShortLinkService, productDetail.partnerSpecificUrl, productDetail.url);
           if (!_.isNull(url)) {
             const ruleCaptions = ruleDetail.captions.map(caption => {
               return caption;

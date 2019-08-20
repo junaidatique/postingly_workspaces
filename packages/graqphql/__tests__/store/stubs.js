@@ -22,10 +22,7 @@ const createStoreStub = async () => {
     timezone: "Asia/Karachi",
     autoApproveUpdates: true,
     autoAddCaptionOfUpdates: true,
-    linkSettings: {
-      service: LINK_SHORTNER_SERVICES_POOOST,
-      isDefault: true
-    }
+    shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
   };
 
   const storeInstance = await StoreModel.create(shopCreateStoreParams);

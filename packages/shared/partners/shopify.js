@@ -2,7 +2,7 @@ const shared = require('shared');
 const fetch = require('node-fetch');
 const _ = require('lodash');
 const moment = require('moment');
-const { PARTNERS_SHOPIFY, FACEBOOK_DEFAULT_TEXT } = require('shared/constants');
+const { PARTNERS_SHOPIFY, FACEBOOK_DEFAULT_TEXT, LINK_SHORTNER_SERVICES_POOOST, LINK_SHORTNER_SERVICES_NONE } = require('shared/constants');
 
 const str = require('shared').stringHelper;
 const httpHelper = require('shared').httpHelper
@@ -138,6 +138,7 @@ module.exports = {
         moneyFormat: shop.money_format,
         moneyWithCurrencyFormat: shop.money_with_currency_format,
         isCharged: false,
+        shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
         // chargedMethod: '',
         // chargeId: '',
         isUninstalled: false,
@@ -593,7 +594,7 @@ module.exports = {
             postableByImage: (product.images.length > 0) ? true : false,
             postableByQuantity: (quantity > 0) ? true : false,
             postableByPrice: (minimumPrice > 0) ? true : false,
-            postableIsNew: (moment(product.created_at).isAfter(moment().subtract(7, 'days'))) ? true : false,
+            postableIsNew: (moment(product.created_at).isAfter(moment().subtract(1, 'days'))) ? true : false,
             postableBySale: onSale
           },
           upsert: true

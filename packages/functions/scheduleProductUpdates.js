@@ -39,11 +39,7 @@ const ScheduleProductUpdates = {
 
       const StoreDetail = await StoreModel.findById(ruleDetail.store);
 
-      const defaultLinkSettings = StoreDetail.linkSettings.map(linkSetting => {
-        if (linkSetting.isDefault) {
-          return linkSetting;
-        }
-      });
+      const defaultShortLinkService = StoreDetail.shortLinkService;
 
       // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
       if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
@@ -139,7 +135,7 @@ const ScheduleProductUpdates = {
 
             let updateData = {};
             updateData.images = imagesForPosting;
-            updateData.suggestedText = await ScheduleProductUpdates.getSuggestedText(ruleDetail, defaultLinkSettings[0], item, itemType);
+            updateData.suggestedText = await ScheduleProductUpdates.getSuggestedText(ruleDetail, defaultShortLinkService, item, itemType);
             update = updates[counter];
             updateData[itemType] = item._id;
             updateData.scheduleState = PENDING;
@@ -275,7 +271,7 @@ const ScheduleProductUpdates = {
     }
     return query;
   },
-  getSuggestedText: async function (ruleDetail, defaultLinkSettings, item, itemType) {
+  getSuggestedText: async function (ruleDetail, defaultShortLinkService, item, itemType) {
     const ProductModel = shared.ProductModel;
     const shortLink = shared.shortLink;
     const stringHelper = shared.stringHelper;
@@ -294,7 +290,7 @@ const ScheduleProductUpdates = {
     const title = productDetail.title;
     const price = productDetail.minimumPrice;
     const description = productDetail.description;
-    const url = await shortLink.getItemShortLink(defaultLinkSettings, productDetail.partnerSpecificUrl, productDetail.url);
+    const url = await shortLink.getItemShortLink(defaultShortLinkService, productDetail.partnerSpecificUrl, productDetail.url);
     const captionText = stringHelper.formatCaptionText(captionsForUpdate[0].captionTexts[0], title, url, price, description);
     return captionText;
   }

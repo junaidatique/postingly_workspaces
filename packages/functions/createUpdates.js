@@ -84,6 +84,7 @@ module.exports = {
           });
         });
         const updates = await UpdateModel.bulkWrite([].concat.apply([], bulkUpdatesWrite));
+        // scheduleState is set seperately because there may be some updates that are updated. so scheduleState is updated for only newly created updates.
         if (updates.result.nUpserted > 0) {
           const bulkUpdate = updates.result.upserted.map(updateTime => {
             return {

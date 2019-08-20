@@ -4,19 +4,7 @@ const Schema = mongoose.Schema;
 
 const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
 
-const LINK_SHORTNER = {
-  service: {
-    type: String,
-    enum: LINK_SHORTNER_SERVICES
-  },
-  api_key: {
-    type: String,
-  },
-  isDefault: {
-    type: Boolean,
-    default: false,
-  },
-}
+
 
 const storeSchema = new mongoose.Schema({
   products: [
@@ -142,7 +130,10 @@ const storeSchema = new mongoose.Schema({
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
-  linkSettings: [LINK_SHORTNER],
+  shortLinkService: {
+    type: String,
+    enum: LINK_SHORTNER_SERVICES
+  },
   autoApproveUpdates: {
     type: Boolean,
     default: true,

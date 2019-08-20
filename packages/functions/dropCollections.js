@@ -12,16 +12,15 @@ addCaptions = require('functions').cronAddCaptions.execute;
 postUpdates = require('functions').postUpdates.share;
 module.exports = {
   execute: async function (event, context) {
-    // const storeId = "5d0750dba96a8dd6c8799110";
+    const storeId = "5d4ab991c91923338c2997c4";
     const CollectionModel = shared.CollectionModel;
     const ImageModel = shared.ImageModel;
     const ProductModel = shared.ProductModel;
     const UpdateModel = shared.UpdateModel;
     const VariantModel = shared.VariantModel;
-
     const RuleModel = shared.RuleModel;
-    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
 
+    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
     await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
     await ImageModel.collection.deleteMany({ _id: { $exists: true } });
     await ProductModel.collection.deleteMany({ _id: { $exists: true } });

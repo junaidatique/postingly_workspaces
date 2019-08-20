@@ -55,7 +55,7 @@ const profileSchema = new mongoose.Schema({
   },
   isConnected: {
     type: Boolean,
-    default: true,
+    default: false,
   },
   isTokenExpired: {
     type: Boolean,

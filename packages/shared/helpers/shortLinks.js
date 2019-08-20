@@ -3,19 +3,18 @@ const fetch = require("node-fetch");
 const { LINK_SHORTNER_SERVICES_NONE, LINK_SHORTNER_SERVICES_POOOST } = require('shared/constants');
 
 const shortLink = {
-  getItemShortLink: async function (defaultLinkSettings, partnerSpecificUrl, ProductDetailUrls) {
+  getItemShortLink: async function (defaultShortLinkService, partnerSpecificUrl, ProductDetailUrls) {
     let url = null;
-    if (_.isEmpty(defaultLinkSettings) || defaultLinkSettings.service == LINK_SHORTNER_SERVICES_NONE) {
+    if (_.isEmpty(defaultShortLinkService) || defaultShortLinkService == LINK_SHORTNER_SERVICES_NONE) {
       url = partnerSpecificUrl;
     } else {
       url = ProductDetailUrls.map(link => {
-        if (defaultLinkSettings.service == link.service) {
+        if (defaultShortLinkService == link.service) {
           return link.url;
         }
       })
-
       if (_.isEmpty(url)) {
-        if (defaultLinkSettings.service === LINK_SHORTNER_SERVICES_POOOST) {
+        if (defaultShortLinkService.service === LINK_SHORTNER_SERVICES_POOOST) {
           url = await shortLink.pooostURL(productDetail.partnerSpecificUrl);
         }
       }

@@ -17,6 +17,7 @@ type Update {
   text: String
   suggestedText: String
   postAsOption: String
+  postType: String
 }
 type UpdateImages {  
   url: String
@@ -64,8 +65,13 @@ input UpdateImagesInput {
 }
 input createUpdateInput {
  text: String 
- scheduleTime: String
+ scheduleTime: String!
  postAsOption: String
- profiles: [ID]
+ profiles: [ID]!
  images: [UpdateImagesInput]
+ product: ID
+ service: Service
+ scheduleType: ScheduleType,
+ store: ID
 }
+
