@@ -67,6 +67,9 @@ const variantSchema = new Schema({
   quantity: {
     type: Number
   },
+  suggestedText: {
+    type: String
+  },
   price: {
     type: mongoose.Decimal128
   },

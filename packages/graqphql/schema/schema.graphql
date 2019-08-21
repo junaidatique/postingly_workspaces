@@ -4,7 +4,7 @@ type Query {
   getStore(uniqKey: String!): Store
   listRules(filter: ModelRuleFilterInput!, limit: Int, skip: Int): [Rule]
   getRule(storeId: ID!, ruleId: ID!): Rule
-  listProducts(filter: ModelProductFilterInput!, limit: Int, skip: Int): [Product]
+  listProducts(filter: ModelProductFilterInput!, limit: Int, skip: Int): ListProductResponse
   listCollections(filter: ModelCollectionFilterInput!, limit: Int, skip: Int): [Collection]
   listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): ListUpdateResponse
 }

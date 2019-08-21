@@ -23,6 +23,7 @@ type UpdateImages {
   url: String
   thumbnailUrl: String
   imageId: ID
+  partnerId: String
 }
 
 enum ScheduleType {

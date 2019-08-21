@@ -36,17 +36,24 @@ module.exports = {
         const updatedObject = {};
         if (update.autoAddCaptionOfUpdates) {
           const ruleDetail = await RuleModel.findById(update.rule);
-          let productId;
+          let productId, variantDetail;
           if (ruleDetail.postAsVariants) {
-            const variantDetail = await VariantModel.findById(update[SCHEDULE_TYPE_VARIANT]);
+            variantDetail = await VariantModel.findById(update[SCHEDULE_TYPE_VARIANT]);
             productId = variantDetail.product;
           } else {
             productId = update.product;
           }
           const productDetail = await ProductModel.findById(productId);
           const StoreDetail = await StoreModel.findById(update.store);
-          const title = productDetail.title;
-          const price = productDetail.minimumPrice;
+          let title, price;
+          if (ruleDetail.postAsVariants) {
+            title = variantDetail.title;
+            price = variantDetail.price;
+          } else {
+            title = productDetail.title;
+            price = productDetail.minimumPrice;
+          }
+
           const description = productDetail.description;
           const defaultShortLinkService = StoreDetail.shortLinkService;
           const url = await shortLink.getItemShortLink(defaultShortLinkService, productDetail.partnerSpecificUrl, productDetail.url);

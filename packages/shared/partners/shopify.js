@@ -577,7 +577,7 @@ module.exports = {
           update: {
             title: product.title,
             description: str.stripTags(product.body_html),
-            suggestedCaption: str.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, url, minimumPrice, str.stripTags(product.body_html)),
+            suggestedText: str.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, url, minimumPrice, str.stripTags(product.body_html)),
             partnerSpecificUrl: url,
             partner: PARTNERS_SHOPIFY,
             partnerId: product.id,
@@ -602,7 +602,7 @@ module.exports = {
       }
     });
     const products = await ProductModel.bulkWrite(bulkProductInsert);
-    const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections');
+    const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections url description');
     if (!_.isNull(event.collectionId)) {
       const bulkCollectionUpdate = dbProducts.map(product => {
         let collections = product.collections;
@@ -678,6 +678,7 @@ module.exports = {
                 position: variant.position,
                 quantity: variant.inventory_quantity,
                 store: event.storeId,
+                suggestedText: str.formatCaptionText(FACEBOOK_DEFAULT_TEXT, variant.title, productForVariant.url, variant.price, str.stripTags(productForVariant.description)),
                 product: productForVariant._id,
                 postableByImage: productForVariant.postableByImage,
                 postableByQuantity: (variant.inventory_quantity > 0) ? true : false,
@@ -703,7 +704,7 @@ module.exports = {
         }
         productImages[image.product].push(image._id)
       })
-      // variants that are recently synced.
+      // creating productVariants to add variants that are recently synced for the product.
       const dbVariants = await VariantModel.where('product').in(dbProducts.map(product => product._id)).select('_id product uniqKey');
       dbVariants.forEach(image => {
         if (_.isEmpty(productVariants[image.product])) {
@@ -711,7 +712,7 @@ module.exports = {
         }
         productVariants[image.product].push(image._id)
       })
-      // query to update variants. 
+      // query to update variants and images for the products. 
       bulkProductUpdate = dbProducts.map(product => {
         return {
           updateOne: {

@@ -12,6 +12,9 @@ const IMAGE = {
   },
   thumbnailUrl: {
     type: String
+  },
+  partnerId: {
+    type: String
   }
 }
 

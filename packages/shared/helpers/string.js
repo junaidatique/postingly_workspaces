@@ -22,6 +22,7 @@ module.exports = {
     formatedText = formatedText.replace(/<li>\n/ig, '<li>');
     formatedText = formatedText.replace(/<li>/ig, '\n➤ ');
     formatedText = formatedText.replace(/<\/li>/ig, '');
+    formatedText = formatedText.replace(/&amp;/ig, ' ');
     formatedText = striptags(formatedText);
     formatedText = formatedText.replace('#cb-yzsehx-detail-wrap *{max-width: 100% !important;box-sizing: border-box;}', '');
     return formatedText;

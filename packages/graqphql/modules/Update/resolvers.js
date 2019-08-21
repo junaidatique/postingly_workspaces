@@ -42,8 +42,8 @@ module.exports = {
   editUpdate: async (obj, args, context, info) => {
     try {
       const updateDetail = await UpdateModel.findById(args.updateId);
-      updateDetail.postAsOption = args.input.postAsOption;
       updateDetail.text = args.input.text;
+      updateDetail.postAsOption = args.input.postAsOption;
       updateDetail.scheduleTime = args.input.scheduleTime;
       updateDetail.images = args.input.images;
       await updateDetail.save();

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+var mongoosePaginate = require('mongoose-paginate');
 const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
 
 const SHORT_LINK = {
@@ -51,7 +52,7 @@ const productSchema = new Schema({
   description: {
     type: String
   },
-  suggestedCaption: {
+  suggestedText: {
     type: String
   },
   partner: {
@@ -135,5 +136,5 @@ productSchema.set('timestamps', true);
 if (process.env.IS_OFFLINE) {
   delete mongoose.connection.models.Product;
 }
-
+productSchema.plugin(mongoosePaginate);
 module.exports = mongoose.model('Product', productSchema);

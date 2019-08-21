@@ -11,6 +11,7 @@ const formattedUpdate = async (update) => {
     profile: profileFunctions.getProfileById.bind(this, update._doc.profile),
     rule: ruleFunctions.getRuleById.bind(this, update._doc.rule),
     product: productFunctions.getProductById.bind(this, update._doc.product),
+    variant: productFunctions.getVariantById.bind(this, update._doc.variant),
     scheduleTime: (update.scheduleTime !== undefined) ? moment(update.scheduleTime).toISOString() : null,
   }
 }

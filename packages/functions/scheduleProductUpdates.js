@@ -30,7 +30,7 @@ const ScheduleProductUpdates = {
       const StoreModel = shared.StoreModel;
 
       // define vars
-      let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting;
+      let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting, updateData;
       // get rule and store
       const ruleDetail = await RuleModel.findById(event.ruleId);
       if (ruleDetail === null) {
@@ -76,7 +76,12 @@ const ScheduleProductUpdates = {
 
           counter = 0;
           await Promise.all(postItems.map(async item => {
-            itemImages = _.orderBy(item.images, ['position'], ['asc']);
+            if (item.images.length === 0 && itemType === SCHEDULE_TYPE_VARIANT) {
+              productImages = await ImageModel.find({ product: item.product });
+              itemImages = _.orderBy(productImages, ['position'], ['asc']);
+            } else {
+              itemImages = _.orderBy(item.images, ['position'], ['asc']);
+            }
             if (imageLimit == 1) {
               if (ruleDetail.rotateImages && (ruleDetail.postAsOption === POST_AS_OPTION_FB_PHOTO || ruleDetail.postAsOption === POST_AS_OPTION_TW_PHOTO)) {
                 if (ruleDetail.rotateImageLimit > 0) {
@@ -89,6 +94,7 @@ const ScheduleProductUpdates = {
                         'imageId': image._id,
                         'url': image.partnerSpecificUrl,
                         'thumbnailUrl': image.thumbnailUrl,
+                        'partnerId': image.partnerId,
                         'position': image.position,
                         'historyId': history._id,
                         'counter': history.counter,
@@ -101,8 +107,9 @@ const ScheduleProductUpdates = {
                   if (_.isEmpty(imageHistory)) {
                     return {
                       'imageId': itemImages[count]._id,
-                      'url': itemImages[count].partnerSpecificUrl,
+                      'partnerSpecificUrl': itemImages[count].partnerSpecificUrl,
                       'thumbnailUrl': itemImages[count].thumbnailUrl,
+                      'partnerId': itemImages[count].partnerId,
                       'position': itemImages[count++].position,
                       'historyId': null,
                       'counter': 0
@@ -114,7 +121,7 @@ const ScheduleProductUpdates = {
                 });
                 itemImages = _.orderBy(itemImages, ['counter', 'position'], ['asc', 'asc']);
                 const postingImage = itemImages[0];
-                imagesForPosting = [{ url: postingImage.url }];
+                imagesForPosting = [{ url: postingImage.partnerSpecificUrl, thumbnailUrl: postingImage.thumbnailUrl, imageId: postingImage.imageId, partnerId: postingImage.partnerId }];
                 const dbImage = await ImageModel.findById(postingImage.imageId);
                 if (_.isNull(postingImage.historyId)) {
                   dbImage.shareHistory = { profile: profile, counter: 1 };
@@ -125,17 +132,18 @@ const ScheduleProductUpdates = {
                   await dbImage.save();
                 }
               } else {
-                imagesForPosting = [{ url: itemImages[0].partnerSpecificUrl, thumbnailUrl: itemImages[0].thumbnailUrl, imageId: itemImages[0]._id }];
+                imagesForPosting = [{ url: itemImages[0].partnerSpecificUrl, thumbnailUrl: itemImages[0].thumbnailUrl, imageId: itemImages[0]._id, partnerId: itemImages[0].partnerId }];
               }
             } else {
               imagesForPosting = itemImages.slice(0, 4).map(image => {
-                return { url: image.partnerSpecificUrl, thumbnailUrl: image.thumbnailUrl, imageId: image._id }
+                return { url: image.partnerSpecificUrl, thumbnailUrl: image.thumbnailUrl, imageId: image._id, partnerId: image.partnerId }
               });
             }
-
-            let updateData = {};
+            updateData = {};
+            if (itemType === SCHEDULE_TYPE_VARIANT) {
+              updateData[SCHEDULE_TYPE_PRODUCT] = item.product;
+            }
             updateData.images = imagesForPosting;
-            updateData.suggestedText = await ScheduleProductUpdates.getSuggestedText(ruleDetail, defaultShortLinkService, item, itemType);
             update = updates[counter];
             updateData[itemType] = item._id;
             updateData.scheduleState = PENDING;

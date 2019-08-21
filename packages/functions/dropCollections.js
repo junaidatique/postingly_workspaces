@@ -32,6 +32,7 @@ module.exports = {
     })
 
     const ruleDetail = await RuleModel.findOne({ store: storeId });
+    console.log("TCL: ruleDetail", ruleDetail)
     await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: 'next' });
     await schedule({ ruleId: ruleDetail._id });
     await addCaptions();

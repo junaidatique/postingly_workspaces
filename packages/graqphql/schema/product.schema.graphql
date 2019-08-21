@@ -13,7 +13,7 @@ type Product {
   partnerUpdatedAt: String
   uniqKey: String!
   description: String
-  suggestedCaption: String
+  suggestedText: String
   position: String
   isPublished: Boolean
   quantity: Int
@@ -43,6 +43,7 @@ type Variant {
   partnerUpdatedAt: String
   uniqKey: String
   description: String
+  suggestedText: String
   position: String
   isPublished: Boolean
   quantity: Int
@@ -87,4 +88,9 @@ input ModelProductFilterInput {
 input ModelCollectionFilterInput {
   storeId: ID!
   title: ModelStringFilterInput
+}
+
+type ListProductResponse {
+  totalRecords: Int,
+  products: [Product]
 }
