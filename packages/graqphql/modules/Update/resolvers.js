@@ -3,6 +3,7 @@ const formattedUpdate = require('./functions').formattedUpdate;
 const query = require('shared').query;
 const moment = require('moment');
 const { APPROVED } = require('shared/constants');
+const str = require('shared').stringHelper;
 module.exports = {
   listUpdates: async (obj, args, context, info) => {
     try {
@@ -72,7 +73,7 @@ module.exports = {
               scheduleType: args.input.scheduleType,
               service: args.input.service,
               profile: profileId,
-              uniqKey: `${profileId}-${args.input.scheduleTime}`,
+              uniqKey: `${profileId}-${args.input.product}-${args.input.scheduleTime}-${str.getRandomString(8)}`,
               scheduleState: APPROVED,
               userEdited: true
             }

@@ -8,7 +8,8 @@ const formattedRule = async (rule) => {
     store: storeFunctions.getStoreByID.bind(this, rule._doc.store),
     profiles: profileFunctions.getProfiles.bind(this, rule._doc.profiles),
     collections: collectionFunctions.getCollections.bind(this, rule._doc.collections),
-    captions: formatCaptions.bind(this, rule._doc.captions)
+    captions: formatCaptions.bind(this, rule._doc.captions),
+    createdAt: (rule.createdAt !== undefined) ? rule.createdAt.toISOString() : null,
   }
 }
 const getRuleById = async ruleId => {

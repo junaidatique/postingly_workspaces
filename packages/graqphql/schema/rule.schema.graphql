@@ -57,6 +57,7 @@ type Rule {
   # selectedPostTimes: SelectedPostTimes
   captions: [Caption]
   active: Boolean
+  createdAt: String
 }
 type Caption {  
   # collectionOption: collectionOptions

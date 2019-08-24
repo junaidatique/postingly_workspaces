@@ -63,6 +63,7 @@ input UpdateImagesInput {
   url: String
   thumbnailUrl: String
   imageId: ID
+  partnerId: String
 }
 input createUpdateInput {
  text: String 

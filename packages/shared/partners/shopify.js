@@ -109,7 +109,7 @@ module.exports = {
     }
     const shop = await this.getShop(shopDomain, accessToken);
     let cognitoUser;
-    if (!_.isUndefined(username) || !_.isNull(username)) {
+    if (!_.isUndefined(username) && !_.isNull(username)) {
       cognitoUser = await cognitoHelper.createUser(username, email, shopDomain);
     } else {
       cognitoUser = await cognitoHelper.createUser(shop.email, shop.email, shopDomain);
@@ -297,7 +297,7 @@ module.exports = {
       method: "GET",
     });
     const json = await resp.json();
-    console.log("getShop json", json);
+    console.log("getShop json", json.shop);
     return json.shop;
   },
 
@@ -416,8 +416,9 @@ module.exports = {
   syncStoreData: async function (event) {
     console.log('syncStoreData event', event);
     const ProductModel = shared.ProductModel;
+    // Collections are reset so that new collections can be assigned to products. 
+    const dbCollectionsUpdate = await ProductModel.updateMany({ store: event.storeId }, { collections: [] });
     if (process.env.IS_OFFLINE) {
-      const dbCollectionsUpdate = await ProductModel.updateMany({ store: event.storeId }, { collections: [] });
       await this.syncCollections({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY });
       await this.syncProducts({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null });
     }
