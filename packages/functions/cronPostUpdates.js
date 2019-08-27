@@ -2,9 +2,9 @@ const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
 const { APPROVED, FACEBOOK_SERVICE } = require('shared/constants');
-let facebookUpdates;
+let shareUpdates;
 if (process.env.IS_OFFLINE) {
-  facebookUpdates = require('functions/facebookUpdates');
+  shareUpdates = require('functions/shareUpdates');
 }
 
 module.exports = {
@@ -13,16 +13,14 @@ module.exports = {
       const UpdateModel = shared.UpdateModel;
       let updates;
       if (process.env.IS_OFFLINE) {
-        updates = await UpdateModel.where('scheduleState').equals(APPROVED);
+        updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(1);
       } else {
         const next_five_minutes = getRoundedDate(5);
         updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $lt: next_five_minutes } });
       }
       await Promise.all(updates.map(async update => {
         if (process.env.IS_OFFLINE) {
-          if (update.service === FACEBOOK_SERVICE) {
-            await facebookUpdates.share({ updateId: update._id });
-          }
+          await shareUpdates.share({ updateId: update._id });
         } else {
           // var params = {
           //   FunctionName: 'Lambda_B', // the lambda function we are going to invoke

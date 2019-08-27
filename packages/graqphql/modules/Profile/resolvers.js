@@ -1,4 +1,4 @@
-const fbConnect = require('./services/facebook');
+const fbConnect = require('shared').FacebookService;
 const { FACEBOOK_SERVICE, TEST } = require('shared/constants');
 const formattedProfile = require('./functions').formattedProfile;
 const ProfileModel = require('shared').ProfileModel;

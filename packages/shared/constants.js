@@ -1,9 +1,10 @@
 
-exports.FACEBOOK_GRPAHAPI_URL = 'https://graph.facebook.com/v3.2/'
+exports.FACEBOOK_GRPAHAPI_URL = 'https://graph.facebook.com/v4.0/'
 exports.DEV = 'dev'
 exports.TEST = 'test'
 exports.STAGING = 'staging'
 exports.PROD = 'prod'
+exports.FB_DEFAULT_ALBUM = 'Timeline Photos'
 
 // schedule states
 const NOT_SCHEDULED = 'not_scheduled'

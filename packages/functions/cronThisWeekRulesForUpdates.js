@@ -2,9 +2,6 @@ const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
 const { SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT, NOT_SCHEDULED } = require('shared/constants');
-if (process.env.IS_OFFLINE) {
-  facebookUpdates = require('functions/facebookUpdates');
-}
 const scheduleProducts = require('functions').scheduleProducts.schedule;
 
 module.exports = {

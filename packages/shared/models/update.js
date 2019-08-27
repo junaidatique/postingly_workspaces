@@ -18,6 +18,26 @@ const IMAGE = {
   }
 }
 
+const updateResponse = {
+  albumId: {
+    type: String,
+  },
+  serviceImages: [{
+    serviceId: {
+      type: String,
+    },
+    servicePostId: {
+      type: String
+    },
+    status: {
+      type: Number
+    },
+    message: {
+      type: String
+    }
+  }]
+}
+
 const updateSchema = new mongoose.Schema({
   store: {
     type: Schema.Types.ObjectId,
@@ -103,7 +123,8 @@ const updateSchema = new mongoose.Schema({
   userEdited: {
     type: Boolean,
     default: false
-  }
+  },
+  response: updateResponse
 });
 
 

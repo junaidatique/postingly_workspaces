@@ -65,6 +65,10 @@ const profileSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  fbDefaultAlbum: {
+    type: String,
+    default: null
+  }
 });
 
 profileSchema.set('timestamps', true);

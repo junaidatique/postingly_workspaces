@@ -12,7 +12,7 @@ addCaptions = require('functions').cronAddCaptions.execute;
 postUpdates = require('functions').postUpdates.share;
 module.exports = {
   execute: async function (event, context) {
-    const storeId = "5d4ab991c91923338c2997c4";
+    const storeId = "5d5d34b07c752b3a274f9d54";
     const CollectionModel = shared.CollectionModel;
     const ImageModel = shared.ImageModel;
     const ProductModel = shared.ProductModel;
@@ -36,7 +36,7 @@ module.exports = {
     await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: 'next' });
     await schedule({ ruleId: ruleDetail._id });
     await addCaptions();
-    // await postUpdates();
+    await postUpdates();
 
 
 

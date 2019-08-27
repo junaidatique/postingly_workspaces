@@ -19,3 +19,6 @@ exports.ImageModel = require('./models/image');
 
 // partners
 exports.PartnerShopify = require('./partners/shopify')
+
+// services
+exports.FacebookService = require('./services/facebook')

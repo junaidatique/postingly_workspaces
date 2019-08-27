@@ -45,6 +45,6 @@ mongoose.set("debug", (collectionName, method, query, doc) => {
   // if (method !== 'bulkWrite') {
   //   console.log(`${collectionName}.${method}`, JSON.stringify(query), doc);
   // } else {
-  //   console.log(`${collectionName}.${method}`);
+  // console.log(`${collectionName}.${method}`);
   // }
 });
