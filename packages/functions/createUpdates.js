@@ -1,10 +1,17 @@
 const shared = require('shared');
 const moment = require('moment-timezone');
-// const momentTz = require('moment-timezone');
 const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
-
+const mongoose = require('mongoose');
+let conn = null;
 module.exports = {
   createUpdates: async function (event, context) {
+    context.callbackWaitsForEmptyEventLoop = false;
+    if (conn == null) {
+      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
+        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
+        bufferMaxEntries: 0
+      });
+    }
     try {
       let updateTimes = [];
       let startOfWeek, endOfWeek;

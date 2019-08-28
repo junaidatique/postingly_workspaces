@@ -6,10 +6,18 @@ let changeCaption;
 if (process.env.IS_OFFLINE) {
   changeCaption = require('functions/changeCaption');
 }
-
+const mongoose = require('mongoose');
+let conn = null;
 
 module.exports = {
   execute: async function (event, context) {
+    context.callbackWaitsForEmptyEventLoop = false;
+    if (conn == null) {
+      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
+        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
+        bufferMaxEntries: 0
+      });
+    }
     let storeId = null;
     try {
       const UpdateModel = shared.UpdateModel;

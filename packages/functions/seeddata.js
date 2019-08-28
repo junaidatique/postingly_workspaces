@@ -1,5 +1,4 @@
-// const faker = require('faker');
-
+const faker = require('faker');
 const mongoose = require('mongoose');
 const shared = require('shared');
 let conn = null;
@@ -18,45 +17,46 @@ module.exports = {
     const StoreModel = shared.StoreModel;
 
 
-    // shop = {
-    //   id: faker.random.number({ min: 10000000 }),
-    //   plan_name: faker.lorem.word(),
-    //   name: faker.company.companyName(),
-    //   domain: faker.internet.domainName(),
-    //   myshopify_domain: faker.internet.domainName(),
-    //   created_at: faker.date.past(),
-    //   updated_at: faker.date.past(),
-    //   timezone: "America/New_York",
-    //   money_format: "$",
-    //   money_with_currency_format: "$ USD",
-    // }
-    // storeKey = `shopify-${shop.id}`;
-    // userName = faker.internet.email();
-    // accessToken = faker.random.uuid();
-    // const shopParams = {
-    //   id: storeKey,
-    //   userId: userName,
-    //   partner: 'shopify',
-    //   partnerId: shop.id,
-    //   partnerPlan: shop.plan_name,
-    //   title: shop.name,
-    //   storeUrl: shop.domain,
-    //   partnerSpecificUrl: shop.myshopify_domain,
-    //   partnerCreatedAt: shop.created_at,
-    //   partnerUpdatedAt: shop.updated_at,
-    //   partnerToken: accessToken,
-    //   timezone: shop.iana_timezone,
-    //   moneyFormat: shop.money_format,
-    //   moneyWithCurrencyFormat: shop.money_with_currency_format,
-    //   isCharged: false,
-    //   // chargedMethod: '',
-    //   // chargeId: '',
-    //   isUninstalled: false,
-    // };
-    // console.log("shopParams", shopParams);
-    // store = new Store(shopParams);
-    // store = await store.save();
-    // console.log("store", store);
+    shop = {
+      id: faker.random.number({ min: 10000000 }),
+      plan_name: faker.lorem.word(),
+      name: faker.company.companyName(),
+      domain: faker.internet.domainName(),
+      myshopify_domain: faker.internet.domainName(),
+      created_at: faker.date.past(),
+      updated_at: faker.date.past(),
+      timezone: "America/New_York",
+      money_format: "$",
+      money_with_currency_format: "$ USD",
+    }
+    storeKey = `shopify-${shop.id}`;
+    userName = faker.internet.email();
+    accessToken = faker.random.uuid();
+    const shopParams = {
+      uniqKey: storeKey,
+      userId: userName,
+      partner: 'shopify',
+      partnerId: shop.id,
+      partnerPlan: shop.plan_name,
+      title: shop.name,
+      storeUrl: shop.domain,
+      partnerSpecificUrl: shop.myshopify_domain,
+      partnerCreatedAt: shop.created_at,
+      partnerUpdatedAt: shop.updated_at,
+      partnerToken: accessToken,
+      timezone: shop.iana_timezone,
+      moneyFormat: shop.money_format,
+      moneyWithCurrencyFormat: shop.money_with_currency_format,
+      isCharged: false,
+      // chargedMethod: '',
+      // chargeId: '',
+      isUninstalled: false,
+    };
+    console.log("shopParams", shopParams);
+    const storeInstance = new StoreModel(shopParams);
+    store = await storeInstance.save();
+
+    console.log("store", store);
 
     // userResponse = {
     //   id: faker.random.number({ min: 10000000 }),

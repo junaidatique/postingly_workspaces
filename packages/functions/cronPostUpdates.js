@@ -1,5 +1,4 @@
 const shared = require('shared');
-const moment = require('moment');
 const _ = require('lodash');
 const { APPROVED, FACEBOOK_SERVICE } = require('shared/constants');
 let shareUpdates;
@@ -7,8 +6,18 @@ if (process.env.IS_OFFLINE) {
   shareUpdates = require('functions/shareUpdates');
 }
 
+const mongoose = require('mongoose');
+let conn = null;
+
 module.exports = {
   share: async function (event, context) {
+    context.callbackWaitsForEmptyEventLoop = false;
+    if (conn == null) {
+      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
+        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
+        bufferMaxEntries: 0
+      });
+    }
     try {
       const UpdateModel = shared.UpdateModel;
       let updates;

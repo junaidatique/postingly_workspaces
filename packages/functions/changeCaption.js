@@ -1,10 +1,19 @@
 const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
+const mongoose = require('mongoose');
+let conn = null;
 const { APPROVED, PENDING, SCHEDULE_TYPE_VARIANT, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
 
 module.exports = {
   update: async function (event, context) {
+    context.callbackWaitsForEmptyEventLoop = false;
+    if (conn == null) {
+      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
+        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
+        bufferMaxEntries: 0
+      });
+    }
     try {
       const UpdateModel = shared.UpdateModel;
       const RuleModel = shared.RuleModel;
