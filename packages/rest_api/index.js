@@ -1,6 +1,8 @@
 const serverless = require('serverless-http');
 const express = require('express')
-const app = express()
+const app = express();
+const mongoose = require('mongoose');
+let conn = null;
 
 const partner = require('./partners')
 
@@ -24,4 +26,16 @@ app.use((request, response, next) => {
   next();
 });
 
-module.exports.handler = serverless(app);
+const handler = serverless(app);
+
+module.exports.handler = async (event, context) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  if (conn == null) {
+    conn = await mongoose.createConnection(process.env.MONGODB_URL, {
+      useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
+      bufferMaxEntries: 0
+    });
+  }
+  const result = await handler(event, context);
+  return result;
+}
