@@ -6,7 +6,8 @@
   "dependencies": {
     "lodash": "^4.17.11",
     "mongoose": "^5.5.9",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "striptags": "^3.1.1"
   },
   "scripts": {
     "seed": "STAGE=dev APP_NAME=postingly STORES_TABLE=Store PROFILE_TABLE=Profile node index.js"

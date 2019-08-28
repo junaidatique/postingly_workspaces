@@ -1,15 +1,14 @@
 service: postingly-functions
 
 plugins:
+  - serverless-plugin-monorepo
   - serverless-dotenv-plugin
-  - serverless-dynamodb-local
   - serverless-offline
 
 provider:
   name: aws
   runtime: nodejs8.10
   stage: ${env:STAGE}
-  region: ${env:AWS_REGION}
 
 functions:
   cron-post-updates:
