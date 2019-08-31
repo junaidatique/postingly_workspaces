@@ -1,5 +1,5 @@
 exports.cognitoHelper = require('./helpers/cognito');
-exports.mongodb = require('shared/helpers/db');
+// exports.mongodb = require('shared/helpers/db');
 exports.httpHelper = require('./helpers/http');
 exports.jwtHelper = require('./helpers/jwt');
 exports.stringHelper = require('./helpers/string');

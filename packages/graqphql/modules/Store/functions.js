@@ -1,5 +1,4 @@
 const StoreModel = require('shared').StoreModel;
-const UserInputError = require('apollo-server-express').UserInputError
 const profileFuns = require('../Profile/functions');
 
 const formattedStore = (store) => {
@@ -18,7 +17,7 @@ const formattedStore = (store) => {
 const getStoreByUniqKey = async (uniqKey) => {
   const storeDetail = await StoreModel.findOne({ uniqKey: uniqKey });
   if (storeDetail === null) {
-    throw new UserInputError('Store not found.');
+    throw new Error('Store not found.');
   }
   return formattedStore(storeDetail)
 }
@@ -26,7 +25,7 @@ const getStoreByID = async (storeId) => {
   const storeDetail = await StoreModel.findById(storeId);
   console.log("TCL: getStoreByID -> storeDetail", storeDetail)
   if (storeDetail === null) {
-    throw new UserInputError('Store not found.');
+    throw new Error('Store not found.');
   }
   return formattedStore(storeDetail)
 }

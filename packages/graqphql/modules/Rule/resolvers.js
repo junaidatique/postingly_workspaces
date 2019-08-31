@@ -10,11 +10,11 @@ let createUpdates;
 let schedule;
 let addCaptions;
 const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
-if (process.env.IS_OFFLINE || process.env.STAGE == TEST) {
-  createUpdates = require('functions').createUpdates.createUpdates;
-  schedule = require('functions').scheduleProducts.schedule;
-  addCaptions = require('functions').cronAddCaptions.execute;
-}
+// if (process.env.IS_OFFLINE || process.env.STAGE == TEST) {
+//   createUpdates = require('functions').createUpdates.createUpdates;
+//   schedule = require('functions').scheduleProducts.schedule;
+//   addCaptions = require('functions').cronAddCaptions.execute;
+// }
 
 module.exports = {
   manageRule: async (obj, args, context, info) => {

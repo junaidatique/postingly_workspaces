@@ -1,5 +1,4 @@
 const ProfileModel = require('shared').ProfileModel;
-const UserInputError = require('apollo-server-express').UserInputError;
 const storeFunctions = require('../Store/functions');
 const formattedProfile = async (profile) => {
   return {
@@ -13,7 +12,7 @@ const formattedProfile = async (profile) => {
 const getProfileById = async profileId => {
   const profileDetail = await ProfileModel.findOne(profileId);
   if (profileDetail === null) {
-    throw new UserInputError('Profile not found.');
+    throw new Error('Profile not found.');
   }
   return formattedProfile(profileDetail)
 }

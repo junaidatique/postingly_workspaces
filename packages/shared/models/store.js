@@ -1,5 +1,6 @@
 
 const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
 const Schema = mongoose.Schema;
 
 const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
@@ -160,6 +161,4 @@ if (process.env.IS_OFFLINE) {
 }
 
 module.exports = mongoose.model('Store', storeSchema);
-
-
 

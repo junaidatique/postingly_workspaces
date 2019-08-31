@@ -1,17 +1,25 @@
-const StoreModel = require('shared').StoreModel;
+const shared = require('shared');
 const formattedStore = require('./functions').formattedStore
 const getStoreByUniqKey = require('./functions').getStoreByUniqKey
-
+let conn;
 const query = require('shared').query
 module.exports = {
   listStores: async (obj, args, context, info) => {
+    console.log("TCL: args", args)
+    const StoreModel = shared.StoreModel;
+    console.log("TCL: StoreModel", StoreModel)
     try {
       searchQuery = query.createSearchQuery(StoreModel, args);
+      console.log("TCL: searchQuery", searchQuery)
       const stores = await searchQuery.populate('profiles');
-      return storesList = stores.map(store => {
+      console.log("TCL: stores", stores)
+      const list = storesList = stores.map(store => {
         return formattedStore(store)
       });
+      console.log("TCL: list", list)
+      return list;
     } catch (error) {
+      console.log("TCL: error1", error)
       throw error;
     }
   },

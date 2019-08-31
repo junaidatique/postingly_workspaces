@@ -1,19 +1,13 @@
 service: postingly-graphql
 plugins:
-  # - serverless-webpack
+  - serverless-plugin-monorepo
   - serverless-dotenv-plugin
   - serverless-offline
-
-# custom:
-#   webpack:
-#     webpackConfig: ./webpack.config.js
-#     includeModules: true
 
 provider:
   name: aws
   runtime: nodejs8.10
   stage: ${env:STAGE}
-  region: ${env:AWS_REGION}
   environment:
     STORES_TABLE: "Store"
     PROFILE_TABLE: "Profile"
@@ -25,10 +19,8 @@ functions:
       - http:
           path: graphql
           method: post
-          cors: true
-  playground:
-    handler: index.handler
-    events:
+          cors: true  
       - http:
-          path: playground
+          path: graphql
           method: get
+          cors: true  
