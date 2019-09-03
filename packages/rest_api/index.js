@@ -19,7 +19,8 @@ app.post('/partners/:partner_slug/payment_return', function (req, res) {
 app.use((request, response, next) => {
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT,OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Autherization');
+  response.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type'); // If needed
+  response.setHeader('Access-Control-Allow-Credentials', true); // If needed
   if (request.method === 'OPTIONS') {
     return response.sendStatus(200);
   }
