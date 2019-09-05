@@ -19,21 +19,21 @@ provider:
 
 functions:
   auth:
-    handler: authFunctions.auth
+    handler: index.auth
     events:
       - http:
           path: /partners/{partner_slug}/auth
           method: get
           cors: true
   callback:
-    handler: authFunctions.callback
+    handler: index.callback
     events:
       - http:
           path: /partners/{partner_slug}/callback
           method: post
           cors: true
   payment_return:
-    handler: authFunctions.activatePayment
+    handler: index.activatePayment
     events:
       - http:
           path: /partners/{partner_slug}/payment_return

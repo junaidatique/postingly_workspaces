@@ -12,8 +12,10 @@ const StoreModel = require('shared').StoreModel
 
 const querystring = require('querystring')
 const jsonwebtoken = require('jsonwebtoken');
-
-
+let syncStoreData;
+if (process.env.IS_OFFLINE) {
+  syncStoreData = require('functions').syncStoreData.syncStoreData;
+}
 module.exports = {
   getAuthURL: function (event, now) {
     console.log("-----------------------------getAuthURL Start-----------------------------");
@@ -144,9 +146,17 @@ module.exports = {
           isUninstalled: false,
         };
         const storeInstance = new StoreModel(shopParams);
-        console.log("TCL: storeInstance", storeInstance)
         store = await storeInstance.save();
-        console.log("TCL: store", store)
+        console.log("TCL: store", store);
+        if (process.env.IS_OFFLINE) {
+          await syncStoreData({
+            "storeId": store._id,
+            "partnerStore": "shopify",
+            "collectionId": null
+          })
+        } else {
+
+        }
       } else {
         isCharged = store.isCharged;
       }
@@ -164,7 +174,7 @@ module.exports = {
         token: jwt.createJWT(cognitoUser, nonce, now, 600),
       });
     } catch (error) {
-      console.log("-----------------------------getAuthURL Error-----------------------------", error);
+      console.log("-----------------------------verifyCallback Error-----------------------------", error);
       return httpHelper.internalError();
     }
 
