@@ -1,22 +1,19 @@
 const faker = require('faker');
-const mongoose = require('mongoose');
-const shared = require('shared');
+const mongoose = require('mongoose')
 let conn = null;
-// mongoose.connect(process.env.MONGODB_URL, { useNewUrlParser: true, useCreateIndex: true })
-// const StoreModel = require('shared').StoreModel;
-// const Profile = require('shared').ProfileModel;
+const shared = require('shared');
 module.exports = {
   createStore: async function (event, context) {
-    context.callbackWaitsForEmptyEventLoop = false;
-    if (conn == null) {
-      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
-        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
-        bufferMaxEntries: 0
-      });
+    if (!process.env.IS_OFFLINE) {
+      context.callbackWaitsForEmptyEventLoop = false;
+      if (conn === null) {
+        conn = await mongoose.createConnection(process.env.MONGODB_URL, {
+          useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
+          bufferMaxEntries: 0
+        });
+      }
     }
     const StoreModel = shared.StoreModel;
-
-
     shop = {
       id: faker.random.number({ min: 10000000 }),
       plan_name: faker.lorem.word(),

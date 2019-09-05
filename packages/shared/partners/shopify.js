@@ -15,36 +15,36 @@ const jsonwebtoken = require('jsonwebtoken');
 
 
 module.exports = {
-  getAuthURL: function (event, now, res) {
+  getAuthURL: function (event, now) {
     console.log("-----------------------------getAuthURL Start-----------------------------");
     try {
       const shopifyApiKey = process.env.SHOPIFY_API_KEY;
       const shopifyScope = process.env.SHOPIFY_SCOPE;
 
       if (!shopifyApiKey) {
-        return httpHelper.badRequest("SHOPIFY_API_KEY environment variable not set", res);
+        return httpHelper.badRequest("SHOPIFY_API_KEY environment variable not set");
       }
 
       if (!shopifyScope) {
-        return httpHelper.badRequest("SHOPIFY_SCOPE environment variable not set", res);
+        return httpHelper.badRequest("SHOPIFY_SCOPE environment variable not set");
       }
 
-      if (!event.query) {
-        return httpHelper.badRequest("No query string paramters found", res);
+      if (!event.queryStringParameters) {
+        return httpHelper.badRequest("No query string paramters found");
       }
 
-      const { "callback-url": callbackUrl, "per-user": perUser, shop } = event.query;
+      const { "callback-url": callbackUrl, "per-user": perUser, shop } = event.queryStringParameters;
 
       if (!callbackUrl) {
-        return httpHelper.badRequest("'callback-url' parameter missing", res);
+        return httpHelper.badRequest("'callback-url' parameter missing");
       }
 
       if (!shop) {
-        return httpHelper.badRequest("'shop' parameter missing", res);
+        return httpHelper.badRequest("'shop' parameter missing");
       }
 
       if (!shop.match(/[a-z0-9][a-z0-9\-]*\.myshopify\.com/i)) {
-        return httpHelper.badRequest("'shop' parameter must end with .myshopify.com and may only contain a-z, 0-9, - and .", res);
+        return httpHelper.badRequest("'shop' parameter must end with .myshopify.com and may only contain a-z, 0-9, - and .");
       }
 
       // Build our authUrl
@@ -63,106 +63,111 @@ module.exports = {
         {
           authUrl,
           token: jwt.createJWT(shop, eNonce, now, 600)
-        },
-        res
+        }
       );
 
     } catch (e) {
       console.log("-----------------------------getAuthURL Error-----------------------------", e);
-      return httpHelper.internalError(res);
+      return httpHelper.internalError();
     }
   },
 
-  verifyCallback: async function (event, now, res) {
-    console.log("-----------------------------verifyCallback Start-----------------------------");
-    if (!event.body) {
-      return httpHelper.badRequest("body is empty", res);
-    }
-    const json = JSON.parse(event.body);
-    const { token, params, username, email } = json;
-    if (!token) {
-      return httpHelper.badRequest("'token' is missing", res);
-    }
-    if (!params) {
-      return httpHelper.badRequest("'params' is missing", res);
-    }
-    console.log("verifyCallback params", params);
-    console.log("verifyCallback username", username);
-    console.log("verifyCallback email", email);
-    const { code, shop: shopDomain } = params;
-    if (!this.validateNonce(token, params)
-      || !this.validateShopDomain(shopDomain)
-    ) {
-      return httpHelper.badRequest("Invalid 'token'", res);
-    }
-    let response;
+  verifyCallback: async function (event, now) {
     try {
-      response = await this.exchangeToken(shopDomain, code);
-    } catch (err) {
-      return httpHelper.badRequest("autherization code is already used.", res);
+      console.log("-----------------------------verifyCallback Start-----------------------------");
+      if (!event.body) {
+        return httpHelper.badRequest("body is empty");
+      }
+      const json = JSON.parse(event.body);
+      const { token, params, username, email } = json;
+      if (!token) {
+        return httpHelper.badRequest("'token' is missing");
+      }
+      if (!params) {
+        return httpHelper.badRequest("'params' is missing");
+      }
+      console.log("verifyCallback params", params);
+      console.log("verifyCallback username", username);
+      console.log("verifyCallback email", email);
+      const { code, shop: shopDomain } = params;
+      if (!this.validateNonce(token, params)
+        || !this.validateShopDomain(shopDomain)
+      ) {
+        return httpHelper.badRequest("Invalid 'token'");
+      }
+      let response;
+      try {
+        response = await this.exchangeToken(shopDomain, code);
+      } catch (err) {
+        return httpHelper.badRequest("autherization code is already used.");
+      }
+
+      const accessToken = response.access_token;
+      if (accessToken === undefined) {
+        console.log("verifyCallback response[\"access_token\"] is undefined");
+        throw new Error("response[\"access_token\"] is undefined");
+      }
+      const shop = await this.getShop(shopDomain, accessToken);
+      let cognitoUser;
+      if (!_.isUndefined(username) && !_.isNull(username)) {
+        cognitoUser = await cognitoHelper.createUser(username, email, shopDomain);
+      } else {
+        cognitoUser = await cognitoHelper.createUser(shop.email, shop.email, shopDomain);
+      }
+      console.log("TCL: cognitoUser", cognitoUser)
+      storeKey = `shopify-${shop.id}`;
+      console.log("TCL: storeKey", storeKey)
+      let store = await StoreModel.findOne({ uniqKey: storeKey });
+      console.log("TCL: store", store)
+      let isCharged = false;
+      if (store === null) {
+        console.log("verifyCallback new signup");
+        const shopParams = {
+          uniqKey: storeKey,
+          userId: cognitoUser,
+          partner: 'shopify',
+          partnerId: shop.id,
+          partnerPlan: shop.plan_name,
+          title: shop.name,
+          url: shop.domain,
+          partnerSpecificUrl: shop.myshopify_domain,
+          partnerCreatedAt: shop.created_at,
+          partnerUpdatedAt: shop.updated_at,
+          partnerToken: accessToken,
+          timezone: shop.iana_timezone,
+          moneyFormat: shop.money_format,
+          moneyWithCurrencyFormat: shop.money_with_currency_format,
+          isCharged: false,
+          shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
+          // chargedMethod: '',
+          // chargeId: '',
+          isUninstalled: false,
+        };
+        const storeInstance = new StoreModel(shopParams);
+        console.log("TCL: storeInstance", storeInstance)
+        store = await storeInstance.save();
+        console.log("TCL: store", store)
+      } else {
+        isCharged = store.isCharged;
+      }
+      let chargeAuthorizationUrl = null
+      if (!isCharged) {
+        chargeAuthorizationUrl = await this.createCharge(shop.myshopify_domain, accessToken);
+      }
+      console.log("chargeAuthorizationUrl:", chargeAuthorizationUrl)
+      nonce = str.getRandomString(32);
+      console.log("-----------------------------verifyCallback Completed-----------------------------");
+      return httpHelper.ok({
+        chargeURL: chargeAuthorizationUrl,
+        userName: cognitoUser,
+        storePartnerId: storeKey,
+        token: jwt.createJWT(cognitoUser, nonce, now, 600),
+      });
+    } catch (error) {
+      console.log("-----------------------------getAuthURL Error-----------------------------", error);
+      return httpHelper.internalError();
     }
 
-    const accessToken = response.access_token;
-    if (accessToken === undefined) {
-      console.log("verifyCallback response[\"access_token\"] is undefined");
-      throw new Error("response[\"access_token\"] is undefined");
-    }
-    const shop = await this.getShop(shopDomain, accessToken);
-    let cognitoUser;
-    if (!_.isUndefined(username) && !_.isNull(username)) {
-      cognitoUser = await cognitoHelper.createUser(username, email, shopDomain);
-    } else {
-      cognitoUser = await cognitoHelper.createUser(shop.email, shop.email, shopDomain);
-    }
-    console.log("TCL: cognitoUser", cognitoUser)
-    storeKey = `shopify-${shop.id}`;
-
-    let store = await StoreModel.findOne({ uniqKey: storeKey });
-    console.log("TCL: store", store)
-    let isCharged = false;
-    if (store === null) {
-      console.log("verifyCallback new signup");
-      const shopParams = {
-        uniqKey: storeKey,
-        userId: cognitoUser,
-        partner: 'shopify',
-        partnerId: shop.id,
-        partnerPlan: shop.plan_name,
-        title: shop.name,
-        url: shop.domain,
-        partnerSpecificUrl: shop.myshopify_domain,
-        partnerCreatedAt: shop.created_at,
-        partnerUpdatedAt: shop.updated_at,
-        partnerToken: accessToken,
-        timezone: shop.iana_timezone,
-        moneyFormat: shop.money_format,
-        moneyWithCurrencyFormat: shop.money_with_currency_format,
-        isCharged: false,
-        shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
-        // chargedMethod: '',
-        // chargeId: '',
-        isUninstalled: false,
-      };
-      // store = await StoreModel.create(shopParams);
-      // store = await query.putItem(process.env.STORES_TABLE, shopParams);
-      const storeInstance = new StoreModel(shopParams);
-      store = await storeInstance.save();
-    } else {
-      isCharged = store.isCharged;
-    }
-    let chargeAuthorizationUrl = null
-    if (!isCharged) {
-      chargeAuthorizationUrl = await this.createCharge(shop.myshopify_domain, accessToken);
-    }
-    console.log("chargeAuthorizationUrl:", chargeAuthorizationUrl)
-    nonce = str.getRandomString(32);
-    console.log("-----------------------------verifyCallback Completed-----------------------------");
-    return httpHelper.ok({
-      chargeURL: chargeAuthorizationUrl,
-      userName: cognitoUser,
-      storePartnerId: storeKey,
-      token: jwt.createJWT(cognitoUser, nonce, now, 600),
-    }, res);
   },
 
   validateNonce: function (token, params) {
@@ -301,23 +306,23 @@ module.exports = {
     return json.shop;
   },
 
-  activatePayment: async function (event, now, res) {
+  activatePayment: async function (event) {
     console.log("-----------------------------activatePayment Start-----------------------------");
     if (!event.body) {
-      return httpHelper.badRequest("body is empty", res);
+      return httpHelper.badRequest("body is empty");
     }
     const json = JSON.parse(event.body);
     const { token, params } = json;
     if (!token) {
-      return httpHelper.badRequest("'token' is missing", res);
+      return httpHelper.badRequest("'token' is missing");
     }
     if (!params) {
-      return httpHelper.badRequest("'params' is missing", res);
+      return httpHelper.badRequest("'params' is missing");
     }
     console.log("activatePayment params", params);
     const { charge_id, shop, storePartnerId } = params;
     if (!this.validateShopDomain(shop)) {
-      return httpHelper.badRequest("Invalid 'shop'", res);
+      return httpHelper.badRequest("Invalid 'shop'");
     }
     storeKey = `${storePartnerId}`;
     console.log("activatePayment storeKey", storeKey);
@@ -331,14 +336,14 @@ module.exports = {
       chargeResponse = await this.getCharge(shop, charge_id, accessToken)
     } catch (err) {
       console.log("get charge error", err);
-      return httpHelper.badRequest("charge not found.", res);
+      return httpHelper.badRequest("charge not found.");
     }
 
     try {
       const activateResponse = await this.activateCharge(shop, chargeResponse, accessToken);
     } catch (err) {
       console.log("activate charge erro", err);
-      return httpHelper.badRequest("charge not activated.", res);
+      return httpHelper.badRequest("charge not activated.");
     }
     store.isCharged = true;
     store.chargedMethod = 'shopify';
@@ -353,7 +358,7 @@ module.exports = {
 
     return httpHelper.ok({
       message: "Done",
-    }, res);
+    });
 
   },
   getCharge: async function (shop, charge_id, accessToken) {

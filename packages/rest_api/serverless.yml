@@ -1,9 +1,13 @@
-service: postingly-api-rest
+service: postingly-rest-api
 
 plugins:
   - serverless-plugin-monorepo
   - serverless-dotenv-plugin
   - serverless-offline
+
+resources:
+  # API Gateway Errors
+  - ${file(resources/api-gateway-errors.yml)}
 
 provider:
   name: aws
@@ -14,8 +18,25 @@ provider:
     PROFILE_TABLE: "Profile"
 
 functions:
-  app:
-    handler: index.handler
+  auth:
+    handler: authFunctions.auth
     events:
-      - http: ANY /
-      - http: "ANY {proxy+}"
+      - http:
+          path: /partners/{partner_slug}/auth
+          method: get
+          cors: true
+  callback:
+    handler: authFunctions.callback
+    events:
+      - http:
+          path: /partners/{partner_slug}/callback
+          method: post
+          cors: true
+  payment_return:
+    handler: authFunctions.activatePayment
+    events:
+      - http:
+          path: /partners/{partner_slug}/payment_return
+          method: post
+          cors: true
+

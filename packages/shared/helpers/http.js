@@ -1,18 +1,45 @@
 
 module.exports = {
-  badRequest: function (message, res) {
-    return res.status(400).json({ message: message });
+  badRequest: function (message) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS" // Required for CORS support to work
+      },
+      body: JSON.stringify({ "message": message })
+    };
   },
 
-  internalError: function (res) {
-    return res.status(500).json({ message: "Internal Error" });
+  internalError: function () {
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS" // Required for CORS support to work
+      },
+      body: JSON.stringify({ "message": "Internal Error" })
+    };
   },
 
-  noContent: function (res) {
-    return res.status(204).json();
+  noContent: function () {
+    return {
+      statusCode: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS" // Required for CORS support to work
+      }
+    };
   },
 
-  ok: function (body, res) {
-    return res.status(200).json(body);
+  ok: function (body) {
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS" // Required for CORS support to work
+      },
+      body: JSON.stringify(body)
+    };
   }
 }
