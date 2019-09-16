@@ -11,26 +11,56 @@ provider:
   stage: ${env:STAGE}
 
 functions:
-  cron-post-updates:
-    handler: cronPostUpdates.share
+  # create update lambda. this function recieves rule id from either 
+  # manage rule resolver or from cron-create-updates-for-next-week lambda function. 
+  # this function creates updates with rule id. 
+  create-updates:
+    handler: createUpdates.createUpdates
+  # creates update for the next week. this lambda will execute on every 
+  # wednesday midnight
+  cron-create-updates-for-next-week:
+    handler: createUpdates.createUpdatesforNextWeek
     events:
       - schedule:
-          rate: cron(*/5 * * * ? *)
+          rate: cron(0 0 ? * WED *)
           enabled: true
+  # this lambda executes everyday at UTC midnight and pass distinct rule 
+  #  based on the updates that are not scheduled. 
   cron-this-week-rules:
     handler: cronThisWeekRulesForUpdates.excute
     events:
       - schedule:
           rate: cron(0 0 * * ? *)
           enabled: true
+  # This updates simply takes the rule id and schedule all the not scheduled updates. 
+  schedule-updates:
+    handler: ScheduleProductUpdates.schedule
+  # This lambda takes the cron and add captions to the scheduled updates. plus also approve them. 
   cron-add-captions:
     handler: cronAddCaptions.execute
     events:
       - schedule:
           rate: cron(*/5 * * * ? *)
           enabled: true
+  # This updates simply takes the rule id and schedule all the not scheduled updates. 
+  change-caption:
+    handler: changeCaption.update
+  # this lambda runs every 5 minutes and call share-updates lambda to post updates. 
+  cron-post-updates:
+    handler: cronPostUpdates.share
+    events:
+      - schedule:
+          rate: cron(*/5 * * * ? *)
+          enabled: true
+  # This lambda post updates to social media. 
+  share-updates:
+    handler: shareUpdates.share
+  
+  
+  
+  #  product sync data.
   sync-store-data:
-    handler: syncStoreData.syncStoreData
+    handler: syncStoreData.syncStoreData  
   sync-collections:
     handler: syncStoreData.syncCollections
   sync-collection-page:
@@ -43,16 +73,29 @@ functions:
     handler: seeddata.createStore
   data-test:
     handler: seeddata.testData
+  
+  # cognito 
   cognito-create-auth-challenge:
     handler: cognito.createAuthChallenge
+    events:
+      - cognitoUserPool:
+          pool: ${env:USER_POOL_ID}
+          trigger: CreateAuthChallenge
   cognito-define-auth-challenge:
     handler: cognito.defineAuthChallenge
+    events:
+      - cognitoUserPool:
+          pool: ${env:USER_POOL_ID}
+          trigger: DefineAuthChallenge
   cognito-verify-auth-challenge:
     handler: cognito.verifyAuthChallenge
+    events:
+      - cognitoUserPool:
+          pool: ${env:USER_POOL_ID}
+          trigger: VerifyAuthChallengeResponse
 
-  create-updates:
-    handler: createUpdates.createUpdates
-  schedule-updates:
-    handler: ScheduleProductUpdates.schedule
-  drop-collection:
-    handler: dropCollections.execute
+  
+  
+  # Testing The Lambdas
+  test-lambda:
+    handler: lambdaTests.execute

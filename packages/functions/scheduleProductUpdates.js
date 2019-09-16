@@ -16,18 +16,12 @@ const {
   POST_AS_OPTION_FB_PHOTO,
   POST_AS_OPTION_TW_PHOTO
 } = require('shared/constants');
-const mongoose = require('mongoose');
-let conn = null;
+const dbConnection = require('./db');
 
 const ScheduleProductUpdates = {
+  // event = { ruleId: ID }
   schedule: async function (event, context) {
-    context.callbackWaitsForEmptyEventLoop = false;
-    if (conn == null) {
-      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
-        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
-        bufferMaxEntries: 0
-      });
-    }
+    await dbConnection.createConnection(context);
     try {
       // load models
       const RuleModel = shared.RuleModel;

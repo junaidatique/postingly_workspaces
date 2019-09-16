@@ -1,52 +1,37 @@
 const shared = require('shared');
 const _ = require('lodash');
 const { APPROVED, FACEBOOK_SERVICE } = require('shared/constants');
-let shareUpdates;
-if (process.env.IS_OFFLINE) {
-  shareUpdates = require('functions/shareUpdates');
-}
 
-const mongoose = require('mongoose');
-let conn = null;
+const dbConnection = require('./db');
 
 module.exports = {
   share: async function (event, context) {
-    context.callbackWaitsForEmptyEventLoop = false;
-    if (conn == null) {
-      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
-        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
-        bufferMaxEntries: 0
-      });
-    }
+    await dbConnection.createConnection(context);
     try {
       const UpdateModel = shared.UpdateModel;
       let updates;
-      if (process.env.IS_OFFLINE) {
-        updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(1);
-      } else {
+      if (process.env.IS_OFFLINE === 'false') {
         const next_five_minutes = getRoundedDate(5);
         updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $lt: next_five_minutes } });
+      } else {
+        updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(1);
       }
-      await Promise.all(updates.map(async update => {
-        if (process.env.IS_OFFLINE) {
-          await shareUpdates.share({ updateId: update._id });
-        } else {
-          // var params = {
-          //   FunctionName: 'Lambda_B', // the lambda function we are going to invoke
-          //   InvocationType: 'RequestResponse',
-          //   LogType: 'Tail',
-          //   Payload: '{ "name" : "Alex" }'
-          // };
-
-          // lambda.invoke(params, function (err, data) {
-          //   if (err) {
-          //     context.fail(err);
-          //   } else {
-          //     context.succeed('Lambda_B said ' + data.Payload);
-          //   }
-          // })
-        }
-      }));
+      if (process.env.IS_OFFLINE === 'false') {
+        await Promise.all(updates.map(async update => {
+          const params = {
+            FunctionName: `postingly-functions-${process.env.STAGE}-share-updates`,
+            InvocationType: 'Event',
+            LogType: 'Tail',
+            Payload: JSON.stringify({ updateId: update._id })
+          };
+          console.log("TCL: lambda.invoke params", params)
+          console.log("TCL: lambda", lambda)
+          const lambdaResponse = await lambda.invoke(params).promise();
+          console.log("TCL: lambdaResponse", lambdaResponse)
+        }));
+      } else {
+        console.log("TCL: cronPostUpdates.share event", event);
+      }
     } catch (error) {
       console.error(error.message);
     }

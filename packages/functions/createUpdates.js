@@ -1,17 +1,38 @@
 const shared = require('shared');
 const moment = require('moment-timezone');
 const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
-const mongoose = require('mongoose');
-let conn = null;
+const dbConnection = require('./db');
 module.exports = {
-  createUpdates: async function (event, context) {
-    context.callbackWaitsForEmptyEventLoop = false;
-    if (conn == null) {
-      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
-        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
-        bufferMaxEntries: 0
-      });
+  // event = null
+  createUpdatesforNextWeek: async function (event, context) {
+    await dbConnection.createConnection(context);
+    try {
+      const RuleModel = shared.RuleModel;
+      const rules = RuleModel.find({ active: true });
+      if (process.env.IS_OFFLINE === 'false') {
+        await Promise.all(rules.map(async ruleDetail => {
+          const params = {
+            FunctionName: `postingly-functions-${process.env.STAGE}-create-updates`,
+            InvocationType: 'Event',
+            LogType: 'Tail',
+            Payload: JSON.stringify({ ruleId: ruleDetail._id })
+          };
+          console.log("TCL: lambda.invoke params", params)
+          const lambdaResponse = await lambda.invoke(params).promise();
+          console.log("TCL: lambdaResponse", lambdaResponse)
+
+        }));
+      } else {
+        console.log("TCL: createUpdatesforNextWeek event", event)
+      }
+    } catch (error) {
+      console.error(error);
+      console.error(error.message);
     }
+  },
+  // event = { ruleId: ruleDetail._id, scheduleWeek: "next" | null }
+  createUpdates: async function (event, context) {
+    await dbConnection.createConnection(context);
     try {
       let updateTimes = [];
       let startOfWeek, endOfWeek;
@@ -23,7 +44,7 @@ module.exports = {
         throw new Error(`rule not found for ${event.ruleId}`);
       }
       const storeDetail = await StoreModel.findById(ruleDetail.store);
-      if (event.scheduleWeek == 'next') {
+      if (event.scheduleWeek === 'next') {
         startOfWeek = moment().add(1, 'weeks').tz(storeDetail.timezone).startOf('isoWeek');
         endOfWeek = moment().add(1, 'weeks').tz(storeDetail.timezone).endOf('isoWeek');
       } else {
@@ -57,14 +78,14 @@ module.exports = {
           }
         });
       }
-      const r = await UpdateModel.deleteMany(
-        {
-          store: storeDetail._id,
-          rule: ruleDetail._id,
-          scheduleTime: { $gte: moment().utc(), $lte: endOfWeek },
-          scheduleState: { $in: [NOT_SCHEDULED, PENDING] }
-        }
-      );
+      // const r = await UpdateModel.deleteMany(
+      //   {
+      //     store: storeDetail._id,
+      //     rule: ruleDetail._id,
+      //     scheduleTime: { $gte: moment().utc(), $lte: endOfWeek },
+      //     scheduleState: { $in: [NOT_SCHEDULED, PENDING] }
+      //   }
+      // );
       if (updateTimes.length > 0) {
         const bulkUpdatesWrite = updateTimes.map(updateTime => {
           return ruleDetail.profiles.map(profile => {

@@ -34,6 +34,19 @@ module.exports = {
     formattedCaption = formattedCaption.replace('[product-url]', url);
     formattedCaption = formattedCaption.replace('[product-description]', description);
     return formattedCaption;
+  },
+  getShopifyPageInfo: function (link) {
+    if (link.includes('rel="next"')) {
+      let linkHeader = link;
+      if (linkHeader.includes('rel="previous"')) {
+        linkHeader = linkHeader.split('https')[2];
+      }
+      linkHeader = linkHeader.replace('>;', '');
+      linkHeader = linkHeader.replace('rel="next"', '');
+      return linkHeader.split('page_info=')[1].split('&')[0];
+    } else {
+      return null;
+    }
   }
 
 }

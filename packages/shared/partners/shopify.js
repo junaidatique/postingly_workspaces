@@ -4,7 +4,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const { PARTNERS_SHOPIFY, FACEBOOK_DEFAULT_TEXT, LINK_SHORTNER_SERVICES_POOOST, LINK_SHORTNER_SERVICES_NONE } = require('shared/constants');
 
-const str = require('shared').stringHelper;
+const stringHelper = require('shared').stringHelper;
 const httpHelper = require('shared').httpHelper
 const cognitoHelper = require('shared').cognitoHelper
 const jwt = require('shared').jwtHelper;
@@ -12,14 +12,18 @@ const StoreModel = require('shared').StoreModel
 
 const querystring = require('querystring')
 const jsonwebtoken = require('jsonwebtoken');
-let syncStoreData;
-if (process.env.IS_OFFLINE) {
-  syncStoreData = require('functions').syncStoreData.syncStoreData;
+
+let lambda;
+const AWS = require('aws-sdk');
+if (process.env.IS_OFFLINE === 'false') {
+  lambda = new AWS.Lambda({
+    region: process.env.AWS_REGION //change to your region
+  });
 }
 module.exports = {
-  getAuthURL: function (event, now) {
-    console.log("-----------------------------getAuthURL Start-----------------------------");
+  getAuthURL: async function (event, now) {
     try {
+      console.log("-----------------------------getAuthURL Start-----------------------------");
       const shopifyApiKey = process.env.SHOPIFY_API_KEY;
       const shopifyScope = process.env.SHOPIFY_SCOPE;
 
@@ -32,7 +36,10 @@ module.exports = {
       }
 
       if (!event.queryStringParameters) {
-        return httpHelper.badRequest("No query string paramters found");
+        console.log("TCL: event.queryStringParameters", event.queryStringParameters)
+        const response = httpHelper.badRequest("No query string paramters found");
+        console.log("TCL: response", response)
+        return response;
       }
 
       const { "callback-url": callbackUrl, "per-user": perUser, shop } = event.queryStringParameters;
@@ -50,14 +57,12 @@ module.exports = {
       }
 
       // Build our authUrl
-      const eNonce = querystring.escape(str.getRandomString(32));
+      const eNonce = querystring.escape(stringHelper.getRandomString(32));
       const eClientId = querystring.escape(shopifyApiKey);
       const eScope = querystring.escape(shopifyScope.replace(":", ","));
       const eCallbackUrl = querystring.escape(callbackUrl);
       const option = perUser === "true" ? "&option=per-user" : "";
-      // tslint:disable-next-line:max-line-length
       const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${eClientId}&scope=${eScope}&redirect_uri=${eCallbackUrl}&state=${eNonce}${option}`;
-      // const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${eClientId}&scope=${eScope}&state=${eNonce}${option}`;
 
       console.log("-----------------------------getAuthURL Completed-----------------------------")
       // Return the authURL
@@ -76,6 +81,7 @@ module.exports = {
 
   verifyCallback: async function (event, now) {
     try {
+      console.group('verifyCallback');
       console.log("-----------------------------verifyCallback Start-----------------------------");
       if (!event.body) {
         return httpHelper.badRequest("body is empty");
@@ -148,15 +154,13 @@ module.exports = {
         const storeInstance = new StoreModel(shopParams);
         store = await storeInstance.save();
         console.log("TCL: store", store);
-        if (process.env.IS_OFFLINE) {
-          await syncStoreData({
-            "storeId": store._id,
-            "partnerStore": "shopify",
-            "collectionId": null
-          })
-        } else {
-
+        const storePayload = {
+          "storeId": store._id,
+          "partnerStore": "shopify",
+          "collectionId": null
         }
+        console.log("TCL: process.env.IS_OFFLINE", process.env.IS_OFFLINE)
+
       } else {
         isCharged = store.isCharged;
       }
@@ -165,8 +169,9 @@ module.exports = {
         chargeAuthorizationUrl = await this.createCharge(shop.myshopify_domain, accessToken);
       }
       console.log("chargeAuthorizationUrl:", chargeAuthorizationUrl)
-      nonce = str.getRandomString(32);
+      nonce = stringHelper.getRandomString(32);
       console.log("-----------------------------verifyCallback Completed-----------------------------");
+      console.groupEnd();
       return httpHelper.ok({
         chargeURL: chargeAuthorizationUrl,
         userName: cognitoUser,
@@ -361,6 +366,18 @@ module.exports = {
     store.chargeDate = (new Date()).toISOString();;
     try {
       await store.save();
+      if (process.env.IS_OFFLINE === 'false') {
+        const syncStoreDataParams = {
+          FunctionName: `postingly-functions-${process.env.STAGE}-sync-store-data`,
+          InvocationType: 'Event',
+          LogType: 'Tail',
+          Payload: JSON.stringify(storePayload)
+        };
+        console.log("TCL: lambda.invoke syncStoreDataParams", syncStoreDataParams)
+
+        const syncStoreDataLambdaResponse = await lambda.invoke(syncStoreDataParams).promise();
+        console.log("TCL: syncStoreDataLambdaResponse", syncStoreDataLambdaResponse)
+      }
     } catch (err) {
       console.log("activatePayment: Store can't be saved");
     }
@@ -428,62 +445,66 @@ module.exports = {
     }
     return json.recurring_application_charge;
   },
+
   syncStoreData: async function (event) {
     console.log('syncStoreData event', event);
     const ProductModel = shared.ProductModel;
     // Collections are reset so that new collections can be assigned to products. 
     const dbCollectionsUpdate = await ProductModel.updateMany({ store: event.storeId }, { collections: [] });
-    if (process.env.IS_OFFLINE) {
-      await this.syncCollections({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY });
-      await this.syncProducts({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null });
+    if (process.env.IS_OFFLINE === 'false') {
+      // syncing the custome colltions 
+      const syncCustomCollectionPageParams = {
+        FunctionName: `postingly-functions-${process.env.STAGE}-sync-collection-page`,
+        InvocationType: 'Event',
+        LogType: 'Tail',
+        Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: 'custom_collections', pageInfo: null })
+      };
+      console.log("TCL: lambda.invoke params", syncCustomCollectionPageParams)
+      const syncCustomCollectionPageLambdaResponse = await lambda.invoke(syncCustomCollectionPageParams).promise();
+      console.log("TCL: syncCustomCollectionPageLambdaResponse", syncCustomCollectionPageLambdaResponse);
+      // syncing the smart collections
+      const syncSmartCollectionPageParams = {
+        FunctionName: `postingly-functions-${process.env.STAGE}-sync-collection-page`,
+        InvocationType: 'Event',
+        LogType: 'Tail',
+        Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: 'smart_collections', pageInfo: null })
+      };
+      console.log("TCL: lambda.invoke params", syncSmartCollectionPageParams)
+
+      const syncSmartCollectionPageLambdaResponse = await lambda.invoke(syncSmartCollectionPageParams).promise();
+      console.log("TCL: syncSmartCollectionPageLambdaResponse", syncSmartCollectionPageLambdaResponse)
+      // syncing products
+      const syncProductPageParams = {
+        FunctionName: `postingly-functions-${process.env.STAGE}-sync-product-page`,
+        InvocationType: 'Event',
+        LogType: 'Tail',
+        Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null })
+      };
+      console.log("TCL: lambda.invoke params", syncProductPageParams)
+
+      const syncProductPageLambdaResponse = await lambda.invoke(syncProductPageParams).promise();
+      console.log("TCL: syncProductPageLambdaResponse", syncProductPageLambdaResponse)
+
+    } else {
+      // await this.syncCollectionPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: 'custom_collections', pageInfo: null });
+      // await this.syncCollectionPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: 'smart_collections', pageInfo: null });
+      // await this.syncProductPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
+
     }
   },
-  syncCollections: async function (event) {
-    console.log('syncCollections event', event);
-    const StoreModel = shared.StoreModel;
-    const storeDetail = await StoreModel.findById(event.storeId);
-    let url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/custom_collections/count.json`;
-    console.log('syncCollections url', url);
-    let res = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "X-Shopify-Access-Token": storeDetail.partnerToken,
-      },
-      method: "GET",
-    });
-    let json = await res.json();
-    const customCollectionsCount = json.count;
-    const totalCustomCollections = Math.ceil(customCollectionsCount / 250);
-    for (let page = 1; page <= totalCustomCollections; page++) {
-      if (process.env.IS_OFFLINE) {
-        await this.syncCollectionPage({ storeId: event.storeId, partnerStore: storeDetail.partner, page: page, collectionType: 'custom_collections' })
-      }
-    }
-    url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/smart_collections/count.json`;
-    res = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "X-Shopify-Access-Token": storeDetail.partnerToken,
-      },
-      method: "GET",
-    });
-    json = await res.json();
-    const smartCollectionsCount = json.count;
-    const totalSmartCollections = Math.ceil(smartCollectionsCount / 250);
-    for (let page = 1; page <= totalSmartCollections; page++) {
-      if (process.env.IS_OFFLINE) {
-        await this.syncCollectionPage({ storeId: event.storeId, partnerStore: storeDetail.partner, page: page, collectionType: 'smart_collections' })
-      }
-    }
-  },
+
   syncCollectionPage: async function (event) {
     console.log('syncCollectionPage event', event);
     const StoreModel = shared.StoreModel;
     const CollectionModel = shared.CollectionModel;
     const storeDetail = await StoreModel.findById(event.storeId);
-    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/${event.collectionType}.json?limit=250&page=${event.page}`;
+    let url;
+
+    if (_.isNull(event.pageInfo)) {
+      url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/${event.collectionType}.json?limit=250`;
+    } else {
+      url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/${event.collectionType}.json?limit=250&page_info=${event.pageInfo}`;
+    }
     const res = await fetch(url, {
       headers: {
         "Accept": "application/json",
@@ -492,7 +513,9 @@ module.exports = {
       },
       method: "GET",
     });
+
     const json = await res.json();
+    // console.log("TCL: json", json)
     let collectionUniqKeys = [];
     const bulkCollectionInsert = json[event.collectionType].map(collection => {
       collectionUniqKeys.push(`${PARTNERS_SHOPIFY}-${collection.id}`);
@@ -507,7 +530,7 @@ module.exports = {
             partnerUpdatedAt: collection.updated_at,
             partner: PARTNERS_SHOPIFY,
             uniqKey: `${PARTNERS_SHOPIFY}-${collection.id}`,
-            description: str.stripTags(collection.body_html),
+            description: stringHelper.stripTags(collection.body_html),
             active: (collection.published_at.blank) ? true : false,
             store: event.storeId,
           },
@@ -515,44 +538,52 @@ module.exports = {
         }
       }
     });
+    console.log("TCL: res.headers", res.headers.get('x-shopify-shop-api-call-limit'))
+    const retryAfter = res.headers.get('Retry-After');
+    if (!_.isNull(retryAfter)) {
+      console.log("TCL: retryAfter the given shop. ", retryAfter)
+    }
+
     const r = await CollectionModel.bulkWrite(bulkCollectionInsert);
+    if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
+      const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
+      if (!_.isNull(pageInfo)) {
+        if (process.env.IS_OFFLINE === 'false') {
+          const syncCustomCollectionPageParams = {
+            FunctionName: `postingly-functions-${process.env.STAGE}-sync-collection-page`,
+            InvocationType: 'Event',
+            LogType: 'Tail',
+            Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo })
+          };
+          console.log("TCL: lambda.invoke syncCustomCollectionPageParams", syncCustomCollectionPageParams)
+
+          const syncCustomCollectionPageLambdaResponse = await lambda.invoke(syncCustomCollectionPageParams).promise();
+          console.log("TCL: syncCustomCollectionPageLambdaResponse", syncCustomCollectionPageLambdaResponse)
+        } else {
+          // await this.syncCollectionPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo });
+        }
+      }
+    }
     const dbCollections = await CollectionModel.where('uniqKey').in(collectionUniqKeys.map(collection => collection)).select('_id');
     await Promise.all(dbCollections.map(async collection => {
-      if (process.env.IS_OFFLINE) {
-        await this.syncProducts({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id })
+      if (process.env.IS_OFFLINE === 'false') {
+        // syncing products
+        const syncProductPageParams = {
+          FunctionName: `postingly-functions-${process.env.STAGE}-sync-product-page`,
+          InvocationType: 'Event',
+          LogType: 'Tail',
+          Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null })
+        };
+        console.log("TCL: lambda.invoke syncProductPageParams", syncProductPageParams);
+        const syncProductPageLambdaResponse = await lambda.invoke(syncProductPageParams).promise();
+        console.log("TCL: syncProductPageLambdaResponse", syncProductPageLambdaResponse);
+      } else {
+        // await this.syncProductPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null })
       }
     }));
 
   },
-  syncProducts: async function (event) {
-    console.log('syncProducts event', event);
-    const StoreModel = shared.StoreModel;
-    const CollectionModel = shared.CollectionModel;
-    const storeDetail = await StoreModel.findById(event.storeId);
-    let url;
-    if (!_.isNull(event.collectionId)) {
-      const collectionDetail = await CollectionModel.findById(event.collectionId);
-      url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/count.json?collection_id=${collectionDetail.partnerId}`;
-    } else {
-      url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/count.json`;
-    }
-    let res = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "X-Shopify-Access-Token": storeDetail.partnerToken,
-      },
-      method: "GET",
-    });
-    let json = await res.json();
-    const productCount = json.count;
-    const totalProducts = Math.ceil(productCount / 250);
-    for (let page = 1; page <= totalProducts; page++) {
-      if (process.env.IS_OFFLINE) {
-        await this.syncProductPage({ storeId: event.storeId, partnerStore: storeDetail.partner, page: page, collectionId: event.collectionId })
-      }
-    }
-  },
+
   syncProductPage: async function (event) {
     console.log('syncProductPage event', event);
     const StoreModel = shared.StoreModel;
@@ -564,11 +595,20 @@ module.exports = {
     let url;
     if (!_.isNull(event.collectionId)) {
       const collectionDetail = await CollectionModel.findById(event.collectionId);
-      url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?collection_id=${collectionDetail.partnerId}&limit=250&page=${event.page}`;
-    } else {
-      url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=250&page=${event.page}`;
-    }
+      if (_.isNull(event.pageInfo)) {
+        url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?collection_id=${collectionDetail.partnerId}&limit=250`;
+      } else {
+        url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?collection_id=${collectionDetail.partnerId}&limit=250&page_infor=${event.pageInfo}`;
+      }
 
+    } else {
+      if (_.isNull(event.pageInfo)) {
+        url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=250`;
+      } else {
+        url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=250&page_info=${event.pageInfo}`;
+      }
+    }
+    // console.log("TCL: url", url)
     let res = await fetch(url, {
       headers: {
         "Accept": "application/json",
@@ -578,7 +618,9 @@ module.exports = {
       method: "GET",
     });
     let json = await res.json();
+    // console.log("TCL: res", res)
     const apiProducts = json.products;
+    // console.log("TCL: apiProducts", apiProducts)
     let productImages = [], productVariants = [], variantImages = [];
     // sync products
     const bulkProductInsert = apiProducts.map(product => {
@@ -586,15 +628,15 @@ module.exports = {
       const minimumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p < v && p > 0) ? p : v));
       const maximumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p > v) ? p : v));
       const onSale = product.variants.map(variant => (variant.compare_at_price != variant.price) ? true : false).includes(true);
-      const url = `https://${storeDetail.url}/${product.handle}`;
+      const partnerSpecificUrl = `https://${storeDetail.url}/${product.handle}`;
       return {
         updateOne: {
           filter: { uniqKey: `${PARTNERS_SHOPIFY}-${product.id}` },
           update: {
             title: product.title,
-            description: str.stripTags(product.body_html),
-            suggestedText: str.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, url, minimumPrice, str.stripTags(product.body_html)),
-            partnerSpecificUrl: url,
+            description: stringHelper.stripTags(product.body_html),
+            suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, url, minimumPrice, stringHelper.stripTags(product.body_html)),
+            partnerSpecificUrl: partnerSpecificUrl,
             partner: PARTNERS_SHOPIFY,
             partnerId: product.id,
             partnerName: product.title,
@@ -617,7 +659,9 @@ module.exports = {
         }
       }
     });
-    const products = await ProductModel.bulkWrite(bulkProductInsert);
+    if (!_.isEmpty(bulkProductInsert)) {
+      const products = await ProductModel.bulkWrite(bulkProductInsert);
+    }
     const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections url description');
     if (!_.isNull(event.collectionId)) {
       const bulkCollectionUpdate = dbProducts.map(product => {
@@ -631,8 +675,10 @@ module.exports = {
             }
           }
         }
-      })
-      const collections = await ProductModel.bulkWrite(bulkCollectionUpdate);
+      });
+      if (!_.isEmpty(bulkCollectionUpdate)) {
+        const collections = await ProductModel.bulkWrite(bulkCollectionUpdate);
+      }
     } else {
 
       // set active to false so that deleted images and variants are eliminated. 
@@ -665,7 +711,9 @@ module.exports = {
           }
         })
       });
-      const images = await ImageModel.bulkWrite([].concat.apply([], bulkImageInsert));
+      if (!_.isEmpty(bulkImageInsert)) {
+        const images = await ImageModel.bulkWrite([].concat.apply([], bulkImageInsert));
+      }
 
       // sync variants for the product
       let bulkVariantInsert = [];
@@ -694,7 +742,7 @@ module.exports = {
                 position: variant.position,
                 quantity: variant.inventory_quantity,
                 store: event.storeId,
-                suggestedText: str.formatCaptionText(FACEBOOK_DEFAULT_TEXT, variant.title, productForVariant.url, variant.price, str.stripTags(productForVariant.description)),
+                suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, variant.title, productForVariant.url, variant.price, stringHelper.stripTags(productForVariant.description)),
                 product: productForVariant._id,
                 postableByImage: productForVariant.postableByImage,
                 postableByQuantity: (variant.inventory_quantity > 0) ? true : false,
@@ -708,8 +756,9 @@ module.exports = {
           });
         })
       });
-      const variants = await VariantModel.bulkWrite(bulkVariantInsert);
-
+      if (!_.isEmpty(bulkVariantInsert)) {
+        const variants = await VariantModel.bulkWrite(bulkVariantInsert);
+      }
 
       // now all the images and variants are synced. now we need to create relationship with products
       // first images that are recently synced.
@@ -765,8 +814,9 @@ module.exports = {
           }
         }
       });
-
-      const t = await ImageModel.bulkWrite(bulkVariantImages);
+      if (!_.isEmpty(bulkVariantImages)) {
+        const t = await ImageModel.bulkWrite(bulkVariantImages);
+      }
       const dbVariantImages = await ImageModel.where('variant').in(dbVariants.map(variant => variant._id));
 
       const bulkVariantUpdate = dbVariantImages.map(variantImage => {
@@ -779,7 +829,28 @@ module.exports = {
           }
         }
       });
-      const s = await VariantModel.bulkWrite(bulkVariantUpdate);
+      if (!_.isEmpty(bulkVariantUpdate)) {
+        const s = await VariantModel.bulkWrite(bulkVariantUpdate);
+      }
+      if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
+        const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
+        if (!_.isNull(pageInfo)) {
+          if (process.env.IS_OFFLINE === 'false') {
+            const syncProductPageParams = {
+              FunctionName: `postingly-functions-${process.env.STAGE}-sync-product-page`,
+              InvocationType: 'Event',
+              LogType: 'Tail',
+              Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo })
+            };
+            console.log("TCL: lambda.invoke syncProductPageParams", syncProductPageParams)
+
+            const syncProductPageParamsLambdaResponse = await lambda.invoke(syncProductPageParams).promise();
+            console.log("TCL: syncProductPageParamsLambdaResponse", syncProductPageParamsLambdaResponse)
+          } else {
+            // await this.syncProductPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo });
+          }
+        }
+      }
       // all done.
     }
   },

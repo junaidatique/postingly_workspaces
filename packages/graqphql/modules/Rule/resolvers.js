@@ -25,6 +25,7 @@ module.exports = {
         ruleParams[item] = args.input[item];
       }
     }
+    // create or update rule based on the param 'id'
     if (!_.has(args.input, 'id')) {
       ruleDetail = await RuleModel.create(ruleParams);
     } else {
@@ -32,6 +33,7 @@ module.exports = {
       await RuleModel.updateOne({ _id: args.input.id }, ruleParams, { upsert: true });
       ruleDetail = await RuleModel.findOne({ _id: args.input.id });
     }
+    // if the rule is for edit, than delete all the pending and approved posts and reschedule posts with new settings. 
     if (_.has(args.input, 'id')) {
       const sampleUpdate = await UpdateModel.findOne({ rule: args.input.id, scheduleState: { $in: [PENDING, APPROVED] } });
       if (!_.isNull(sampleUpdate)) {
@@ -90,10 +92,22 @@ module.exports = {
           })
       }
     }
-    if (process.env.IS_OFFLINE || process.env.STAGE === TEST) {
-      await createUpdates({ ruleId: ruleDetail._id });
-      await schedule({ ruleId: ruleDetail._id });
-      await addCaptions();
+    if (process.env.IS_OFFLINE === 'false') {
+      const params = {
+        FunctionName: `postingly-functions-${process.env.STAGE}-create-updates`,
+        InvocationType: 'Event',
+        LogType: 'Tail',
+        Payload: JSON.stringify({ ruleId: ruleDetail._id })
+      };
+      console.log("TCL: lambda.invoke params", params)
+      console.log("TCL: lambda", lambda)
+      const lambdaResponse = await lambda.invoke(params).promise();
+      console.log("TCL: lambdaResponse", lambdaResponse)
+
+    } else {
+      // await createUpdates({ ruleId: ruleDetail._id });
+      // await schedule({ ruleId: ruleDetail._id });
+      // await addCaptions();
     }
     const ruleResult = formattedRule(ruleDetail);
     return ruleResult;

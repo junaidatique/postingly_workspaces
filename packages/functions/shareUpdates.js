@@ -1,19 +1,10 @@
 const shared = require('shared');
-const moment = require('moment');
-const _ = require('lodash');
-const { POSTED, FACEBOOK_SERVICE, POST_AS_OPTION_FB_ALBUM, POST_AS_OPTION_FB_LINK, POST_AS_OPTION_FB_PHOTO } = require('shared/constants');
+const { FACEBOOK_SERVICE, POST_AS_OPTION_FB_ALBUM, POST_AS_OPTION_FB_LINK, POST_AS_OPTION_FB_PHOTO } = require('shared/constants');
 const FacebookService = require('shared').FacebookService;
-const mongoose = require('mongoose');
-let conn = null;
+const dbConnection = require('./db');
 module.exports = {
   share: async function (event, context) {
-    context.callbackWaitsForEmptyEventLoop = false;
-    if (conn == null) {
-      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
-        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
-        bufferMaxEntries: 0
-      });
-    }
+    await dbConnection.createConnection(context);
     const UpdateModel = shared.UpdateModel;
     const update = await UpdateModel.findById(event.updateId);
     let response;

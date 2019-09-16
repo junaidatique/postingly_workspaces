@@ -1,6 +1,6 @@
 exports.cognitoHelper = require('./helpers/cognito');
 
-if (process.env.IS_OFFLINE) {
+if (process.env.IS_OFFLINE !== 'false') {
   exports.mongodb = require('shared/helpers/db');
 }
 exports.httpHelper = require('./helpers/http');

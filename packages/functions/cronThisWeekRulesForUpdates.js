@@ -2,18 +2,12 @@ const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
 const { SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT, NOT_SCHEDULED } = require('shared/constants');
-const scheduleProducts = require('functions').scheduleProducts.schedule;
-const mongoose = require('mongoose');
-let conn = null;
+// const scheduleProducts = require('functions').scheduleProducts.schedule;
+const dbConnection = require('./db');
 module.exports = {
   excute: async function (event, context) {
-    context.callbackWaitsForEmptyEventLoop = false;
-    if (conn == null) {
-      conn = await mongoose.createConnection(process.env.MONGODB_URL, {
-        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
-        bufferMaxEntries: 0
-      });
-    }
+
+    await dbConnection.createConnection(context);
     try {
       const UpdateModel = shared.UpdateModel;
       const rules = await UpdateModel.distinct('rule',
@@ -24,10 +18,21 @@ module.exports = {
           rule: { $exists: true }
         }
       );
-      if (process.env.IS_OFFLINE) {
+      if (process.env.IS_OFFLINE === 'false') {
         await Promise.all(rules.map(async rule => {
-          await scheduleProducts({ ruleId: rule })
+          const params = {
+            FunctionName: `postingly-functions-${process.env.STAGE}-schedule-updates`,
+            InvocationType: 'Event',
+            LogType: 'Tail',
+            Payload: JSON.stringify({ ruleId: rule })
+          };
+          console.log("TCL: lambda.invoke params", params)
+          console.log("TCL: lambda", lambda)
+          const lambdaResponse = await lambda.invoke(params).promise();
+          console.log("TCL: lambdaResponse", lambdaResponse)
         }));
+      } else {
+        console.log("TCL: cronThisWeekRulesForUpdates event", event)
       }
     } catch (error) {
       console.error(error.message);

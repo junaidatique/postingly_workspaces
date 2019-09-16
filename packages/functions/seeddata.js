@@ -2,17 +2,11 @@ const faker = require('faker');
 const mongoose = require('mongoose')
 let conn = null;
 const shared = require('shared');
+const dbConnection = require('./db');
 module.exports = {
   createStore: async function (event, context) {
-    if (!process.env.IS_OFFLINE) {
-      context.callbackWaitsForEmptyEventLoop = false;
-      if (conn === null) {
-        conn = await mongoose.createConnection(process.env.MONGODB_URL, {
-          useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
-          bufferMaxEntries: 0
-        });
-      }
-    }
+    console.log("TCL: event", event)
+    dbConnection.createConnection(context);
     const StoreModel = shared.StoreModel;
     shop = {
       id: faker.random.number({ min: 10000000 }),
