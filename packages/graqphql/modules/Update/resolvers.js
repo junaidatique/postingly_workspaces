@@ -47,6 +47,7 @@ module.exports = {
       updateDetail.postAsOption = args.input.postAsOption;
       updateDetail.scheduleTime = args.input.scheduleTime;
       updateDetail.images = args.input.images;
+      updateDetail.scheduleState = args.input.scheduleState;
       await updateDetail.save();
       return formattedUpdate(updateDetail);
     } catch (error) {

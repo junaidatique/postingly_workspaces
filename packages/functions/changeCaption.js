@@ -8,7 +8,6 @@ const { APPROVED, PENDING, SCHEDULE_TYPE_VARIANT, SCHEDULE_TYPE_PRODUCT } = requ
 
 module.exports = {
   update: async function (event, context) {
-    console.log("TCL: event", event)
     await dbConnection.createConnection(context);
     try {
       const UpdateModel = shared.UpdateModel;
@@ -61,7 +60,8 @@ module.exports = {
 
           const description = productDetail.description;
           const defaultShortLinkService = StoreDetail.shortLinkService;
-          const url = await shortLink.getItemShortLink(defaultShortLinkService, productDetail.partnerSpecificUrl, productDetail.url);
+          const productDetailURL = await productDetail.url.map(urls => urls);
+          const url = await shortLink.getItemShortLink(defaultShortLinkService, productDetail.partnerSpecificUrl, productDetailURL);
           if (!_.isNull(url)) {
             const ruleCaptions = ruleDetail.captions.map(caption => {
               return caption;
@@ -100,7 +100,9 @@ module.exports = {
           )
         }
       }));
-      const updateUpdates = await UpdateModel.bulkWrite(approvedUpdates);
+      if (!_.isEmpty(approvedUpdates)) {
+        const updateUpdates = await UpdateModel.bulkWrite(approvedUpdates);
+      }
     } catch (error) {
       console.error(error.message);
     }

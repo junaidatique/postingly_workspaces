@@ -14,8 +14,8 @@ const shortLink = {
         }
       })
       if (_.isEmpty(url)) {
-        if (defaultShortLinkService.service === LINK_SHORTNER_SERVICES_POOOST) {
-          url = await shortLink.pooostURL(productDetail.partnerSpecificUrl);
+        if (defaultShortLinkService === LINK_SHORTNER_SERVICES_POOOST) {
+          url = await shortLink.pooostURL(partnerSpecificUrl);
         }
       }
     }

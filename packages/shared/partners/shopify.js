@@ -635,7 +635,7 @@ module.exports = {
           update: {
             title: product.title,
             description: stringHelper.stripTags(product.body_html),
-            suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, url, minimumPrice, stringHelper.stripTags(product.body_html)),
+            suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, partnerSpecificUrl, minimumPrice, stringHelper.stripTags(product.body_html)),
             partnerSpecificUrl: partnerSpecificUrl,
             partner: PARTNERS_SHOPIFY,
             partnerId: product.id,
@@ -662,7 +662,7 @@ module.exports = {
     if (!_.isEmpty(bulkProductInsert)) {
       const products = await ProductModel.bulkWrite(bulkProductInsert);
     }
-    const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections url description');
+    const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description');
     if (!_.isNull(event.collectionId)) {
       const bulkCollectionUpdate = dbProducts.map(product => {
         let collections = product.collections;
@@ -742,7 +742,7 @@ module.exports = {
                 position: variant.position,
                 quantity: variant.inventory_quantity,
                 store: event.storeId,
-                suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, variant.title, productForVariant.url, variant.price, stringHelper.stripTags(productForVariant.description)),
+                suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, variant.title, productForVariant.partnerSpecificUrl, variant.price, stringHelper.stripTags(productForVariant.description)),
                 product: productForVariant._id,
                 postableByImage: productForVariant.postableByImage,
                 postableByQuantity: (variant.inventory_quantity > 0) ? true : false,
