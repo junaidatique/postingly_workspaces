@@ -33,6 +33,7 @@ module.exports = {
 
   createStore: async (obj, args, context, info) => {
     try {
+      const StoreModel = shared.StoreModel;
       storeKey = `${args.input.partner}-${args.input.partnerId}`;
       let shopParams = {};
       for (item in args.input) {
@@ -50,6 +51,7 @@ module.exports = {
   },
   updateStore: async (obj, args, context, info) => {
     try {
+      const StoreModel = shared.StoreModel;
       storeKey = args.input.id;
       let shopParams = {};
       for (item in args.input) {

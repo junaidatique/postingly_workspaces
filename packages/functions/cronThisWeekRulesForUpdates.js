@@ -4,6 +4,13 @@ const _ = require('lodash');
 const { SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT, NOT_SCHEDULED } = require('shared/constants');
 // const scheduleProducts = require('functions').scheduleProducts.schedule;
 const dbConnection = require('./db');
+let lambda;
+const AWS = require('aws-sdk');
+if (process.env.IS_OFFLINE === 'false') {
+  lambda = new AWS.Lambda({
+    region: process.env.AWS_REGION //change to your region
+  });
+}
 module.exports = {
   excute: async function (event, context) {
 

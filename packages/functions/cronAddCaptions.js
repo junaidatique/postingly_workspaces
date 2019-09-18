@@ -29,6 +29,7 @@ module.exports = {
           captionsUpdated: false,
         }
       );
+      console.log("TCL: services", services)
       if (process.env.IS_OFFLINE === 'false') {
         await Promise.all(services.map(async service => {
           if (!_.isEmpty(event) && !_.isUndefined(event) && !_.isNull(event.storeId)) {
@@ -53,9 +54,5 @@ module.exports = {
       console.error(error.message);
     }
   },
-  getRoundedDate: function (minutes, d = new Date()) {
-    let ms = 1000 * 60 * minutes; // convert minutes to ms
-    let roundedDate = new Date(Math.round(d.getTime() / ms) * ms);
-    return roundedDate
-  }
+
 }

@@ -15,7 +15,13 @@ const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED, SCHEDULE_TYPE_PR
 //   schedule = require('functions').scheduleProducts.schedule;
 //   addCaptions = require('functions').cronAddCaptions.execute;
 // }
-
+let lambda;
+const AWS = require('aws-sdk');
+if (process.env.IS_OFFLINE === 'false') {
+  lambda = new AWS.Lambda({
+    region: process.env.AWS_REGION //change to your region
+  });
+}
 module.exports = {
   manageRule: async (obj, args, context, info) => {
     let ruleParams = {};
@@ -97,7 +103,7 @@ module.exports = {
         FunctionName: `postingly-functions-${process.env.STAGE}-create-updates`,
         InvocationType: 'Event',
         LogType: 'Tail',
-        Payload: JSON.stringify({ ruleId: ruleDetail._id })
+        Payload: JSON.stringify({ ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id })
       };
       console.log("TCL: lambda.invoke params", params)
       console.log("TCL: lambda", lambda)

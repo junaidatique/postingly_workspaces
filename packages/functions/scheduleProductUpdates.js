@@ -6,21 +6,19 @@ const {
   PENDING,
   SCHEDULE_TYPE_PRODUCT,
   SCHEDULE_TYPE_VARIANT,
-  COLLECTION_OPTION_SELECTED,
-  COLLECTION_OPTION_NOT_SELECTED,
-  RULE_TYPE_OLD,
-  RULE_TYPE_NEW,
-  POSTING_SORTORDER_NEWEST,
+
   POST_AS_OPTION_FB_ALBUM,
   POST_AS_OPTION_TW_ALBUM,
   POST_AS_OPTION_FB_PHOTO,
   POST_AS_OPTION_TW_PHOTO
 } = require('shared/constants');
 const dbConnection = require('./db');
+const schedulerHelper = require('./helpers/productScheduleFns')
 
-const ScheduleProductUpdates = {
+module.exports = {
   // event = { ruleId: ID }
   schedule: async function (event, context) {
+    console.log("TCL: event", event)
     await dbConnection.createConnection(context);
     try {
       // load models
@@ -66,16 +64,14 @@ const ScheduleProductUpdates = {
         if (updates.length > 0) {
           // get variants or products based on the rule settings. 
           if (ruleDetail.postAsVariants) {
-            postItems = await ScheduleProductUpdates.getVariantsForSchedule(ruleDetail._id, profile, updates.length);
+            postItems = await schedulerHelper.getVariantsForSchedule(ruleDetail._id, profile, updates.length);
             itemModel = VariantModel;
             itemType = SCHEDULE_TYPE_VARIANT;
           } else {
-            postItems = await ScheduleProductUpdates.getProductsForSchedule(ruleDetail._id, profile, updates.length);
+            postItems = await schedulerHelper.getProductsForSchedule(ruleDetail._id, profile, updates.length);
             itemModel = ProductModel;
             itemType = SCHEDULE_TYPE_PRODUCT;
           }
-
-
           counter = 0;
           await Promise.all(postItems.map(async item => {
             if (item.images.length === 0 && itemType === SCHEDULE_TYPE_VARIANT) {
@@ -178,133 +174,13 @@ const ScheduleProductUpdates = {
           }));
         }
       }));
+      console.log("TCL: bulkUpdate", bulkUpdate)
       const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
     } catch (error) {
       console.error(error.message);
     }
   },
-  getProductsForSchedule: async function (ruleId, profileId, limit) {
-    const RuleModel = shared.RuleModel;
-    const ProductModel = shared.ProductModel;
-    const ruleDetail = await RuleModel.findById(ruleId);
-    const notSharedOnThisProfileQuery = this.getProductsQuery(ruleDetail);
-    const notSharedOnThisProfile = notSharedOnThisProfileQuery.find({ "shareHistory.profile": { $ne: profileId } });
-    const productsForCount = await notSharedOnThisProfile;
-    if (productsForCount.length > 0) {
-      let notSharedOnThisProfileLimitQuery = this.getProductsQuery(ruleDetail);
-      if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
-        notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.sort({ partnerCreatedAt: -1 })
-      } else {
-        notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.limit(-1).skip(Math.random() * productsForCount.length)
-      }
-      notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.find({ "shareHistory.profile": { $ne: profileId } }).limit(limit);
-      let products = await notSharedOnThisProfileLimitQuery.populate('images');
-      return products;
-    }
-    let lessSharedOnThisProfile = this.getProductsQuery(ruleDetail);
-    lessSharedOnThisProfile = lessSharedOnThisProfile.find({ "shareHistory.profile": profileId }).sort({ "shareHistory.counter": 1 });
-    if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
-      lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ partnerCreatedAt: -1 })
-    } else {
-      const productCount = await ProductModel.find({ store: ruleDetail.store }).estimatedDocumentCount();
-      lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.random() * productCount)
-    }
-    lessSharedOnThisProfile = lessSharedOnThisProfile.limit(limit);
-    let products = await lessSharedOnThisProfile.populate('images');
-    return products;
-  },
-  getProductsQuery: function (ruleDetail) {
-    const ProductModel = shared.ProductModel;
-    let query;
-    query = ProductModel.find({ store: ruleDetail.store, active: true, postableByPrice: true, postableByImage: true });
-    // if the rule is of type old than don't schedule new products
-    if (ruleDetail.type == RULE_TYPE_OLD) {
-      query = query.where({ postableIsNew: false })
-    } else if (ruleDetail.type == RULE_TYPE_NEW) {
-      query = query.where({ postableIsNew: true });
-    }
-    // if zero quantity is not allowed than only select in stock products 
-    if (!ruleDetail.allowZeroQuantity) {
-      query = query.where({ postableByQuantity: true })
-    }
-    if (ruleDetail.collectionOption === COLLECTION_OPTION_SELECTED) {
-      query = query.where('collections').in(ruleDetail.collections);
-    } else if (ruleDetail.collectionOption === COLLECTION_OPTION_NOT_SELECTED) {
-      query = query.where('collections').nin(ruleDetail.collections);
-    }
-    return query;
-  },
-  getVariantsForSchedule: async function (ruleId, profileId, limit) {
-    const RuleModel = shared.RuleModel;
-    const ruleDetail = await RuleModel.findById(ruleId);
-    const notSharedOnThisProfile = this.getVariantsQuery(ruleDetail);
-    const variantsCount = await notSharedOnThisProfile.find({ "shareHistory.profile": { $ne: profileId } }).estimatedDocumentCount();
-    if (variantsCount > 0) {
-      let query = this.getVariantsQuery(ruleDetail);
-      if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
-        query = query.sort({ partnerCreatedAt: -1 })
-      } else {
-        const variantCount = await VariantModel.estimatedDocumentCount();
-        query = query.limit(-1).skip(Math.random() * variantCount)
-      }
-      let products = await query.find({ "shareHistory.profile": { $ne: profileId } }).limit(limit).populate('images');
-      return products;
-    }
-    let lessSharedOnThisProfile = this.getVariantsQuery(ruleDetail);;
-    if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
-      lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ partnerCreatedAt: -1 })
-    } else {
-      const variantCount = await VariantModel.find({ store: ruleDetail.store }).estimatedDocumentCount();
-      lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.random() * variantCount)
-    }
-    let products = await lessSharedOnThisProfile.find({ "shareHistory.profile": profileId }).sort({ "shareHistory.counter": 1 }).limit(limit).populate('images');
-    return products;
-  },
-  getVariantsQuery: function (ruleDetail) {
-    const VariantModel = shared.VariantModel;
-    let query;
-    query = VariantModel.find({ store: ruleDetail.store, active: true, postableByPrice: true, postableByImage: true });
-    // if the rule is of type old than don't schedule new products
-    if (ruleDetail.type == RULE_TYPE_OLD) {
-      query = query.where({ postableIsNew: false })
-    } else if (ruleDetail.type == RULE_TYPE_NEW) {
-      query = query.where({ postableIsNew: true });
-    }
-    // if zero quantity is not allowed than only select in stock products 
-    if (!ruleDetail.allowZeroQuantity) {
-      query = query.where({ postableByQuantity: true })
-    }
-    if (ruleDetail.collectionOption === COLLECTION_OPTION_SELECTED) {
-      query = query.where('collections').in(ruleDetail.collections);
-    } else if (ruleDetail.collectionOption === COLLECTION_OPTION_NOT_SELECTED) {
-      query = query.where('collections').nin(ruleDetail.collections);
-    }
-    return query;
-  },
-  getSuggestedText: async function (ruleDetail, defaultShortLinkService, item, itemType) {
-    const ProductModel = shared.ProductModel;
-    const shortLink = shared.shortLink;
-    const stringHelper = shared.stringHelper;
 
-    const captionsForUpdate = ruleDetail.captions.filter(caption => {
-      if (caption.isDefault) {
-        return caption;
-      }
-    });
-    let productDetail;
-    if (itemType === SCHEDULE_TYPE_VARIANT) {
-      productDetail = await ProductModel.findById(item.product);
-    } else {
-      productDetail = item;
-    }
-    const title = productDetail.title;
-    const price = productDetail.minimumPrice;
-    const description = productDetail.description;
-    const url = await shortLink.getItemShortLink(defaultShortLinkService, productDetail.partnerSpecificUrl, productDetail.url);
-    const captionText = stringHelper.formatCaptionText(captionsForUpdate[0].captionTexts[0], title, url, price, description);
-    return captionText;
-  }
 
 }
 
-module.exports = ScheduleProductUpdates;

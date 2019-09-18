@@ -1,21 +1,30 @@
 const shared = require('shared');
 const _ = require('lodash');
-const { APPROVED, FACEBOOK_SERVICE } = require('shared/constants');
+const { APPROVED } = require('shared/constants');
 
 const dbConnection = require('./db');
-
+let lambda;
+const AWS = require('aws-sdk');
+if (process.env.IS_OFFLINE === 'false') {
+  lambda = new AWS.Lambda({
+    region: process.env.AWS_REGION //change to your region
+  });
+}
 module.exports = {
   share: async function (event, context) {
     await dbConnection.createConnection(context);
     try {
       const UpdateModel = shared.UpdateModel;
+      const dateTime = shared.dateTime;
       let updates;
+      const next_five_minutes = dateTime.getRoundedDate(5);
+      console.log("TCL: next_five_minutes", next_five_minutes)
       if (process.env.IS_OFFLINE === 'false') {
-        const next_five_minutes = getRoundedDate(5);
-        updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $lt: next_five_minutes } });
+        updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $lte: next_five_minutes } });
       } else {
         updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(1);
       }
+      // console.log("TCL: updates", updates)
       if (process.env.IS_OFFLINE === 'false') {
         await Promise.all(updates.map(async update => {
           const params = {
@@ -36,9 +45,5 @@ module.exports = {
       console.error(error.message);
     }
   },
-  getRoundedDate: function (minutes, d = new Date()) {
-    let ms = 1000 * 60 * minutes; // convert minutes to ms
-    let roundedDate = new Date(Math.round(d.getTime() / ms) * ms);
-    return roundedDate
-  }
+
 }

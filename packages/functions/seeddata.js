@@ -6,7 +6,7 @@ const dbConnection = require('./db');
 module.exports = {
   createStore: async function (event, context) {
     console.log("TCL: event", event)
-    dbConnection.createConnection(context);
+    await dbConnection.createConnection(context);
     const StoreModel = shared.StoreModel;
     shop = {
       id: faker.random.number({ min: 10000000 }),

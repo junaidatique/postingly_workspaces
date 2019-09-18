@@ -154,12 +154,8 @@ module.exports = {
         const storeInstance = new StoreModel(shopParams);
         store = await storeInstance.save();
         console.log("TCL: store", store);
-        const storePayload = {
-          "storeId": store._id,
-          "partnerStore": "shopify",
-          "collectionId": null
-        }
-        console.log("TCL: process.env.IS_OFFLINE", process.env.IS_OFFLINE)
+
+
 
       } else {
         isCharged = store.isCharged;
@@ -367,6 +363,11 @@ module.exports = {
     try {
       await store.save();
       if (process.env.IS_OFFLINE === 'false') {
+        const storePayload = {
+          "storeId": store._id,
+          "partnerStore": "shopify",
+          "collectionId": null
+        }
         const syncStoreDataParams = {
           FunctionName: `postingly-functions-${process.env.STAGE}-sync-store-data`,
           InvocationType: 'Event',

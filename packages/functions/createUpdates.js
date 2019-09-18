@@ -1,7 +1,15 @@
 const shared = require('shared');
 const moment = require('moment-timezone');
+const _ = require('lodash');
 const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
 const dbConnection = require('./db');
+let lambda;
+const AWS = require('aws-sdk');
+if (process.env.IS_OFFLINE === 'false') {
+  lambda = new AWS.Lambda({
+    region: process.env.AWS_REGION //change to your region
+  });
+}
 module.exports = {
   // event = null
   createUpdatesforNextWeek: async function (event, context) {
@@ -125,6 +133,22 @@ module.exports = {
             }
           });
           const updateUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+        }
+      }
+      if (!_.isNull(event.ruleIdForScheduler)) {
+        if (process.env.IS_OFFLINE === 'false') {
+          const params = {
+            FunctionName: `postingly-functions-${process.env.STAGE}-schedule-updates`,
+            InvocationType: 'Event',
+            LogType: 'Tail',
+            Payload: JSON.stringify({ ruleId: event.ruleIdForScheduler })
+          };
+          console.log("TCL: lambda.invoke params", params)
+          console.log("TCL: lambda", lambda)
+          const lambdaResponse = await lambda.invoke(params).promise();
+          console.log("TCL: lambdaResponse", lambdaResponse)
+        } else {
+          console.log("TCL: cronThisWeekRulesForUpdates event", event)
         }
       }
 

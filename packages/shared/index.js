@@ -8,6 +8,7 @@ exports.jwtHelper = require('./helpers/jwt');
 exports.stringHelper = require('./helpers/string');
 exports.query = require('./helpers/query');
 exports.shortLink = require('./helpers/shortLinks');
+exports.dateTime = require('./helpers/dateTime');
 
 // models
 exports.StoreModel = require('./models/store');

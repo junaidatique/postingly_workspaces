@@ -1,13 +1,12 @@
 const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
-const mongoose = require('mongoose');
 const dbConnection = require('./db');
-let conn = null;
 const { APPROVED, PENDING, SCHEDULE_TYPE_VARIANT, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
 
 module.exports = {
   update: async function (event, context) {
+    console.log("TCL: event", event)
     await dbConnection.createConnection(context);
     try {
       const UpdateModel = shared.UpdateModel;
@@ -30,10 +29,12 @@ module.exports = {
           service: event.service
         }
       );
-      if (!_.isNull(event.storeId)) {
+      console.log("TCL: event.storeId", event.storeId)
+      if (!_.isNull(event.storeId) && !_.isUndefined(event.storeId)) {
         servicesQuery = servicesQuery.where({ store: event.storeId });
       }
       const updates = await servicesQuery.limit(50);
+      console.log("TCL: updates", updates)
 
       let approvedUpdates = [];
       await Promise.all(updates.map(async update => {

@@ -9,7 +9,12 @@ provider:
   name: aws
   runtime: nodejs8.10
   stage: ${env:STAGE}
-
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource:
+        - arn:aws:lambda:us-east-1:*:* 
 functions:
   # create update lambda. this function recieves rule id from either 
   # manage rule resolver or from cron-create-updates-for-next-week lambda function. 
@@ -34,7 +39,7 @@ functions:
           enabled: true
   # This updates simply takes the rule id and schedule all the not scheduled updates. 
   schedule-updates:
-    handler: ScheduleProductUpdates.schedule
+    handler: scheduleProductUpdates.schedule
   # This lambda takes the cron and add captions to the scheduled updates. plus also approve them. 
   cron-add-captions:
     handler: cronAddCaptions.execute
