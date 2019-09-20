@@ -6,7 +6,8 @@ const formattedProfile = async (profile) => {
     id: profile._id,
     parent: getProfileById.bind(this, profile._doc.parent),
     children: getProfiles.bind(this, profile._doc.children),
-    store: storeFunctions.getStoreByID.bind(this, profile._doc.store)
+    store: storeFunctions.getStoreByID.bind(this, profile._doc.store),
+    createdAt: (profile.createdAt !== undefined) ? profile.createdAt.toISOString() : null,
   }
 }
 const getProfileById = async profileId => {

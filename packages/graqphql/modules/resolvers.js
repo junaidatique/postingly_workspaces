@@ -21,6 +21,7 @@ module.exports = {
     updateStore: storeResolvers.updateStore,
     connectProfile: profileResolvers.connectProfile,
     updateProfile: profileResolvers.updateProfile,
+    deleteProfile: profileResolvers.deleteProfile,
     manageRule: ruleResolvers.manageRule,
     deleteRule: ruleResolvers.deleteRule,
     deleteUpdate: updateResolvers.deleteUpdate,

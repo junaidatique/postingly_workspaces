@@ -174,7 +174,6 @@ module.exports = {
           }));
         }
       }));
-      console.log("TCL: bulkUpdate", bulkUpdate)
       const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
     } catch (error) {
       console.error(error.message);

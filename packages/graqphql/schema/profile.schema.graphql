@@ -16,6 +16,7 @@ type Profile {
   isTokenExpired: Boolean
   isSharePossible: Boolean
   store: Store
+  createdAt: String
 }
 
 input connectProfileInput {

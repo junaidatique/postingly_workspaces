@@ -14,7 +14,8 @@ type Mutation {
   createStore(input: CreateStoreInput!): Store
   updateStore(input: UpdateStoreInput!): Store
   connectProfile(input: connectProfileInput!): Profile
-  updateProfile(input: [updateProfileInput]!): [Profile]
+  updateProfile(storeId: ID!, input: [updateProfileInput]!): [Profile]
+  deleteProfile(profileId: ID!): [Profile]
   manageRule(input: RuleInput!): Rule
   deleteRule(ruleId: ID!): Rule
   deleteUpdate(updateId: ID!): Update
