@@ -13,7 +13,6 @@ if (process.env.IS_OFFLINE === 'false') {
 }
 module.exports = {
   excute: async function (event, context) {
-
     await dbConnection.createConnection(context);
     try {
       const UpdateModel = shared.UpdateModel;

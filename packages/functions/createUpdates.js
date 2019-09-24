@@ -16,14 +16,14 @@ module.exports = {
     await dbConnection.createConnection(context);
     try {
       const RuleModel = shared.RuleModel;
-      const rules = RuleModel.find({ active: true });
+      const rules = await RuleModel.find({ active: true });
       if (process.env.IS_OFFLINE === 'false') {
         await Promise.all(rules.map(async ruleDetail => {
           const params = {
             FunctionName: `postingly-functions-${process.env.STAGE}-create-updates`,
             InvocationType: 'Event',
             LogType: 'Tail',
-            Payload: JSON.stringify({ ruleId: ruleDetail._id })
+            Payload: JSON.stringify({ ruleId: ruleDetail._id, scheduleWeek: 'next' })
           };
           console.log("TCL: lambda.invoke params", params)
           const lambdaResponse = await lambda.invoke(params).promise();
@@ -40,6 +40,7 @@ module.exports = {
   },
   // event = { ruleId: ruleDetail._id, scheduleWeek: "next" | null }
   createUpdates: async function (event, context) {
+    console.log("TCL: event", event)
     await dbConnection.createConnection(context);
     try {
       let updateTimes = [];
@@ -135,7 +136,8 @@ module.exports = {
           const updateUpdates = await UpdateModel.bulkWrite(bulkUpdate);
         }
       }
-      if (!_.isNull(event.ruleIdForScheduler)) {
+      console.log("TCL: event.ruleIdForScheduler", event.ruleIdForScheduler)
+      if (!_.isNull(event.ruleIdForScheduler) && !_.isUndefined(event.ruleIdForScheduler)) {
         if (process.env.IS_OFFLINE === 'false') {
           const params = {
             FunctionName: `postingly-functions-${process.env.STAGE}-schedule-updates`,

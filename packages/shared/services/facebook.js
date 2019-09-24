@@ -5,7 +5,7 @@ const StoreModel = require('shared').StoreModel;
 const ProductModel = require('shared').ProductModel;
 const VariantModel = require('shared').VariantModel;
 const _ = require('lodash')
-const { FACEBOOK_SERVICE, FACEBOOK_GRPAHAPI_URL, FACEBOOK_PROFILE, FACEBOOK_PAGE, FAILED, POSTED, FB_DEFAULT_ALBUM } = require('shared/constants');
+const { FACEBOOK_SERVICE, FACEBOOK_GRPAHAPI_URL, FACEBOOK_PROFILE, FACEBOOK_PAGE, FACEBOOK_GROUP, FAILED, POSTED, FB_DEFAULT_ALBUM } = require('shared/constants');
 module.exports = {
   login: async function (storeId, code, serviceProfile) {
     console.log(" -- FB Login Start -- ");
@@ -16,7 +16,7 @@ module.exports = {
       console.log(" -- FB Login End -- ");
     } catch (error) {
       console.log(" -- FB Login Error -- ");
-      throw new Error(error.message);
+      throw new Error(error);
     }
   },
   getAccessToken: async function (code) {
@@ -142,8 +142,8 @@ module.exports = {
       let profile;
       if (serviceProfile === FACEBOOK_PAGE) {
         profile = await this.getPages(storeId, userDetail._id, accessToken);
-      } else {
-
+      } else if (serviceProfile === FACEBOOK_GROUP) {
+        profile = await this.getGroups(storeId, userDetail._id, accessToken);
       }
       console.log("TCL: profile", profile)
       return profile;
@@ -212,12 +212,74 @@ module.exports = {
       throw new Error(error.message);
     }
   },
+  getGroups: async function (storeId, parentId, accessToken) {
+    console.log("TCL: storeId", storeId)
+    console.log("TCL: parentId", parentId)
+    console.log(" -- FB getGroups Start -- ");
+    console.log("FB getGroups ", accessToken);
+    const parent = await ProfileModel.findById(parentId);
+    try {
+      const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me/groups?admin_only=true`;
+      console.log("TCL: graphApiUrl -> graphApiUrl", graphApiUrl);
+      getGroupsQuery = querystring.stringify({ access_token: accessToken });
+      const groupsDetailResponse = await fetch(`${graphApiUrl}&${getGroupsQuery}`, {
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        method: "GET",
+      });
+      const groupResponse = await groupsDetailResponse.json();
+      if (groupsDetailResponse.status === 200) {
+        console.log("FB getGroups Recieved", groupResponse);
+        const bulkProfileInsert = groupResponse.data.map(groupProfile => {
+          const uniqKey = `${FACEBOOK_GROUP}-${storeId}-${groupProfile.id}`;
+          return {
+            updateOne: {
+              filter: { uniqKey: uniqKey },
+              update: {
+                name: groupProfile.name,
+                avatarUrl: null,
+                serviceUserId: groupProfile.id,
+                profileURL: null,
+                accessToken: accessToken,
+                service: FACEBOOK_SERVICE,
+                serviceProfile: FACEBOOK_GROUP,
+                store: storeId,
+                parent: parentId,
+                isSharePossible: true
+              },
+              upsert: true
+            }
+          }
+        });
+        const groupProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
+        const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
+        const store = await StoreModel.findById(storeId);
+        store.profiles = storeProfiles;
+        await store.save();
+        const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
+        parent.childrent = childProfiles;
+        await parent.save();
+        console.log("TCL: parent", parent)
+        return parent;
+      } else {
+        console.log("Fb getGroups Not Recieved");
+        throw new Error(userDetailResponse.statusText);
+      }
+    } catch (error) {
+      console.log(" -- FB getGroups Error -- ");
+      throw new Error(error.message);
+    }
+  },
   shareFacebookPostAsAlbum: async function (update) {
     const profile = await ProfileModel.findById(update.profile);
+    if (profile.serviceProfile === FACEBOOK_GROUP) {
+      return this.shareFacebookPostAsPhoto(update);
+    }
     let albumTitle, updateItem;
     if (!_.isNull(update.product) && !_.isUndefined(update.product)) {
       updateItem = await ProductModel.findById(update.product);
-
     } else if (!_.isNull(update.variant) && !_.isUndefined(update.variant)) {
       updateItem = await VariantModel.findById(update.variant);
     }
@@ -303,7 +365,12 @@ module.exports = {
   },
   shareFacebookPostAsPhoto: async function (update) {
     const profile = await ProfileModel.findById(update.profile);
-    let fbDefaultAlbum = profile.fbDefaultAlbum;
+    let fbDefaultAlbum = null;
+    if (profile.serviceProfile === FACEBOOK_GROUP) {
+      fbDefaultAlbum = profile.serviceUserId;
+    } else {
+      fbDefaultAlbum = profile.fbDefaultAlbum;
+    }
     console.log("TCL: shareFacebookPostAsPhoto fbDefaultAlbum", fbDefaultAlbum);
     if (_.isNull(fbDefaultAlbum)) {
       const defaultAlbumResponse = await this.getDefaultAlbum(profile.serviceUserId, profile.accessToken);

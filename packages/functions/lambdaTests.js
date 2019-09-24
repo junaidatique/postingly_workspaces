@@ -49,11 +49,12 @@ module.exports = {
     await cronThisWeekRulesForUpdates();
 
     await schedule({ ruleId: ruleDetail._id });
-    // await cronAddCaptions();
-    // await changeCaption({ service: FACEBOOK_SERVICE, storeId: null });
-    // await cronPostUpdates();
-    // updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(1);
-    // await shareUpdates({ updateId: updates[0]._id });
+    await cronAddCaptions();
+    await changeCaption({ service: FACEBOOK_SERVICE, storeId: null });
+    await cronPostUpdates();
+    updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(1);
+    console.log("TCL: updates", updates)
+    await shareUpdates({ updateId: updates[0]._id });
 
 
   }
