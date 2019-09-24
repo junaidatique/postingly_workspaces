@@ -52,9 +52,9 @@ module.exports = {
     await cronAddCaptions();
     await changeCaption({ service: FACEBOOK_SERVICE, storeId: null });
     await cronPostUpdates();
-    updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(1);
-    console.log("TCL: updates", updates)
-    await shareUpdates({ updateId: updates[0]._id });
+    // updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(1);
+    // console.log("TCL: updates", updates)
+    // await shareUpdates({ updateId: updates[0]._id });
 
 
   }

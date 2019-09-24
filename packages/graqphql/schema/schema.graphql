@@ -21,5 +21,6 @@ type Mutation {
   deleteUpdate(updateId: ID!): Update
   editUpdate(updateId: ID!, input: editUpdateInput!): Update
   createUpdate(input: createUpdateInput!): Update
+  syncProducts(storeId: ID!): Store
 }
 

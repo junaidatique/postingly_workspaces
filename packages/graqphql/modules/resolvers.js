@@ -26,6 +26,7 @@ module.exports = {
     deleteRule: ruleResolvers.deleteRule,
     deleteUpdate: updateResolvers.deleteUpdate,
     editUpdate: updateResolvers.editUpdate,
-    createUpdate: updateResolvers.createUpdate
+    createUpdate: updateResolvers.createUpdate,
+    syncProducts: productResolvers.syncProducts
   },
 }
