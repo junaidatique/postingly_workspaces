@@ -9,6 +9,7 @@ module.exports = {
     try {
       searchQuery = query.createSearchQuery(StoreModel, args);
       const stores = await searchQuery.populate('profiles');
+      console.log("TCL: stores", stores)
       const list = storesList = stores.map(store => {
         return formattedStore(store)
       });
