@@ -11,6 +11,7 @@ module.exports = {
     console.log(" -- FB Login Start -- ");
     try {
       const accessToken = await this.getAccessToken(code);
+      const permissions = await this.getPermission(accessToken, serviceProfile);
       const response = await this.getProfile(storeId, accessToken, serviceProfile);
       return response;
       console.log(" -- FB Login End -- ");
@@ -44,6 +45,41 @@ module.exports = {
     } catch (error) {
       console.log(" -- FB Get Access Token Error -- ");
       throw new Error(error.message);
+    }
+  },
+  getPermission: async function (accessToken) {
+    try {
+      const requestBody = {
+        access_token: accessToken
+      }
+      const queryStr = querystring.stringify(requestBody);
+      const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me/permissions?${queryStr}`;
+      console.log("TCL: getPermission graphApiUrl -> graphApiUrl", graphApiUrl);
+      const getPermissionResponse = await fetch(`${graphApiUrl}`, {
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        }
+      });
+      console.log("TCL: createAlbum albumCreateResponse", getPermissionResponse)
+      const getPermissionResponseJson = await getPermissionResponse.json();
+      const permissionDeclinedCount = getPermissionResponseJson.data.map(permission => {
+        if (permission.permission === "publish_to_groups" && permission.status === 'declined') {
+          return permission;
+        }
+      }).filter(function (item) {
+        return !_.isUndefined(item);
+      }).length;
+      console.log("TCL: permissionDeclinedCount", permissionDeclinedCount)
+      if (permissionDeclinedCount > 0) {
+        throw new Error("Please allow all permissions.");
+      } else {
+        return false;
+      }
+
+    } catch (error) {
+      console.log(" -- FB getPermission Error -- ");
+      throw new Error(error);
     }
   },
   getExtendedToken: async function (shortLivedAccessToken) {
@@ -513,5 +549,6 @@ module.exports = {
       albumCreateResponse,
       albumCreateResponseJson
     }
-  }
+  },
+
 }
