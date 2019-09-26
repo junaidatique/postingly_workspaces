@@ -49,20 +49,20 @@ module.exports = {
   updateProfile: async (obj, args, context, info) => {
     try {
       let res;
-
+      console.log("TCL: args", args)
       if (!_.isEmpty(args)) {
-        _.each(args.input, async (value, key) => {
-          res = await ProfileModel.updateOne({ _id: value.id }, { isConnected: value.isConnected });
-        });
+        console.log("TCL: args.input", args.input)
+        await Promise.all(args.input.map(async value => {
+          // _.each(args.input, async (value, key) => {
+          if (value.isConnected) {
+            console.log("TCL: value", value)
+            res = await ProfileModel.updateOne({ _id: value.id }, { isConnected: value.isConnected });
+            console.log("TCL: res", res)
+          }
+        }));
       }
-      const profileIds = args.input.map(profile => {
-        return profile.id
-      });
       const profiles = await ProfileModel.where('store').eq(args.storeId);
-      const connectedProfiles = await ProfileModel.where('store').equals(profiles[0].store).where('isConnected').equals(true);
-      const storeDetail = await StoreModel.findById(profiles[0].store);
-      storeDetail.numberOfConnectedProfiles = connectedProfiles.length;
-      await storeDetail.save();
+      console.log("TCL: profiles", profiles)
       return profiles.map(profile => {
         return formattedProfile(profile);
       })

@@ -223,7 +223,8 @@ module.exports = {
                 serviceProfile: FACEBOOK_PAGE,
                 store: storeId,
                 parent: parentId,
-                isSharePossible: true
+                isSharePossible: true,
+                isConnected: false
               },
               upsert: true
             }

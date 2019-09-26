@@ -22,9 +22,7 @@ module.exports = {
         }));
       }
       const connectedProfiles = await ProfileModel.where('store').equals(profiles[0].store).where('isConnected').equals(true);
-      const storeDetail = await StoreModel.findById(profileDetail.store);
-      storeDetail.numberOfConnectedProfiles = connectedProfiles.length;
-      await storeDetail.save();
+
       res = await ProfileModel.updateOne({ _id: profileDetail._id }, { isConnected: false });
     } catch (error) {
       throw error;
