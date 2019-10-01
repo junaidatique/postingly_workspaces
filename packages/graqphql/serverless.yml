@@ -8,15 +8,21 @@ provider:
   name: aws
   runtime: nodejs8.10
   stage: ${env:STAGE}
+  vpc:
+    securityGroupIds:
+      - sg-6e86951d
+    subnetIds:
+      - subnet-4673b90d
+      - subnet-46d56622
+      - subnet-68321e64
+
   iamRoleStatements:
     - Effect: Allow
       Action:
         - lambda:InvokeFunction
       Resource:
         - arn:aws:lambda:us-east-1:*:* 
-  environment:
-    STORES_TABLE: "Store"
-    PROFILE_TABLE: "Profile"
+  
 
 functions:
   graphql:
