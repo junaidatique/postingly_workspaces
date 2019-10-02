@@ -351,7 +351,7 @@ module.exports = {
       if (process.env.IS_OFFLINE === 'false') {
         const storePayload = {
           "storeId": store._id,
-          "partnerStore": "shopify",
+          "partnerStore": PARTNERS_SHOPIFY,
           "collectionId": null
         }
         const syncStoreDataParams = {
@@ -364,6 +364,23 @@ module.exports = {
 
         const syncStoreDataLambdaResponse = await lambda.invoke(syncStoreDataParams).promise();
         console.log("TCL: syncStoreDataLambdaResponse", syncStoreDataLambdaResponse)
+      }
+      if (process.env.IS_OFFLINE === 'false') {
+        const webhookPayload = {
+          partnerStore: PARTNERS_SHOPIFY,
+          shopURL: store.url,
+          accessToken: store.partnerToken
+        }
+        const webhookParams = {
+          FunctionName: `postingly-functions-${process.env.STAGE}-get-webhooks`,
+          InvocationType: 'Event',
+          LogType: 'Tail',
+          Payload: JSON.stringify(webhookPayload)
+        };
+        console.log("TCL: lambda.invoke webhookParams", webhookParams)
+
+        const webhookLambdaResponse = await lambda.invoke(webhookParams).promise();
+        console.log("TCL: webhookLambdaResponse", webhookLambdaResponse)
       }
     } catch (err) {
       console.log("activatePayment: Store can't be saved");
@@ -860,7 +877,7 @@ module.exports = {
 
       const syncEvent = {
         "storeId": storeDetail._id,
-        "partnerStore": "shopify",
+        "partnerStore": PARTNERS_SHOPIFY,
         "collectionId": null
       }
       await this.syncProducts(syncEvent, apiProducts, storeDetail);
@@ -895,7 +912,7 @@ module.exports = {
       const apiProducts = [JSON.parse(event.body)];
       const syncEvent = {
         "storeId": storeDetail._id,
-        "partnerStore": "shopify",
+        "partnerStore": PARTNERS_SHOPIFY,
         "collectionId": null
       }
       await this.syncProducts(syncEvent, apiProducts, storeDetail);
