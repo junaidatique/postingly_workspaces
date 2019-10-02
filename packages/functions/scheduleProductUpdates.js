@@ -64,11 +64,11 @@ module.exports = {
         if (updates.length > 0) {
           // get variants or products based on the rule settings. 
           if (ruleDetail.postAsVariants) {
-            postItems = await schedulerHelper.getVariantsForSchedule(ruleDetail._id, profile, updates.length);
+            postItems = await schedulerHelper.getVariantsForSchedule(ruleDetail, profile, updates.length);
             itemModel = VariantModel;
             itemType = SCHEDULE_TYPE_VARIANT;
           } else {
-            postItems = await schedulerHelper.getProductsForSchedule(ruleDetail._id, profile, updates.length);
+            postItems = await schedulerHelper.getProductsForSchedule(ruleDetail, profile, updates.length);
             itemModel = ProductModel;
             itemType = SCHEDULE_TYPE_PRODUCT;
           }

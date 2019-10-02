@@ -1,8 +1,6 @@
 const shared = require('shared');
 const { PARTNERS_SHOPIFY } = require('shared/constants');
-const mongoose = require('mongoose');
 const dbConnection = require('./db');
-let conn = null;
 module.exports = {
   syncStoreData: async function (event, context) {
     await dbConnection.createConnection(context);

@@ -208,3 +208,16 @@ exports.INSTAGRAM_DEFAULT_TEXT = '[product-title]' + "\n"
   + '➤ [product-url]' + "\n"
   + '[product-description] ';
 exports.TW_DEFAULT_TEXT = '[product-title] USD [product-price]' + "\n" + '[product-url]';
+
+exports.WEBHOOKS = {
+  shopify: [
+    { webhook: 'products/create', endpoint: 'productsCreate' },
+    { webhook: 'products/update', endpoint: 'productsUpdate' },
+    { webhook: 'products/delete', endpoint: 'productsDelete' },
+    { webhook: 'collections/create', endpoint: 'collectionsCreate' },
+    { webhook: 'collections/update', endpoint: 'collectionsUpdate' },
+    { webhook: 'collections/delete', endpoint: 'collectionsDelete' },
+    { webhook: 'app/uninstalled', endpoint: 'appUninstalled' },
+    { webhook: 'shop/update', endpoint: 'shopUpdate' },
+  ]
+}

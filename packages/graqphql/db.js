@@ -2,19 +2,21 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 let connection = null;
 module.exports = async () => {
-  if (connection) {
-    return Promise.resolve(connection);
+  if (process.env.IS_OFFLINE === 'false') {
+    if (connection) {
+      return Promise.resolve(connection);
+    }
+    if ((connection && !connection.isConnected()) || (connection === null)) {
+      connection = await mongoose.connect(process.env.MONGODB_URL, {
+        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
+        bufferMaxEntries: 0,
+        ssl: true,
+        sslCA: returnCerts(),
+        dbName: process.env.STAGE
+      });
+    }
+    return connection;
   }
-  if ((connection && !connection.isConnected()) || (connection === null)) {
-    connection = await mongoose.connect(process.env.MONGODB_URL, {
-      useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
-      bufferMaxEntries: 0,
-      ssl: true,
-      sslCA: returnCerts(),
-      dbName: process.env.STAGE
-    });
-  }
-  return connection;
 }
 
 function returnCerts() {

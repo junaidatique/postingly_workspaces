@@ -82,6 +82,8 @@ functions:
     handler: syncStoreData.syncProducts
   sync-product-page:
     handler: syncStoreData.syncProductPage
+  get-webhooks:
+    handler: webhooks.getWebhooks
   data-seed:
     handler: seeddata.createStore
   data-test:
@@ -89,26 +91,18 @@ functions:
   
   # cognito 
   cognito-create-auth-challenge:
-    handler: cognito.createAuthChallenge
-    events:
-      - cognitoUserPool:
-          pool: ${env:USER_POOL_ID}
-          trigger: CreateAuthChallenge
+    handler: cognito.createAuthChallenge    
   cognito-define-auth-challenge:
-    handler: cognito.defineAuthChallenge
-    events:
-      - cognitoUserPool:
-          pool: ${env:USER_POOL_ID}
-          trigger: DefineAuthChallenge
+    handler: cognito.defineAuthChallenge    
   cognito-verify-auth-challenge:
-    handler: cognito.verifyAuthChallenge
-    events:
-      - cognitoUserPool:
-          pool: ${env:USER_POOL_ID}
-          trigger: VerifyAuthChallengeResponse
+    handler: cognito.verifyAuthChallenge    
 
   
   
   # Testing The Lambdas
   test-lambda:
     handler: lambdaTests.execute
+  test-webhooks-lambda:
+    handler: lambdaWebhooksTests.execute
+  test-sync-lambda:
+    handler: lambdaSyncTests.execute
