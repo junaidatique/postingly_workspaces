@@ -19,6 +19,12 @@ const IMAGE = {
 }
 
 const updateResponse = {
+  tweetId: {
+    type: String,
+  },
+  tweetURL: {
+    type: String,
+  },
   albumId: {
     type: String,
   },

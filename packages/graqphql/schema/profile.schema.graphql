@@ -21,9 +21,12 @@ type Profile {
 
 input connectProfileInput {
   storeId: String!
-  code: String!
+  code: String
   service: Service!
   serviceProfile: ServiceProfile!
+  oauthToken: String
+  oauthVerifier: String
+  oauthRequestTokenSecret: String
 }
 
 input updateProfileInput {

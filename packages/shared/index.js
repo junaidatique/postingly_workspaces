@@ -26,6 +26,7 @@ exports.PartnerShopify = require('./partners/shopify')
 
 // services
 exports.FacebookService = require('./services/facebook');
+exports.TwitterService = require('./services/twitter');
 
 // functions
 exports.profileFns = require('./functions/profileFns')

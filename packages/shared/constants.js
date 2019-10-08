@@ -1,5 +1,6 @@
 
 exports.FACEBOOK_GRPAHAPI_URL = 'https://graph.facebook.com/v4.0/'
+exports.TWITTER_API_URL = 'https://api.twitter.com/'
 exports.DEV = 'dev'
 exports.TEST = 'test'
 exports.STAGING = 'staging'

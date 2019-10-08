@@ -122,4 +122,11 @@ functions:
           path: /partners/{partner_slug}/shopUpdate
           method: post
           cors: true
+  twitterRequestToken:
+    handler: index.twitterRequestToken
+    events:
+      - http:
+          path: /twitter/getRequestToken
+          method: post
+          cors: true
 

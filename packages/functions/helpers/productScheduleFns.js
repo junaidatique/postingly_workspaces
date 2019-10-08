@@ -11,9 +11,12 @@ const {
 module.exports = {
   getProductsForSchedule: async function (ruleDetail, profileId, limit) {
     const ProductModel = shared.ProductModel;
+    // get all the products that are not shared on this profile. 
     const notSharedOnThisProfileQuery = this.getProductsQuery(ruleDetail);
     const notSharedOnThisProfile = notSharedOnThisProfileQuery.find({ "shareHistory.profile": { $ne: profileId } });
     const productsForCount = await notSharedOnThisProfile;
+    // console.log("TCL: productsForCount", productsForCount)
+    // following condition. means that there are some products that are not shared on this profile. 
     if (productsForCount.length > 0) {
       let notSharedOnThisProfileLimitQuery = this.getProductsQuery(ruleDetail);
       if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {

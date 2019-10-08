@@ -14,7 +14,6 @@ const {
 } = require('shared/constants');
 const dbConnection = require('./db');
 const schedulerHelper = require('./helpers/productScheduleFns')
-
 module.exports = {
   // event = { ruleId: ID }
   schedule: async function (event, context) {
@@ -36,11 +35,8 @@ module.exports = {
       if (ruleDetail === null) {
         throw new Error(`rule not found for ${event.ruleId}`);
       }
-
       const StoreDetail = await StoreModel.findById(ruleDetail.store);
-
       const defaultShortLinkService = StoreDetail.shortLinkService;
-
       // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
       if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
         imageLimit = 4;
@@ -174,7 +170,10 @@ module.exports = {
           }));
         }
       }));
-      const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+      // console.log("TCL: bulkUpdate", bulkUpdate);
+      if (!_.isEmpty(bulkUpdate)) {
+        const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+      }
     } catch (error) {
       console.error(error.message);
     }

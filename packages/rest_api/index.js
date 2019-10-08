@@ -1,6 +1,6 @@
 'use strict';
 const partner = require('./partners');
-
+const TwitterService = require('shared').TwitterService;
 const dbConnection = require('./db');
 exports.auth = async function (event, context) {
   await dbConnection.createConnection(context);
@@ -46,3 +46,7 @@ exports.shopUpdate = async function (event, context) {
   await dbConnection.createConnection(context);
   return await partner.shopUpdate(event, new Date());
 };
+exports.twitterRequestToken = async function (event, context, callback) {
+  const respones = await TwitterService.getRequestToken(callback);
+  return respones;
+}

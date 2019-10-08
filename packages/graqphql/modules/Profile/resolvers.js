@@ -1,8 +1,8 @@
-const fbConnect = require('shared').FacebookService;
-const { FACEBOOK_SERVICE, TEST } = require('shared/constants');
+const FacebookService = require('shared').FacebookService;
+const TwitterService = require('shared').TwitterService;
+const { FACEBOOK_SERVICE, TEST, TWITTER_SERVICE } = require('shared/constants');
 const formattedProfile = require('./functions').formattedProfile;
 const ProfileModel = require('shared').ProfileModel;
-const StoreModel = require('shared').StoreModel;
 const _ = require('lodash')
 const profileFns = require('shared').profileFns;
 module.exports = {
@@ -10,11 +10,13 @@ module.exports = {
     try {
       if (args.input.service === FACEBOOK_SERVICE) {
         if (process.env.STAGE == TEST) {
-          response = await fbConnect.getProfile(args.input.storeId, args.input.code, args.input.serviceProfile);
+          response = await FacebookService.getProfile(args.input.storeId, args.input.code, args.input.serviceProfile);
         } else {
-          response = await fbConnect.login(args.input.storeId, args.input.code, args.input.serviceProfile);
+          response = await FacebookService.login(args.input.storeId, args.input.code, args.input.serviceProfile);
 
         }
+      } else if (args.input.service === TWITTER_SERVICE && !_.isNull(args.input.oauthToken)) {
+        response = await TwitterService.getProfile(args.input.storeId, args.input.oauthToken, args.input.oauthRequestTokenSecret, args.input.oauthVerifier);
       } else {
 
       }
@@ -30,13 +32,14 @@ module.exports = {
       if (args.isConnected === true) {
         query = query.where({ isConnected: true });
       } else {
-        query = query.where('isConnected').ne(true);
+        if (args.service !== TWITTER_SERVICE) {
+          query = query.where('isConnected').ne(true);
+        }
       }
       query = query.where('isSharePossible').equals(true);
-      if (!_.isUndefined(args.parent) && !_.isNull(args.parent)) {
+      if ((!_.isUndefined(args.parent) && !_.isNull(args.parent)) && args.service !== TWITTER_SERVICE) {
         query = query.where('parent').equals(args.parent);
       }
-      // console.log("TCL: query", query)
       const profiles = await query;
       // console.log("TCL: profiles", profiles);
       return profiles.map(profile => {

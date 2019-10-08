@@ -29,12 +29,12 @@ module.exports = {
           service: event.service
         }
       );
-      console.log("TCL: event.storeId", event.storeId)
+      // console.log("TCL: event.storeId", event.storeId)
       if (!_.isNull(event.storeId) && !_.isUndefined(event.storeId)) {
         servicesQuery = servicesQuery.where({ store: event.storeId });
       }
       const updates = await servicesQuery.limit(50);
-      console.log("TCL: updates", updates)
+      // console.log("TCL: updates", updates)
 
       let approvedUpdates = [];
       await Promise.all(updates.map(async update => {

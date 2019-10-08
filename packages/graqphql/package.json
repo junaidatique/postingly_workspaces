@@ -21,7 +21,8 @@
     "serverless-http": "^2.0.1",
     "serverless-webpack": "^5.3.0",
     "shared": "1.0.0",
-    "striptags": "^3.1.1"
+    "striptags": "^3.1.1",
+    "twitter-text": "^3.0.0"
   },
   "devDependencies": {
     "jest": "^24.8.0",

@@ -583,12 +583,12 @@ module.exports = {
       collectionQuery = `&collection_id=${collectionDetail.partnerId}`;
     }
     if (!_.isNull(event.pageInfo)) {
-      pageInfoQuery = `&page_infor=${event.pageInfo}`;
+      pageInfoQuery = `&page_info=${event.pageInfo}`;
     }
     const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?&limit=250${collectionQuery}${pageInfoQuery}`;
     const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     const apiProducts = json.products;
-    this.syncProducts(event, apiProducts, storeDetail);
+    await this.syncProducts(event, apiProducts, storeDetail);
     if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
       const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
       if (!_.isNull(pageInfo)) {
@@ -637,7 +637,7 @@ module.exports = {
             partnerUpdatedAt: product.updated_at,
             uniqKey: `${PARTNERS_SHOPIFY}-${product.id}`,
             active: (product.published_at) ? true : false,
-            store: storeDetail._Id,
+            store: storeDetail._id,
             quantity: quantity,
             minimumPrice: minimumPrice,
             maximumPrice: maximumPrice,
