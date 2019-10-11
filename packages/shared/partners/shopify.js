@@ -7,7 +7,8 @@ const {
   PARTNERS_SHOPIFY, FACEBOOK_DEFAULT_TEXT,
   LINK_SHORTNER_SERVICES_POOOST,
   WEBHOOKS, PENDING, APPROVED,
-  RULE_TYPE_NEW } = require('shared/constants');
+  RULE_TYPE_NEW
+} = require('shared/constants');
 
 const stringHelper = require('shared').stringHelper;
 const httpHelper = require('shared').httpHelper

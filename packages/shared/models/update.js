@@ -19,6 +19,9 @@ const IMAGE = {
 }
 
 const updateResponse = {
+  bufferId: {
+    type: String
+  },
   tweetId: {
     type: String,
   },

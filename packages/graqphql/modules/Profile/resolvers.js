@@ -1,6 +1,7 @@
 const FacebookService = require('shared').FacebookService;
 const TwitterService = require('shared').TwitterService;
-const { FACEBOOK_SERVICE, TEST, TWITTER_SERVICE } = require('shared/constants');
+const BufferService = require('shared').BufferService;
+const { FACEBOOK_SERVICE, TEST, TWITTER_SERVICE, BUFFER_SERVICE } = require('shared/constants');
 const formattedProfile = require('./functions').formattedProfile;
 const ProfileModel = require('shared').ProfileModel;
 const _ = require('lodash')
@@ -17,8 +18,8 @@ module.exports = {
         }
       } else if (args.input.service === TWITTER_SERVICE && !_.isNull(args.input.oauthToken)) {
         response = await TwitterService.getProfile(args.input.storeId, args.input.oauthToken, args.input.oauthRequestTokenSecret, args.input.oauthVerifier);
-      } else {
-
+      } else if (args.input.service === BUFFER_SERVICE) {
+        response = await BufferService.getProfile(args.input.storeId, args.input.code, args.input.serviceProfile);
       }
       return response;
     } catch (error) {

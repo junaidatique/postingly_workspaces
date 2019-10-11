@@ -1,6 +1,7 @@
 
 exports.FACEBOOK_GRPAHAPI_URL = 'https://graph.facebook.com/v4.0/'
 exports.TWITTER_API_URL = 'https://api.twitter.com/'
+exports.BUFFER_API_URL = 'https://api.bufferapp.com/1/'
 exports.DEV = 'dev'
 exports.TEST = 'test'
 exports.STAGING = 'staging'
@@ -111,7 +112,7 @@ exports.BUFFER_LINKEDIN_GROUP = BUFFER_LINKEDIN_GROUP;
 exports.BUFFER_PINTEREST_PROFILE = BUFFER_PINTEREST_PROFILE;
 
 // service posting options
-const POST_AS_OPTION_NONE = 'none'
+const POST_AS_OPTION_NONE = null
 const POST_AS_OPTION_FB_ALBUM = 'facebookPostAsAlbum'
 const POST_AS_OPTION_FB_LINK = 'facebookPostAsLink'
 const POST_AS_OPTION_FB_PHOTO = 'facebookPostAsPhoto'

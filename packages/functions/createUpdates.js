@@ -104,8 +104,9 @@ module.exports = {
                 update: {
                   store: storeDetail._id,
                   rule: ruleDetail._id,
-                  profile: profile,
+                  profile: profile._id,
                   service: ruleDetail.service,
+                  serviceProfile: profile.serviceProfile,
                   postAsOption: ruleDetail.postAsOption,
                   scheduleTime: updateTime,
                   postType: ruleDetail.type,

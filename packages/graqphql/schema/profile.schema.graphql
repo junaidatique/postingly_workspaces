@@ -2,7 +2,7 @@ type Profile {
   id: ID!
   parent: Profile
   children: [Profile]
-  name: String!
+  name: String
   avatarUrl: String
   uniqKey: String
   serviceUsername: String

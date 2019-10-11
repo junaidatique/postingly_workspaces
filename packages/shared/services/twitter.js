@@ -1,8 +1,5 @@
-const _ = require('lodash')
 const oauth = require('oauth');
 const Twit = require('twit');
-const http = require('http');
-const https = require('https');
 const fetch = require('node-fetch');
 
 const ProfileModel = require('shared').ProfileModel;
