@@ -83,7 +83,7 @@ type Collection {
 
 input ModelProductFilterInput {
   storeId: ID!
-  title: ModelStringFilterInput
+  title: String
 }
 input ModelCollectionFilterInput {
   storeId: ID!

@@ -1,4 +1,5 @@
 const UpdateModel = require('shared').UpdateModel;
+const ProfileModel = require('shared').ProfileModel;
 const formattedUpdate = require('./functions').formattedUpdate;
 const query = require('shared').query;
 const moment = require('moment');
@@ -58,10 +59,8 @@ module.exports = {
   createUpdate: async (obj, args, context, info) => {
     console.log("TCL: args", args)
     try {
-      args.input.profiles.forEach(profileId => {
-
-      });
-      const bulkUpdate = args.input.profiles.map(profileId => {
+      const profiles = await ProfileModel.where('_id').in(args.input.profiles);
+      const bulkUpdate = profiles.map(profile => {
         return {
           insertOne: {
             document: {
@@ -73,8 +72,9 @@ module.exports = {
               product: args.input.product,
               scheduleType: args.input.scheduleType,
               service: args.input.service,
-              profile: profileId,
-              uniqKey: `${profileId}-${args.input.product}-${args.input.scheduleTime}-${str.getRandomString(8)}`,
+              serviceProfile: profile.serviceProfile,
+              profile: profile._id,
+              uniqKey: `${profile._id}-${args.input.product}-${args.input.scheduleTime}-${str.getRandomString(8)}`,
               scheduleState: APPROVED,
               userEdited: true
             }
@@ -85,5 +85,5 @@ module.exports = {
     } catch (error) {
       throw error;
     }
-  }
+  },
 }

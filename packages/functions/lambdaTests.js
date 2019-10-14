@@ -18,16 +18,16 @@ module.exports = {
     const storeId = storeDetail._id;
     const RuleModel = shared.RuleModel;
 
-    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
     const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
     console.log("TCL: ruleDetail", ruleDetail)
-    // await createUpdates({ ruleId: ruleDetail._id });
-    // await createUpdatesforNextWeek();
-    // await cronThisWeekRulesForUpdates();
+    await createUpdates({ ruleId: ruleDetail._id });
+    await createUpdatesforNextWeek();
+    await cronThisWeekRulesForUpdates();
 
-    // await schedule({ ruleId: ruleDetail._id });
-    // await cronAddCaptions();
-    // await changeCaption({ service: BUFFER_SERVICE, storeId: null });
+    await schedule({ ruleId: ruleDetail._id });
+    await cronAddCaptions();
+    await changeCaption({ service: BUFFER_SERVICE, storeId: null });
     // await cronPostUpdates();
     // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
     // console.log("TCL: updates", updates)

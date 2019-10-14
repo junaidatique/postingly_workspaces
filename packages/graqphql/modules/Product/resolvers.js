@@ -3,6 +3,7 @@ const StoreModel = require('shared').StoreModel;
 const formattedProduct = require('./functions').formattedProduct
 const formattedStore = require('../Store/functions').formattedStore
 const PartnerShopify = require('shared').PartnerShopify;
+const _ = require('lodash')
 const { PARTNERS_SHOPIFY } = require('shared/constants');
 let lambda;
 const AWS = require('aws-sdk');
@@ -15,8 +16,14 @@ if (process.env.IS_OFFLINE === 'false') {
 module.exports = {
   listProducts: async (obj, args, context, info) => {
     try {
-      const searchQuery = {
+      let searchQuery = {
         store: args.filter.storeId,
+      }
+      if (!_.isEmpty(args.filter.title)) {
+        searchQuery = {
+          store: args.filter.storeId,
+          title: new RegExp(args.filter.title, "i")
+        }
       }
       const searchOptions = {
         sort: { createdAt: -1 },

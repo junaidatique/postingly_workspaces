@@ -48,7 +48,7 @@ module.exports = {
       const RuleModel = shared.RuleModel;
       const StoreModel = shared.StoreModel;
       const UpdateModel = shared.UpdateModel;
-      const ruleDetail = await RuleModel.findById(event.ruleId);
+      const ruleDetail = await RuleModel.findById(event.ruleId).populate('profiles');
       if (ruleDetail === null) {
         throw new Error(`rule not found for ${event.ruleId}`);
       }
