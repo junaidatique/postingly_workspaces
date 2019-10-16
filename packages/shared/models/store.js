@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 const Schema = mongoose.Schema;
-
+const mongoosePaginate = require('mongoose-paginate');
 const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
 
 
@@ -159,6 +159,6 @@ storeSchema.set('timestamps', true);
 if (process.env.IS_OFFLINE) {
   delete mongoose.connection.models.Store;
 }
-
+storeSchema.plugin(mongoosePaginate);
 module.exports = mongoose.model('Store', storeSchema);
 
