@@ -89,6 +89,14 @@ input ModelCollectionFilterInput {
   storeId: ID!
   title: ModelStringFilterInput
 }
+enum ModelProductSortInput {
+  title_ASC
+  title_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
 
 type ListProductResponse {
   totalRecords: Int,

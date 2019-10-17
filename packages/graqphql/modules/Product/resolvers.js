@@ -25,8 +25,17 @@ module.exports = {
           title: new RegExp(args.filter.title, "i")
         }
       }
+      let sortOrder = { createdAt: -1 };
+      if (!_.isEmpty(args.sort)) {
+        if (args.sort === 'title_ASC') {
+          sortOrder = { title: 1 };
+        }
+        else if (args.sort === 'title_DESC') {
+          sortOrder = { title: -1 };
+        }
+      }
       const searchOptions = {
-        sort: { createdAt: -1 },
+        sort: sortOrder,
         offset: args.skip,
         limit: args.limit
       }
