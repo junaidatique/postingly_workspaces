@@ -208,38 +208,42 @@ module.exports = {
       const pageResponse = await pagesDetailResponse.json();
       if (pagesDetailResponse.status === 200) {
         console.log("FB getPages Recieved", pageResponse);
-        const bulkProfileInsert = pageResponse.accounts.data.map(pageProfile => {
-          const uniqKey = `${FACEBOOK_PAGE}-${storeId}-${pageProfile.id}`;
-          return {
-            updateOne: {
-              filter: { uniqKey: uniqKey },
-              update: {
-                name: pageProfile.name,
-                avatarUrl: pageProfile.picture.data.url,
-                serviceUserId: pageProfile.id,
-                profileURL: pageProfile.link,
-                accessToken: pageProfile.access_token,
-                service: FACEBOOK_SERVICE,
-                serviceProfile: FACEBOOK_PAGE,
-                store: storeId,
-                parent: parentId,
-                isSharePossible: true,
-                isConnected: false
-              },
-              upsert: true
+        if (!_.isUndefined(pageResponse.accounts) && !_.isEmpty(pageResponse.accounts)) {
+          const bulkProfileInsert = pageResponse.accounts.data.map(pageProfile => {
+            const uniqKey = `${FACEBOOK_PAGE}-${storeId}-${pageProfile.id}`;
+            return {
+              updateOne: {
+                filter: { uniqKey: uniqKey },
+                update: {
+                  name: pageProfile.name,
+                  avatarUrl: pageProfile.picture.data.url,
+                  serviceUserId: pageProfile.id,
+                  profileURL: pageProfile.link,
+                  accessToken: pageProfile.access_token,
+                  service: FACEBOOK_SERVICE,
+                  serviceProfile: FACEBOOK_PAGE,
+                  store: storeId,
+                  parent: parentId,
+                  isSharePossible: true,
+                  isConnected: false
+                },
+                upsert: true
+              }
             }
-          }
-        });
-        const pageProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
-        const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
-        const store = await StoreModel.findById(storeId);
-        store.profiles = storeProfiles;
-        await store.save();
-        const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
-        parent.childrent = childProfiles;
-        await parent.save();
-        console.log("TCL: parent", parent)
-        return parent;
+          });
+          const pageProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
+          const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
+          const store = await StoreModel.findById(storeId);
+          store.profiles = storeProfiles;
+          await store.save();
+          const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
+          parent.childrent = childProfiles;
+          await parent.save();
+          console.log("TCL: parent", parent)
+          return parent;
+        } else {
+          throw new Error("No Page Found");
+        }
       } else {
         console.log("Fb getPages Not Recieved");
         throw new Error(userDetailResponse.statusText);
@@ -290,16 +294,20 @@ module.exports = {
             }
           }
         });
-        const groupProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
-        const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
-        const store = await StoreModel.findById(storeId);
-        store.profiles = storeProfiles;
-        await store.save();
-        const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
-        parent.childrent = childProfiles;
-        await parent.save();
-        console.log("TCL: parent", parent)
-        return parent;
+        if (!_.isEmpty(bulkProfileInsert)) {
+          const groupProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
+          const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
+          const store = await StoreModel.findById(storeId);
+          store.profiles = storeProfiles;
+          await store.save();
+          const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
+          parent.childrent = childProfiles;
+          await parent.save();
+          console.log("TCL: parent", parent)
+          return parent;
+        } else {
+          throw new Error("No group found.");
+        }
       } else {
         console.log("Fb getGroups Not Recieved");
         throw new Error(userDetailResponse.statusText);
@@ -418,7 +426,7 @@ module.exports = {
           failedMessage: defaultAlbumResponse.message
         };
       } else {
-        if (_.isNull(defaultAlbumResponse.defaultAlbumId)) {
+        if (_.isNull(defaultAlbumResponse.defaultAlbumId) || _.isUndefined(defaultAlbumResponse.defaultAlbumId)) {
           const albumResponse = await this.createAlbum(profile.serviceUserId, FB_DEFAULT_ALBUM, '', profile.accessToken);
           const albumCreateResponse = albumResponse.albumCreateResponse;
           const albumCreateResponseJson = albumResponse.albumCreateResponseJson;
@@ -476,7 +484,7 @@ module.exports = {
       },
       method: "POST",
     });
-    console.log("TCL: imageUploadResponse", imageUploadResponse)
+    // console.log("TCL: imageUploadResponse", imageUploadResponse)
     const imageUploadResponseJson = await imageUploadResponse.json();
     console.log("TCL: imageUploadResponseJson", imageUploadResponseJson)
     if (imageUploadResponse.status === 200) {
@@ -506,6 +514,7 @@ module.exports = {
       },
     });
     const albumGetResponseJson = await albumGetResponse.json();
+    console.log("TCL: getDefaultAlbum albumGetResponseJson", albumGetResponseJson)
     if (albumGetResponse.status === 200) {
       const defaultAlbumId = albumGetResponseJson.data.map(album => {
         if (album.name === FB_DEFAULT_ALBUM) {
@@ -516,6 +525,7 @@ module.exports = {
       }).filter(album => {
         return !_.isUndefined(album);
       })
+      console.log("TCL: getDefaultAlbum defaultAlbumId", defaultAlbumId)
       return {
         status: albumGetResponse.status,
         defaultAlbumId: defaultAlbumId[0]
