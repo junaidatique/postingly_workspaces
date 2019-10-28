@@ -65,8 +65,14 @@ type ProductImage {
   partnerSpecificUrl: String
   partnerCreatedAt: String
   partnerUpdatedAt: String
+  position: Int
   url: String
   thumbnailUrl: String
+  shareHistory: [ShareHistory]
+}
+type ShareHistory {
+  profile: Profile
+  counter: Int
 }
 
 type Collection {
@@ -84,6 +90,9 @@ type Collection {
 input ModelProductFilterInput {
   storeId: ID!
   title: String
+  profile: ID
+  scheduledOnProfile: Boolean
+  collections: [ID]
 }
 input ModelCollectionFilterInput {
   storeId: ID!

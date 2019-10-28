@@ -2,11 +2,14 @@ const UpdateModel = require('shared').UpdateModel;
 const ProfileModel = require('shared').ProfileModel;
 const formattedUpdate = require('./functions').formattedUpdate;
 const query = require('shared').query;
+const _ = require('lodash')
 const moment = require('moment');
 const { APPROVED } = require('shared/constants');
 const str = require('shared').stringHelper;
 module.exports = {
   listUpdates: async (obj, args, context, info) => {
+    console.log("TCL: args", args.filter.product)
+    console.log("TCL: args", args)
     try {
 
       searchQuery = {
@@ -15,11 +18,15 @@ module.exports = {
         scheduleState: args.filter.scheduleState,
         scheduleTime: { "$gte": moment().utc() },
       }
+      if (!_.isUndefined(args.filter.product)) {
+        searchQuery.product = args.filter.product;
+      }
       searchOptions = {
         sort: { scheduleTime: 1 },
         offset: args.skip,
         limit: args.limit
       }
+      console.log("TCL: searchQuery", searchQuery)
       const updates = await UpdateModel.paginate(searchQuery, searchOptions);
       const updatesList = updates.docs.map(update => {
         return formattedUpdate(update)

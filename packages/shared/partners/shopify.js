@@ -537,7 +537,7 @@ module.exports = {
           const syncProductPageLambdaResponse = await lambda.invoke(syncProductPageParams).promise();
           console.log("TCL: syncProductPageLambdaResponse", syncProductPageLambdaResponse);
         } else {
-          // await this.syncProductPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null })
+          await this.syncProductPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null })
         }
       }));
     }
@@ -554,8 +554,7 @@ module.exports = {
           update: {
             title: collection.title,
             partnerId: collection.id,
-            partnerName: collection.title,
-            partneCreatedAt: collection.published_at,
+            partnerCreatedAt: collection.published_at,
             partnerUpdatedAt: collection.updated_at,
             partner: PARTNERS_SHOPIFY,
             uniqKey: `${PARTNERS_SHOPIFY}-${collection.id}`,
@@ -610,6 +609,23 @@ module.exports = {
       }
     }
   },
+  addCollectiontoItems: async function (model, items, collectionId) {
+    const bulkCollectionUpdate = items.map(item => {
+      let collections = item.collections;
+      collections.push(collectionId);
+      return {
+        updateOne: {
+          filter: { _id: item._id },
+          update: {
+            collections: collections
+          }
+        }
+      }
+    });
+    if (!_.isEmpty(bulkCollectionUpdate)) {
+      const collections = await model.bulkWrite(bulkCollectionUpdate);
+    }
+  },
   syncProducts: async function (event, apiProducts, storeDetail) {
     // console.log("TCL: apiProducts", apiProducts)
     let productImages = [], productVariants = [], variantImages = [];
@@ -657,22 +673,11 @@ module.exports = {
       const products = await ProductModel.bulkWrite(bulkProductInsert);
     }
     const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description');
+    const dbVariants = await VariantModel.where('product').in(dbProducts.map(product => product._id)).select('_id product collections uniqKey');
     if (!_.isNull(event.collectionId)) {
-      const bulkCollectionUpdate = dbProducts.map(product => {
-        let collections = product.collections;
-        collections.push(event.collectionId);
-        return {
-          updateOne: {
-            filter: { _id: product._id },
-            update: {
-              collections: collections
-            }
-          }
-        }
-      });
-      if (!_.isEmpty(bulkCollectionUpdate)) {
-        const collections = await ProductModel.bulkWrite(bulkCollectionUpdate);
-      }
+      await this.addCollectiontoItems(ProductModel, dbProducts, event.collectionId);
+      await this.addCollectiontoItems(VariantModel, dbVariants, event.collectionId);
+
     } else {
 
       // set active to false so that deleted images and variants are eliminated. 
@@ -764,7 +769,7 @@ module.exports = {
         productImages[image.product].push(image._id)
       })
       // creating productVariants to add variants that are recently synced for the product.
-      const dbVariants = await VariantModel.where('product').in(dbProducts.map(product => product._id)).select('_id product uniqKey');
+      // const dbVariants = await VariantModel.where('product').in(dbProducts.map(product => product._id)).select('_id product uniqKey');
       dbVariants.forEach(image => {
         if (_.isEmpty(productVariants[image.product])) {
           productVariants[image.product] = [];

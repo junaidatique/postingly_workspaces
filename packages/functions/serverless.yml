@@ -88,6 +88,8 @@ functions:
     handler: seeddata.createStore
   data-test:
     handler: seeddata.testData
+  rule-test:
+    handler: seeddata.testRules
   
   # cognito 
   cognito-create-auth-challenge:

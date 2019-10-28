@@ -38,7 +38,7 @@ module.exports = {
       console.error(error.message);
     }
   },
-  // event = { ruleId: ruleDetail._id, scheduleWeek: "next" | null }
+  // event = { ruleId: ruleDetail._id, scheduleWeek: "next" | datetime | undefined  }
   createUpdates: async function (event, context) {
     console.log("TCL: event", event)
     await dbConnection.createConnection(context);
@@ -56,11 +56,16 @@ module.exports = {
       if (event.scheduleWeek === 'next') {
         startOfWeek = moment().add(1, 'weeks').tz(storeDetail.timezone).startOf('isoWeek');
         endOfWeek = moment().add(1, 'weeks').tz(storeDetail.timezone).endOf('isoWeek');
+      } else if (!_.isUndefined(event.scheduleWeek)) {
+        startOfWeek = moment(event.scheduleWeek);
+        endOfWeek = moment().add(7, 'days');
       } else {
         // startOfWeek = moment.unix(moment().unix() - (moment().unix() % (ruleDetail.postTimings[0].postingInterval * 60)));
         startOfWeek = moment().tz(storeDetail.timezone).startOf('isoWeek')
         endOfWeek = moment().tz(storeDetail.timezone).endOf('isoWeek');
       }
+      console.log("TCL: startOfWeek", startOfWeek.toISOString())
+      console.log("TCL: endOfWeek", endOfWeek.toISOString())
       if (ruleDetail.postingTimeOption === POST_IMMEDIATELY) {
         for (let loopTime = startOfWeek; loopTime.isBefore(endOfWeek); loopTime = loopTime.add(ruleDetail.postTimings[0].postingInterval, 'minute')) {
           if (loopTime.isAfter(moment.utc()) && ruleDetail.postTimings[0].postingDays.includes(moment.weekdays(loopTime.weekday()))) {
@@ -100,7 +105,7 @@ module.exports = {
           return ruleDetail.profiles.map(profile => {
             return {
               updateOne: {
-                filter: { uniqKey: `${ruleDetail.id}-${profile}-${updateTime}` },
+                filter: { uniqKey: `${ruleDetail.id}-${profile._id}-${updateTime}` },
                 update: {
                   store: storeDetail._id,
                   rule: ruleDetail._id,

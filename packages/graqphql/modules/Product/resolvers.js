@@ -4,7 +4,17 @@ const formattedProduct = require('./functions').formattedProduct
 const formattedStore = require('../Store/functions').formattedStore
 const PartnerShopify = require('shared').PartnerShopify;
 const _ = require('lodash')
-const { PARTNERS_SHOPIFY } = require('shared/constants');
+const {
+  PARTNERS_SHOPIFY,
+  PRODUCT_SORT_TITLE_ASC,
+  PRODUCT_SORT_TITLE_DESC,
+  PRODUCT_SORT_CREATED_ASC,
+  PRODUCT_SORT_CREATED_DESC,
+  PRODUCT_SORT_UPDATED_ASC,
+  PRODUCT_SORT_UPDATED_DESC,
+  PRODUCT_SORT_SCHEDULED_ASC,
+  PRODUCT_SORT_SCHEDULED_DESC
+} = require('shared/constants');
 let lambda;
 const AWS = require('aws-sdk');
 if (process.env.IS_OFFLINE === 'false') {
@@ -20,25 +30,55 @@ module.exports = {
         store: args.filter.storeId,
       }
       if (!_.isEmpty(args.filter.title)) {
-        searchQuery = {
-          store: args.filter.storeId,
-          title: new RegExp(args.filter.title, "i")
+        searchQuery.title = new RegExp(args.filter.title, "i")
+      }
+      if (!_.isNull(args.filter.profile) && !_.isUndefined(args.filter.profile)) {
+        if (args.filter.scheduledOnProfile) {
+          searchQuery["shareHistory.profile"] = args.filter.profile
+        } else {
+          searchQuery["shareHistory.profile"] = { $ne: args.filter.profile }
         }
       }
-      let sortOrder = { createdAt: -1 };
-      if (!_.isEmpty(args.sort)) {
-        if (args.sort === 'title_ASC') {
+      if (!_.isEmpty(args.filter.collections)) {
+        searchQuery.collections = { $in: args.filter.collections }
+      }
+      let sortOrder;
+      switch (args.sort) {
+        case PRODUCT_SORT_TITLE_ASC:
           sortOrder = { title: 1 };
-        }
-        else if (args.sort === 'title_DESC') {
+          break;
+        case PRODUCT_SORT_TITLE_DESC:
           sortOrder = { title: -1 };
-        }
+          break;
+        case PRODUCT_SORT_CREATED_ASC:
+          sortOrder = { partnerCreatedAt: 1 };
+          break;
+        case PRODUCT_SORT_CREATED_DESC:
+          sortOrder = { partnerCreatedAt: -1 };
+          break;
+        case PRODUCT_SORT_UPDATED_ASC:
+          sortOrder = { partnerUpdatedAt: 1 };
+          break;
+        case PRODUCT_SORT_UPDATED_DESC:
+          sortOrder = { partnerUpdatedAt: -1 };
+          break;
+        case PRODUCT_SORT_SCHEDULED_ASC:
+          sortOrder = { "shareHistory.counter": 1 };
+          break;
+        case PRODUCT_SORT_SCHEDULED_DESC:
+          sortOrder = { "shareHistory.counter": -1 };
+          break;
+        default:
+          sortOrder = { createdAt: 1 };
       }
+
+
       const searchOptions = {
         sort: sortOrder,
         offset: args.skip,
         limit: args.limit
       }
+      console.log("TCL: searchQuery", searchQuery)
       const products = await ProductModel.paginate(searchQuery, searchOptions);
       const productList = products.docs.map(product => {
         return formattedProduct(product);

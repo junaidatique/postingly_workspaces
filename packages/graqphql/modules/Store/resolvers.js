@@ -6,6 +6,7 @@ let conn;
 const query = require('shared').query
 module.exports = {
   listStores: async (obj, args, context, info) => {
+    console.log("TCL: args", args)
     const StoreModel = shared.StoreModel;
     try {
       let searchQuery = {}

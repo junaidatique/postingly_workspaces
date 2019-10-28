@@ -20,7 +20,6 @@ module.exports = {
 
     await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
     const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
-    console.log("TCL: ruleDetail", ruleDetail)
     await createUpdates({ ruleId: ruleDetail._id });
     await createUpdatesforNextWeek();
     await cronThisWeekRulesForUpdates();

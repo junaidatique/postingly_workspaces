@@ -1,8 +1,9 @@
 const faker = require('faker');
-const mongoose = require('mongoose')
-let conn = null;
+const productStubs = require('../graqphql/__tests__/product/stubs')
 const shared = require('shared');
 const dbConnection = require('./db');
+const createUpdates = require('./createUpdates');
+const { FACEBOOK_SERVICE, RULE_TYPE_OLD, POST_BETWEEN_WITH_INTERVAL, POST_AS_OPTION_FB_PHOTO, COLLECTION_OPTION_ALL, POSTING_SORTORDER_RANDOM, FACEBOOK_DEFAULT_TEXT } = require('shared/constants')
 module.exports = {
   createStore: async function (event, context) {
     console.log("TCL: event", event)
@@ -121,8 +122,88 @@ module.exports = {
     // profile = await query.putItem(process.env.PROFILE_TABLE, pageParams);
   },
   testData: async function (event, context) {
-    // console.log(event);
-    // const p = await Profile.get({ id: event }, { attributes: ['id', 'storeId', 'profileURL', 'avatarUrl'] });
-    // console.log(p);
+    await dbConnection.createConnection(context);
+    const StoreModel = shared.StoreModel;
+    const CollectionModel = shared.CollectionModel;
+    const ImageModel = shared.ImageModel;
+    const ProductModel = shared.ProductModel;
+    const VariantModel = shared.VariantModel;
+    const UpdateModel = shared.UpdateModel;
+
+    const storeDetail = await StoreModel.findOne()
+    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
+    await ImageModel.collection.deleteMany({ _id: { $exists: true } });
+    await ProductModel.collection.deleteMany({ _id: { $exists: true } });
+    await VariantModel.collection.deleteMany({ _id: { $exists: true } });
+
+    await productStubs.createCollectionStub(storeDetail._id, 6);
+    const collections = await CollectionModel.find({ store: storeDetail._id });
+    await productStubs.createProductStub(storeDetail._id, 6, [collections[0]._id]);
+    await productStubs.createProductStub(storeDetail._id, 6, [collections[0]._id, collections[1]._id]);
+    await productStubs.createProductStub(storeDetail._id, 6, [collections[1]._id, collections[2]._id]);
+    await productStubs.createProductStub(storeDetail._id, 6, [collections[2]._id, collections[3]._id]);
+    await productStubs.createProductStub(storeDetail._id, 6, [collections[3]._id, collections[4]._id]);
+    await productStubs.createProductStub(storeDetail._id, 6, [collections[4]._id, collections[5]._id]);
+    await productStubs.createProductStub(storeDetail._id, 6, [collections[5]._id]);
+  },
+  testRules: async function (event, context) {
+    await dbConnection.createConnection(context);
+    const RuleModel = shared.RuleModel;
+    const ProfileModel = shared.ProfileModel;
+    const StoreModel = shared.StoreModel;
+    const UpdateModel = shared.UpdateModel;
+
+    const storeDetail = await StoreModel.findOne()
+    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+
+    await RuleModel.collection.deleteMany({ store: storeDetail._id });
+    const profiles = await ProfileModel.find({ store: storeDetail._id, service: FACEBOOK_SERVICE, isConnected: true, isSharePossible: true });
+    const createRuleInput = {
+      store: storeDetail._id,
+      service: FACEBOOK_SERVICE,
+      type: RULE_TYPE_OLD,
+      profiles: [
+        profiles[0]._id,
+        // profiles[1]._id
+      ],
+      postingTimeOption: POST_BETWEEN_WITH_INTERVAL,
+      postTimings: [
+        {
+          postingInterval: 120,
+          startPostingHour: 6,
+          endPostingHour: 20,
+          postingDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        }
+      ]
+      ,
+      postAsOption: POST_AS_OPTION_FB_PHOTO,
+      collectionOption: COLLECTION_OPTION_ALL,
+      collections: [],
+      allowZeroQuantity: true,
+      postAsVariants: false,
+      rotateImages: false,
+      repeatFrequency: 0,
+      postingProductOrder: POSTING_SORTORDER_RANDOM,
+      captions: [
+        {
+          captionTexts: FACEBOOK_DEFAULT_TEXT,
+          isDefault: true,
+          collections: []
+        },
+      ]
+
+    }
+    // console.log("TCL: createRuleInput", createRuleInput)
+    const ruleDetail = await RuleModel.create(createRuleInput);
+    await storeDetail.rules.push(ruleDetail);
+    await storeDetail.save();
+    await createUpdates.createUpdates({ ruleId: ruleDetail._id });
+    await schedule({ ruleId: ruleDetail._id });
+
+    const lastUpdate = await UpdateModel.findOne({ store: storeDetail._id }).sort({ scheduleTime: -1 });
+    console.log("TCL: lastUpdate", lastUpdate)
+    await createUpdates.createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
   }
+
 }
