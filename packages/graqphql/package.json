@@ -6,6 +6,7 @@
   "dependencies": {
     "apollo-server-express": "^2.9.1",
     "apollo-server-lambda": "^2.9.0",
+    "axios": "^0.19.0",
     "express": "^4.16.4",
     "faker": "^4.1.0",
     "graphql": "^14.3.0",
@@ -17,11 +18,13 @@
     "moment-timezone": "^0.5.26",
     "mongoose": "^5.5.9",
     "mongoose-paginate": "^5.0.3",
+    "oauth": "^0.9.15",
     "require-graphql-file": "^1.0.1",
     "serverless-http": "^2.0.1",
     "serverless-webpack": "^5.3.0",
     "shared": "1.0.0",
     "striptags": "^3.1.1",
+    "twit": "^2.2.11",
     "twitter-text": "^3.0.0"
   },
   "devDependencies": {

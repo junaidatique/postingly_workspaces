@@ -10,11 +10,10 @@ provider:
   stage: ${env:STAGE}
   vpc:
     securityGroupIds:
-      - sg-6e86951d
+      - sg-0e0b1c8b49a3919d8
     subnetIds:
-      - subnet-4673b90d
-      - subnet-46d56622
-      - subnet-68321e64
+      - subnet-0be2e1119f5a9942b
+      - subnet-08f8f22623b8c212b
 
   iamRoleStatements:
     - Effect: Allow

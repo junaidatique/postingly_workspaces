@@ -5,13 +5,18 @@ const fetch = require('node-fetch');
 const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
 const { TWITTER_API_URL, TWITTER_SERVICE, TWITTER_PROFILE, POSTED, FAILED } = require('shared/constants');
-const consumer = new oauth.OAuth(`${TWITTER_API_URL}oauth/request_token`, `${TWITTER_API_URL}oauth/access_token`, process.env.TWITTER_API_KEY, process.env.TWITTER_API_SECRET, "1.0A", `${process.env.FRONTEND_URL}twitter-callback/`, "HMAC-SHA1");
+const consumer = new oauth.OAuth(`${TWITTER_API_URL}oauth/request_token`, `${TWITTER_API_URL}oauth/access_token`, process.env.TWITTER_API_KEY, process.env.TWITTER_API_SECRET, "1.0A", `${process.env.FRONTEND_URL}twitter-callback`, "HMAC-SHA1");
 
 
 module.exports = {
   getRequestToken: function (callback) {
+    console.log("TCL: callback", callback)
     return new Promise((resolve, reject) => {
       consumer.getOAuthRequestToken(function (error, oauthToken, oauthTokenSecret, results) {
+        console.log("TCL: results", results)
+        console.log("TCL: error", error)
+        console.log("TCL: oauthTokenSecret", oauthTokenSecret)
+        console.log("TCL: oauthToken", oauthToken)
         responseOauthToken = oauthToken;
         responseoauthTokenSecret = oauthTokenSecret;
         resolve(

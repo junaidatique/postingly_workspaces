@@ -6,14 +6,18 @@ module.exports = async () => {
     if (connection) {
       return Promise.resolve(connection);
     }
-    if ((connection && !connection.isConnected()) || (connection === null)) {
-      connection = await mongoose.connect(process.env.MONGODB_URL, {
-        useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
-        bufferMaxEntries: 0,
-        ssl: true,
-        sslCA: returnCerts(),
-        dbName: process.env.STAGE
-      });
+    if ((connection === null)) {
+      try {
+        connection = await mongoose.connect(process.env.MONGODB_URL, {
+          useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
+          bufferMaxEntries: 0,
+          ssl: true,
+          sslCA: returnCerts(),
+          dbName: process.env.STAGE
+        });
+      } catch (error) {
+        console.log("TCL: error", error)
+      }
     }
     return connection;
   }

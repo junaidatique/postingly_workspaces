@@ -6,7 +6,7 @@ const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, APPROVED } = require('shared/constan
 module.exports = {
   execute: async function (event, context) {
     const StoreModel = shared.StoreModel;
-    const storeDetail = await StoreModel.findOne().limit(1)
+    const storeDetail = await StoreModel.findOne()
     await webhooks.getWebhooks({
       partnerStore: storeDetail.partner,
       shopURL: storeDetail.url,

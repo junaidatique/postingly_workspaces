@@ -90,10 +90,10 @@ const productSchema = new Schema({
     type: Number
   },
   minimumPrice: {
-    type: mongoose.Decimal128
+    type: Number
   },
   maximumPrice: {
-    type: mongoose.Decimal128
+    type: Number
   },
   onSale: {
     type: Boolean,

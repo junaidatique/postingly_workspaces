@@ -71,10 +71,10 @@ const variantSchema = new Schema({
     type: String
   },
   price: {
-    type: mongoose.Decimal128
+    type: Number
   },
   salePrice: {
-    type: mongoose.Decimal128
+    type: Number
   },
   onSale: {
     type: Boolean,
