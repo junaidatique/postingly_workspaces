@@ -126,7 +126,7 @@ module.exports = {
       const shop = await this.getShop(shopDomain, accessToken);
       let cognitoUser;
 
-      storeKey = `shopify-${shop.id}`;
+      const storeKey = `shopify-${shop.id}`;
       console.log("TCL: storeKey", storeKey)
       let store = await StoreModel.findOne({ uniqKey: storeKey });
       console.log("TCL: store", store)
@@ -145,7 +145,7 @@ module.exports = {
         const shopParams = {
           uniqKey: storeKey,
           userId: cognitoUser,
-          partner: 'shopify',
+          partner: PARTNERS_SHOPIFY,
           partnerId: shop.id,
           partnerPlan: shop.plan_name,
           title: shop.name,
@@ -167,8 +167,20 @@ module.exports = {
         store = await storeInstance.save();
         console.log("TCL: store", store);
       } else {
+        if (!store.cognitoUserCreate) {
+          let createUserUsername = shop.email;
+          let createUserEmail = shop.email;
+          if (!_.isUndefined(username) && !_.isNull(username)) {
+            createUserUsername = username;
+          }
+          if (!_.isUndefined(email) && !_.isNull(email) && email !== 'undefined') {
+            createUserEmail = email;
+          }
+          cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
+        } else {
+          cognitoUser = store.userId;
+        }
         isCharged = store.isCharged;
-        cognitoUser = store.userId;
         store.isUninstalled = false;
         await store.save();
       }
@@ -338,7 +350,7 @@ module.exports = {
     if (!this.validateShopDomain(shop)) {
       return httpHelper.badRequest("Invalid 'shop'");
     }
-    storeKey = `${storePartnerId}`;
+    const storeKey = `${storePartnerId}`;
     console.log("activatePayment storeKey", storeKey);
     const store = await StoreModel.findOne({ uniqKey: storeKey });
     // let store = await query.getItem(process.env.STORES_TABLE, { storeKey: storeKey });
@@ -519,8 +531,8 @@ module.exports = {
       console.log("TCL: syncProductPageLambdaResponse", syncProductPageLambdaResponse)
 
     } else {
-      await this.syncCollectionPage(syncCustomCollectionPayload);
-      await this.syncCollectionPage(syncSmartCollectionPayload);
+      // await this.syncCollectionPage(syncCustomCollectionPayload);
+      // await this.syncCollectionPage(syncSmartCollectionPayload);
       await this.syncProductPage(syncProductPayload);
 
     }
@@ -659,10 +671,6 @@ module.exports = {
           console.log("TCL: syncProductPageParamsLambdaResponse", syncProductPageParamsLambdaResponse)
         } else {
           const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
-          console.log('=================================');
-          console.log("TCL: syncProductPage payload", payload)
-          console.log("TCL: syncProductPage event", event)
-          console.log('=================================');
           await this.syncProductPage(payload);
         }
       }
@@ -778,7 +786,7 @@ module.exports = {
     if (!_.isEmpty(bulkVariantInsert)) {
       const variants = await VariantModel.bulkWrite(bulkVariantInsert);
     }
-    const dbVariants = await VariantModel.where('product').in(dbProducts.map(product => product._id)).select('_id product collections uniqKey');    
+    const dbVariants = await VariantModel.where('product').in(dbProducts.map(product => product._id)).select('_id product collections uniqKey');
     if (!_.isNull(event.collectionId)) {
       await this.addCollectiontoItems(ProductModel, dbProducts, event.collectionId);
       await this.addCollectiontoItems(VariantModel, dbVariants, event.collectionId);
@@ -1168,6 +1176,7 @@ module.exports = {
     const retryAfter = res.headers.get('Retry-After');
     if (!_.isNull(retryAfter)) {
       console.log(`TCL: retryAfter the given shop. ${url}`, retryAfter)
+      this.sleep(5);
     }
     const json = await res.json();
     if ("error_description" in json || "error" in json || "errors" in json) {
@@ -1176,5 +1185,9 @@ module.exports = {
       // return {json: json};
     }
     return { json: json, res: res };
+  },
+  sleep: function (seconds) {
+    var waitTill = new Date(new Date().getTime() + seconds * 1000);
+    while (waitTill > new Date()) { }
   }
 }

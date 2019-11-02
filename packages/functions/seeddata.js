@@ -1,10 +1,38 @@
 // const faker = require('faker');
 // const productStubs = require('../graqphql/__tests__/product/stubs')
-// const shared = require('shared');
+const shared = require('shared');
+const moment = require('moment');
+const _ = require('lodash');
 // const dbConnection = require('./db');
 // const createUpdates = require('./createUpdates');
 const fetch = require('node-fetch');
-// const { FACEBOOK_SERVICE, RULE_TYPE_OLD, POST_BETWEEN_WITH_INTERVAL, POST_AS_OPTION_FB_PHOTO, COLLECTION_OPTION_ALL, POSTING_SORTORDER_RANDOM, FACEBOOK_DEFAULT_TEXT } = require('shared/constants')
+const {
+  PARTNERS_SHOPIFY,
+  FACEBOOK_SERVICE,
+  TWITTER_SERVICE,
+  BUFFER_SERVICE,
+  RULE_TYPE_OLD,
+  POST_BETWEEN_WITH_INTERVAL,
+  POST_AS_OPTION_FB_PHOTO,
+  COLLECTION_OPTION_ALL,
+  POSTING_SORTORDER_RANDOM,
+  FACEBOOK_DEFAULT_TEXT,
+  LINK_SHORTNER_SERVICES_POOOST,
+  FACEBOOK_PROFILE,
+  FACEBOOK_PAGE,
+  FACEBOOK_GROUP,
+  TWITTER_PROFILE,
+  BUFFER_FACEBOOK_PROFILE,
+  BUFFER_FACEBOOK_PAGE,
+  BUFFER_FACEBOOK_GROUP,
+  BUFFER_TWITTER_PROFILE,
+  BUFFER_LINKEDIN_PROFILE,
+  BUFFER_LINKEDIN_PAGE,
+  BUFFER_LINKEDIN_GROUP,
+  BUFFER_INSTAGRAM_PROFILE,
+  BUFFER_INSTAGRAM_BUSINESS,
+
+} = require('shared/constants')
 module.exports = {
   // createStore: async function (event, context) {
   //   console.log("TCL: event", event)
@@ -207,7 +235,6 @@ module.exports = {
   //   await createUpdates.createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
   // },
   testFetch: async function (event, context) {
-
     const code = "1234";
     const body = JSON.stringify({
       client_id: process.env.SHOPIFY_API_KEY,
@@ -226,5 +253,200 @@ module.exports = {
       method: "POST",
     }).then(response => response.json());
     console.log("TCL: exchangeToken res", res)
+  },
+  syncStores: async function (event, context) {
+    const shopifyAPI = shared.PartnerShopify;
+    const StoreModel = shared.StoreModel;
+    const ProfileModel = shared.ProfileModel;
+    const url = `https://posting.ly/cron/exportStores`;
+    const stores = await fetch(url, {
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      method: "GET",
+    }).then(response => response.json());
+    await Promise.all(stores.map(async store => {
+      console.log("TCL: store", store);
+      const shop = await shopifyAPI.getShop(store.partnerSpecificUrl, store.partnerToken);
+      const storeKey = `shopify-${shop.id}`;
+      console.log("TCL: storeKey", storeKey)
+      let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+      if (dbStore === null) {
+        const shopParams = {
+          uniqKey: storeKey,
+          userId: shop.email,
+          partner: PARTNERS_SHOPIFY,
+          partnerId: shop.id,
+          partnerPlan: shop.plan_name,
+          title: shop.name,
+          url: shop.domain,
+          partnerSpecificUrl: shop.myshopify_domain,
+          partnerCreatedAt: shop.created_at,
+          partnerUpdatedAt: shop.updated_at,
+          partnerToken: store.partnerToken,
+          timezone: shop.iana_timezone,
+          moneyFormat: shop.money_format,
+          moneyWithCurrencyFormat: shop.money_with_currency_format,
+          isCharged: true,
+          shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
+          chargedMethod: PARTNERS_SHOPIFY,
+          chargeId: store.chargeId,
+          chargeDate: moment(store.chargeDate).toISOString(),
+          isUninstalled: false,
+        };
+        const storeInstance = new StoreModel(shopParams);
+        dbStore = await storeInstance.save();
+      }
+      const storeId = dbStore._id;
+      await Promise.all(store.profiles.map(async profile => {
+        let parent = null;
+        if (!_.isUndefined(profile.parent)) {
+          parent = await module.exports.createProfile(storeId, profile.parent, null)
+        }
+        // let dbProfile = await module.exports.createProfile(storeId, profile.profile, parent)
+      }));
+      await Promise.all(store.profiles.map(async profile => {
+        let parent = null;
+        if (!_.isUndefined(profile.parent)) {
+          parent = await module.exports.createProfile(storeId, profile.parent, null)
+        }
+        let dbProfile = await module.exports.createProfile(storeId, profile.profile, parent)
+        if (!_.isNull(parent)) {
+          const childProfiles = await ProfileModel.find({ parent: parent._id }).select('_id');
+          parent.children = childProfiles;
+          await parent.save();
+        }
+      }));
+      const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
+      dbStore.profiles = storeProfiles;
+      await dbStore.save();
+      const storePayload = {
+        "storeId": dbStore._id,
+        "partnerStore": PARTNERS_SHOPIFY,
+        "collectionId": null
+      }
+      if (process.env.IS_OFFLINE === 'false') {
+        const syncStoreDataParams = {
+          FunctionName: `postingly-functions-${process.env.STAGE}-sync-store-data`,
+          InvocationType: 'Event',
+          LogType: 'Tail',
+          Payload: JSON.stringify(storePayload)
+        };
+        console.log("TCL: lambda.invoke syncStoreDataParams", syncStoreDataParams)
+
+        const syncStoreDataLambdaResponse = await lambda.invoke(syncStoreDataParams).promise();
+        console.log("TCL: syncStoreDataLambdaResponse", syncStoreDataLambdaResponse)
+      }
+      const webhookPayload = {
+        partnerStore: PARTNERS_SHOPIFY,
+        shopURL: dbStore.url,
+        accessToken: dbStore.partnerToken
+      }
+      if (process.env.IS_OFFLINE === 'false') {
+        const webhookParams = {
+          FunctionName: `postingly-functions-${process.env.STAGE}-get-webhooks`,
+          InvocationType: 'Event',
+          LogType: 'Tail',
+          Payload: JSON.stringify(webhookPayload)
+        };
+        console.log("TCL: lambda.invoke webhookParams", webhookParams)
+
+        const webhookLambdaResponse = await lambda.invoke(webhookParams).promise();
+        console.log("TCL: webhookLambdaResponse", webhookLambdaResponse)
+      }
+    }));
+  },
+  createProfile: async function (storeId, profile, parentId) {
+    const ProfileModel = shared.ProfileModel;
+    let profileService = '';
+    let profileServiceProfile = '';
+    let isSharePossible = true;
+    if (profile.service === 'fb') {
+      profileService = FACEBOOK_SERVICE;
+      profileServiceProfile = FACEBOOK_PROFILE;
+      isSharePossible = false;
+    }
+    if (profile.service === 'fb_page') {
+      profileService = FACEBOOK_SERVICE;
+      profileServiceProfile = FACEBOOK_PAGE;
+    }
+    if (profile.service === 'tw') {
+      profileService = TWITTER_SERVICE;
+      profileServiceProfile = TWITTER_PROFILE;
+    }
+    if (profile.service === 'buffer') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_PROFILE;
+      isSharePossible = false;
+    }
+    if (profile.service === 'twitter_profile') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_TWITTER_PROFILE;
+    }
+    if (profile.service === 'facebook_profile') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_FACEBOOK_PROFILE;
+    }
+    if (profile.service === 'facebook_page') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_FACEBOOK_PAGE;
+    }
+    if (profile.service === 'facebook_group') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_FACEBOOK_GROUP;
+    }
+    if (profile.service === 'linkedin_profile') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_LINKEDIN_PROFILE;
+    }
+    if (profile.service === 'linkedin_page') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_LINKEDIN_PAGE;
+    }
+    if (profile.service === 'linkedin_group') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_LINKEDIN_GROUP;
+    }
+    if (profile.service === 'instagram_profile') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_INSTAGRAM_PROFILE;
+    }
+    if (profile.service === 'instagram_business') {
+      profileService = BUFFER_SERVICE;
+      profileServiceProfile = BUFFER_INSTAGRAM_BUSINESS;
+    }
+    const uniqKey = `${profileService}-${storeId}-${profile.serviceUserId}`;
+    let dbProfile = await ProfileModel.findOne({ uniqKey: uniqKey });
+    console.log('------------------');
+    console.log("TCL: dbProfile DB", dbProfile)
+    console.log('------------------');
+
+    if (_.isNull(dbProfile)) {
+      const profileParams = {
+        store: storeId,
+        parent: (!_.isNull(parentId) ? parentId._id : null),
+        name: profile.name,
+        uniqKey: uniqKey,
+        avatarUrl: profile.avatarUrl,
+        serviceUserId: profile.serviceUserId,
+        serviceUsername: profile.serviceUsername,
+        profileURL: profile.profileURL,
+        accessToken: profile.accessToken,
+        accessTokenSecret: profile.accessTokenSecret,
+        service: profileService,
+        serviceProfile: profileServiceProfile,
+        bufferId: profile.bufferId,
+        isConnected: (profile.isConnected === '0') ? false : true,
+        isTokenExpired: (profile.isTokenExpired === '0') ? false : true,
+        isSharePossible: isSharePossible,
+        fbDefaultAlbum: profile.fbDefaultAlbum,
+      };
+      dbProfile = await ProfileModel.create(profileParams);
+    }
+    console.log('===================');
+    console.log("TCL: dbProfile", dbProfile)
+    console.log('===================');
+    return dbProfile;
   }
 }

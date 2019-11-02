@@ -136,7 +136,7 @@ module.exports = {
       store.profiles = storeProfiles;
       await store.save();
       const childProfiles = await ProfileModel.find({ parent: bufferProfile._id }).select('_id');
-      bufferProfile.childrent = childProfiles;
+      bufferProfile.children = childProfiles;
       await bufferProfile.save();
       return bufferProfile;
     } catch (error) {

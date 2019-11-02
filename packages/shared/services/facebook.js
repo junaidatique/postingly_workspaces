@@ -236,7 +236,7 @@ module.exports = {
         store.profiles = storeProfiles;
         await store.save();
         const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
-        parent.childrent = childProfiles;
+        parent.children = childProfiles;
         await parent.save();
         console.log("TCL: parent", parent)
         return parent;
@@ -296,7 +296,7 @@ module.exports = {
         store.profiles = storeProfiles;
         await store.save();
         const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
-        parent.childrent = childProfiles;
+        parent.children = childProfiles;
         await parent.save();
         console.log("TCL: parent", parent)
         return parent;

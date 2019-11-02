@@ -118,6 +118,10 @@ const storeSchema = new mongoose.Schema({
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
+  cognitoUserCreate: {
+    type: Boolean,
+    default: false
+  },
   isCharged: {
     type: Boolean
   },

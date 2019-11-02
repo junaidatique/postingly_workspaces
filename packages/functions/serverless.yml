@@ -9,6 +9,7 @@ provider:
   name: aws
   runtime: nodejs8.10
   stage: ${env:STAGE}
+  timeout: 10 
   vpc:
     securityGroupIds:
       - sg-0e0b1c8b49a3919d8
@@ -91,6 +92,8 @@ functions:
     handler: seeddata.testRules
   fetch-test:
     handler: seeddata.testFetch
+  sync-stores:
+    handler: seeddata.syncStores
   
   # cognito 
   cognito-create-auth-challenge:
