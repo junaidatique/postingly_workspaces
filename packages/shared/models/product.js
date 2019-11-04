@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-var mongoosePaginate = require('mongoose-paginate');
+const mongoosePaginate = require('mongoose-paginate');
 const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
 
 const SHORT_LINK = {
@@ -90,10 +90,10 @@ const productSchema = new Schema({
     type: Number
   },
   minimumPrice: {
-    type: mongoose.Decimal128
+    type: Number
   },
   maximumPrice: {
-    type: mongoose.Decimal128
+    type: Number
   },
   onSale: {
     type: Boolean,

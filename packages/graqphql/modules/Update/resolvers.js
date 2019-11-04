@@ -1,11 +1,15 @@
 const UpdateModel = require('shared').UpdateModel;
+const ProfileModel = require('shared').ProfileModel;
 const formattedUpdate = require('./functions').formattedUpdate;
 const query = require('shared').query;
+const _ = require('lodash')
 const moment = require('moment');
 const { APPROVED } = require('shared/constants');
 const str = require('shared').stringHelper;
 module.exports = {
   listUpdates: async (obj, args, context, info) => {
+    console.log("TCL: args", args.filter.product)
+    console.log("TCL: args", args)
     try {
 
       searchQuery = {
@@ -14,11 +18,15 @@ module.exports = {
         scheduleState: args.filter.scheduleState,
         scheduleTime: { "$gte": moment().utc() },
       }
+      if (!_.isUndefined(args.filter.product)) {
+        searchQuery.product = args.filter.product;
+      }
       searchOptions = {
         sort: { scheduleTime: 1 },
         offset: args.skip,
         limit: args.limit
       }
+      console.log("TCL: searchQuery", searchQuery)
       const updates = await UpdateModel.paginate(searchQuery, searchOptions);
       const updatesList = updates.docs.map(update => {
         return formattedUpdate(update)
@@ -58,10 +66,8 @@ module.exports = {
   createUpdate: async (obj, args, context, info) => {
     console.log("TCL: args", args)
     try {
-      args.input.profiles.forEach(profileId => {
-
-      });
-      const bulkUpdate = args.input.profiles.map(profileId => {
+      const profiles = await ProfileModel.where('_id').in(args.input.profiles);
+      const bulkUpdate = profiles.map(profile => {
         return {
           insertOne: {
             document: {
@@ -73,8 +79,9 @@ module.exports = {
               product: args.input.product,
               scheduleType: args.input.scheduleType,
               service: args.input.service,
-              profile: profileId,
-              uniqKey: `${profileId}-${args.input.product}-${args.input.scheduleTime}-${str.getRandomString(8)}`,
+              serviceProfile: profile.serviceProfile,
+              profile: profile._id,
+              uniqKey: `${profile._id}-${args.input.product}-${args.input.scheduleTime}-${str.getRandomString(8)}`,
               scheduleState: APPROVED,
               userEdited: true
             }
@@ -85,5 +92,5 @@ module.exports = {
     } catch (error) {
       throw error;
     }
-  }
+  },
 }

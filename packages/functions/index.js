@@ -6,3 +6,4 @@ exports.cronPostUpdates = require('functions/cronPostUpdates');
 exports.shareUpdates = require('functions/shareUpdates');
 exports.changeCaption = require('functions/changeCaption');
 exports.cronAddCaptions = require('functions/cronAddCaptions');
+exports.webhooks = require('functions/webhooks');

@@ -1,10 +1,10 @@
 type Query {
-  listStores(filter: ModelStoreFilterInput, limit: Int, skip: Int, sort: ModelStoreSortInput): [Store]
+  listStores(filter: ModelStoreFilterInput, limit: Int, skip: Int, sort: ModelStoreSortInput): ListStoreResponse
   listProfiles(storeId: ID!, service: Service!, parent: String, isConnected: Boolean): [Profile]
-  getStore(uniqKey: String!): Store
+  getStore(id: ID!): Store
   listRules(filter: ModelRuleFilterInput!, limit: Int, skip: Int): [Rule]
   getRule(storeId: ID!, ruleId: ID!): Rule
-  listProducts(filter: ModelProductFilterInput!, limit: Int, skip: Int): ListProductResponse
+  listProducts(filter: ModelProductFilterInput!, limit: Int, skip: Int, sort: ModelProductSortInput): ListProductResponse
   listCollections(filter: ModelCollectionFilterInput!, limit: Int, skip: Int): [Collection]
   listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): ListUpdateResponse
 }

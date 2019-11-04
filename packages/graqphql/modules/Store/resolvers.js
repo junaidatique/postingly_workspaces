@@ -1,19 +1,40 @@
 const shared = require('shared');
 const formattedStore = require('./functions').formattedStore
-const getStoreByUniqKey = require('./functions').getStoreByUniqKey
+const getStoreByID = require('./functions').getStoreByID
+const _ = require('lodash')
 let conn;
 const query = require('shared').query
 module.exports = {
   listStores: async (obj, args, context, info) => {
+    console.log("TCL: args", args)
     const StoreModel = shared.StoreModel;
     try {
-      searchQuery = query.createSearchQuery(StoreModel, args);
-      const stores = await searchQuery.populate('profiles');
-      console.log("TCL: stores", stores)
-      const list = storesList = stores.map(store => {
+      let searchQuery = {}
+      if (!_.isUndefined(args.filter)) {
+        if (!_.isEmpty(args.filter.userId)) {
+          searchQuery.userId = args.filter.userId;
+        }
+        if (!_.isEmpty(args.filter.partner)) {
+          searchQuery.partner = args.filter.partner;
+        }
+        if (!_.isEmpty(args.filter.title)) {
+          searchQuery.title = new RegExp(args.filter.title, "i");
+        }
+      }
+      const searchOptions = {
+        sort: { createdAt: -1 },
+        populate: 'profiles',
+        offset: args.skip,
+        limit: _.isUndefined(args.limit) ? 10 : args.limit
+      }
+      const stores = await StoreModel.paginate(searchQuery, searchOptions);
+      const list = storesList = stores.docs.map(store => {
         return formattedStore(store)
       });
-      return list;
+      return {
+        stores: list,
+        totalRecords: stores.total
+      }
     } catch (error) {
       console.log("TCL: error1", error)
       throw error;
@@ -21,7 +42,7 @@ module.exports = {
   },
   getStore: async (obj, args, context, info) => {
     try {
-      return getStoreByUniqKey(args.uniqKey);
+      return getStoreByID(args.id);
     } catch (error) {
       throw error;
     }

@@ -19,6 +19,15 @@ const IMAGE = {
 }
 
 const updateResponse = {
+  bufferId: {
+    type: String
+  },
+  tweetId: {
+    type: String,
+  },
+  tweetURL: {
+    type: String,
+  },
   albumId: {
     type: String,
   },
@@ -102,6 +111,16 @@ const updateSchema = new mongoose.Schema({
     required: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
+  // scheduleWeek: {
+  //   type: Number,
+  //   required: false,
+  //   default: null,
+  // },
+  // scheduleDayOfYear: {
+  //   type: Number,
+  //   required: false,
+  //   default: null,
+  // },
   text: {
     type: String
   },

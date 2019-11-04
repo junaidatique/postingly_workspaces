@@ -9,16 +9,17 @@ const {
   POSTING_SORTORDER_NEWEST
 } = require('shared/constants');
 module.exports = {
-  getProductsForSchedule: async function (ruleId, profileId, limit) {
-    const RuleModel = shared.RuleModel;
+  getProductsForSchedule: async function (ruleDetail, profileId, limit) {
     const ProductModel = shared.ProductModel;
-    const ruleDetail = await RuleModel.findById(ruleId);
+    // get all the products that are not shared on this profile. 
     const notSharedOnThisProfileQuery = this.getProductsQuery(ruleDetail);
-    const notSharedOnThisProfile = notSharedOnThisProfileQuery.find({ "shareHistory.profile": { $ne: profileId } });
-    const productsForCount = await notSharedOnThisProfile;
-    if (productsForCount.length > 0) {
+    const productsForCount = await notSharedOnThisProfileQuery.countDocuments({ "shareHistory.profile": { $ne: profileId } });
+    // const productsForCount = await notSharedOnThisProfile;
+    // console.log("TCL: productsForCount", productsForCount)
+    // following condition. means that there are some products that are not shared on this profile. 
+    if (productsForCount > 0) {
       let notSharedOnThisProfileLimitQuery = this.getProductsQuery(ruleDetail);
-      if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
+      if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
         notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.sort({ partnerCreatedAt: -1 })
       } else {
         notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.limit(-1).skip(Math.random() * productsForCount.length)
@@ -29,10 +30,10 @@ module.exports = {
     }
     let lessSharedOnThisProfile = this.getProductsQuery(ruleDetail);
     lessSharedOnThisProfile = lessSharedOnThisProfile.find({ "shareHistory.profile": profileId }).sort({ "shareHistory.counter": 1 });
-    if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
+    if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
       lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ partnerCreatedAt: -1 })
     } else {
-      const productCount = await ProductModel.find({ store: ruleDetail.store }).estimatedDocumentCount();
+      const productCount = await ProductModel.countDocuments({ store: ruleDetail.store, active: true });
       lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.random() * productCount)
     }
     lessSharedOnThisProfile = lessSharedOnThisProfile.limit(limit);
@@ -53,34 +54,32 @@ module.exports = {
     if (!ruleDetail.allowZeroQuantity) {
       query = query.where({ postableByQuantity: true })
     }
-    if (ruleDetail.collectionOption === COLLECTION_OPTION_SELECTED) {
+    if (ruleDetail.collectionOption === COLLECTION_OPTION_SELECTED && ruleDetail.collections.length > 0) {
       query = query.where('collections').in(ruleDetail.collections);
-    } else if (ruleDetail.collectionOption === COLLECTION_OPTION_NOT_SELECTED) {
+    } else if (ruleDetail.collectionOption === COLLECTION_OPTION_NOT_SELECTED && ruleDetail.collections.length > 0) {
       query = query.where('collections').nin(ruleDetail.collections);
     }
     return query;
   },
-  getVariantsForSchedule: async function (ruleId, profileId, limit) {
-    const RuleModel = shared.RuleModel;
-    const ruleDetail = await RuleModel.findById(ruleId);
+  getVariantsForSchedule: async function (ruleDetail, profileId, limit) {
     const notSharedOnThisProfile = this.getVariantsQuery(ruleDetail);
-    const variantsCount = await notSharedOnThisProfile.find({ "shareHistory.profile": { $ne: profileId } }).estimatedDocumentCount();
+    const variantsCount = await notSharedOnThisProfile.productsForCount({ "shareHistory.profile": { $ne: profileId } });
     if (variantsCount > 0) {
       let query = this.getVariantsQuery(ruleDetail);
-      if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
+      if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
         query = query.sort({ partnerCreatedAt: -1 })
       } else {
-        const variantCount = await VariantModel.estimatedDocumentCount();
+        const variantCount = await VariantModel.productsForCount({ store: ruleDetail.store, active: true });
         query = query.limit(-1).skip(Math.random() * variantCount)
       }
       let products = await query.find({ "shareHistory.profile": { $ne: profileId } }).limit(limit).populate('images');
       return products;
     }
     let lessSharedOnThisProfile = this.getVariantsQuery(ruleDetail);;
-    if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST) {
+    if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
       lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ partnerCreatedAt: -1 })
     } else {
-      const variantCount = await VariantModel.find({ store: ruleDetail.store }).estimatedDocumentCount();
+      const variantCount = await VariantModel.countDocuments({ store: ruleDetail.store, active: true });
       lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.random() * variantCount)
     }
     let products = await lessSharedOnThisProfile.find({ "shareHistory.profile": profileId }).sort({ "shareHistory.counter": 1 }).limit(limit).populate('images');

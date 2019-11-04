@@ -5,10 +5,10 @@ module.exports = {
     console.log("createUser email", email);
     console.log("createUser shopDomain", shopDomain);
     const awsConfig = { accessKeyId: process.env.LOCAL_AWS_KEY, secretAccessKey: process.env.LOCAL_AWS_SECRET_KEY, region: process.env.AWS_REGION };
-    console.log("TCL: awsConfig", awsConfig)
+    // console.log("TCL: awsConfig", awsConfig)
     AWS.config.update(awsConfig);
     const identityProvider = new AWS.CognitoIdentityServiceProvider({ apiVersion: "2016-04-18" });
-    console.log("TCL: identityProvider", identityProvider)
+    // console.log("TCL: identityProvider", identityProvider)
     const userPoolId = process.env.USER_POOL_ID;
     if (!userPoolId) {
       console.log("USER_POOL_ID environment variable not set");

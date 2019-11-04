@@ -14,7 +14,6 @@ const {
 } = require('shared/constants');
 const dbConnection = require('./db');
 const schedulerHelper = require('./helpers/productScheduleFns')
-
 module.exports = {
   // event = { ruleId: ID }
   schedule: async function (event, context) {
@@ -36,11 +35,8 @@ module.exports = {
       if (ruleDetail === null) {
         throw new Error(`rule not found for ${event.ruleId}`);
       }
-
       const StoreDetail = await StoreModel.findById(ruleDetail.store);
-
       const defaultShortLinkService = StoreDetail.shortLinkService;
-
       // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
       if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
         imageLimit = 4;
@@ -64,11 +60,11 @@ module.exports = {
         if (updates.length > 0) {
           // get variants or products based on the rule settings. 
           if (ruleDetail.postAsVariants) {
-            postItems = await schedulerHelper.getVariantsForSchedule(ruleDetail._id, profile, updates.length);
+            postItems = await schedulerHelper.getVariantsForSchedule(ruleDetail, profile, updates.length);
             itemModel = VariantModel;
             itemType = SCHEDULE_TYPE_VARIANT;
           } else {
-            postItems = await schedulerHelper.getProductsForSchedule(ruleDetail._id, profile, updates.length);
+            postItems = await schedulerHelper.getProductsForSchedule(ruleDetail, profile, updates.length);
             itemModel = ProductModel;
             itemType = SCHEDULE_TYPE_PRODUCT;
           }
@@ -174,7 +170,10 @@ module.exports = {
           }));
         }
       }));
-      const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+      // console.log("TCL: bulkUpdate", bulkUpdate);
+      if (!_.isEmpty(bulkUpdate)) {
+        const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+      }
     } catch (error) {
       console.error(error.message);
     }

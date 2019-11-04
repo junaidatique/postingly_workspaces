@@ -2,7 +2,7 @@ type Profile {
   id: ID!
   parent: Profile
   children: [Profile]
-  name: String!
+  name: String
   avatarUrl: String
   uniqKey: String
   serviceUsername: String
@@ -21,9 +21,12 @@ type Profile {
 
 input connectProfileInput {
   storeId: String!
-  code: String!
+  code: String
   service: Service!
   serviceProfile: ServiceProfile!
+  oauthToken: String
+  oauthVerifier: String
+  oauthRequestTokenSecret: String
 }
 
 input updateProfileInput {

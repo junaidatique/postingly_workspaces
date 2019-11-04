@@ -231,19 +231,17 @@ module.exports = {
               }
             }
           });
-          const pageProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
-          const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
-          const store = await StoreModel.findById(storeId);
-          store.profiles = storeProfiles;
-          await store.save();
-          const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
-          parent.childrent = childProfiles;
-          await parent.save();
-          console.log("TCL: parent", parent)
-          return parent;
-        } else {
-          throw new Error("No Page Found");
         }
+        const pageProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
+        const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
+        const store = await StoreModel.findById(storeId);
+        store.profiles = storeProfiles;
+        await store.save();
+        const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
+        parent.children = childProfiles;
+        await parent.save();
+        console.log("TCL: parent", parent)
+        return parent;
       } else {
         console.log("Fb getPages Not Recieved");
         throw new Error(userDetailResponse.statusText);
@@ -294,20 +292,16 @@ module.exports = {
             }
           }
         });
-        if (!_.isEmpty(bulkProfileInsert)) {
-          const groupProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
-          const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
-          const store = await StoreModel.findById(storeId);
-          store.profiles = storeProfiles;
-          await store.save();
-          const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
-          parent.childrent = childProfiles;
-          await parent.save();
-          console.log("TCL: parent", parent)
-          return parent;
-        } else {
-          throw new Error("No group found.");
-        }
+        const groupProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
+        const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
+        const store = await StoreModel.findById(storeId);
+        store.profiles = storeProfiles;
+        await store.save();
+        const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
+        parent.children = childProfiles;
+        await parent.save();
+        console.log("TCL: parent", parent)
+        return parent;
       } else {
         console.log("Fb getGroups Not Recieved");
         throw new Error(userDetailResponse.statusText);

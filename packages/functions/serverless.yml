@@ -9,6 +9,14 @@ provider:
   name: aws
   runtime: nodejs8.10
   stage: ${env:STAGE}
+  timeout: 20 
+  vpc:
+    securityGroupIds:
+      - sg-0e0b1c8b49a3919d8
+    subnetIds:
+      - subnet-0be2e1119f5a9942b
+      - subnet-08f8f22623b8c212b
+
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -72,35 +80,41 @@ functions:
     handler: syncStoreData.syncCollectionPage
   sync-products:
     handler: syncStoreData.syncProducts
+    timeout: 120 
   sync-product-page:
     handler: syncStoreData.syncProductPage
+    timeout: 120 
+  get-webhooks:
+    handler: webhooks.getWebhooks
   data-seed:
     handler: seeddata.createStore
   data-test:
     handler: seeddata.testData
+  rule-test:
+    handler: seeddata.testRules
+  fetch-test:
+    handler: seeddata.testFetch
+  sync-stores:
+    handler: seeddata.syncStores
+    # events:
+    #   - schedule:
+    #       rate: cron(*/5 * * * ? *)
+    #       enabled: true
   
   # cognito 
   cognito-create-auth-challenge:
-    handler: cognito.createAuthChallenge
-    events:
-      - cognitoUserPool:
-          pool: ${env:USER_POOL_ID}
-          trigger: CreateAuthChallenge
+    handler: cognito.createAuthChallenge    
   cognito-define-auth-challenge:
-    handler: cognito.defineAuthChallenge
-    events:
-      - cognitoUserPool:
-          pool: ${env:USER_POOL_ID}
-          trigger: DefineAuthChallenge
+    handler: cognito.defineAuthChallenge    
   cognito-verify-auth-challenge:
-    handler: cognito.verifyAuthChallenge
-    events:
-      - cognitoUserPool:
-          pool: ${env:USER_POOL_ID}
-          trigger: VerifyAuthChallengeResponse
+    handler: cognito.verifyAuthChallenge    
 
   
   
   # Testing The Lambdas
   test-lambda:
     handler: lambdaTests.execute
+  test-webhooks-lambda:
+    handler: lambdaWebhooksTests.execute
+  test-sync-lambda:
+    handler: lambdaSyncTests.execute

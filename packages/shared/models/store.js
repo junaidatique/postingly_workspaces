@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 const Schema = mongoose.Schema;
-
+const mongoosePaginate = require('mongoose-paginate');
 const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
 
 
@@ -99,24 +99,32 @@ const storeSchema = new mongoose.Schema({
     type: String
   },
   numberOfProducts: {
-    type: Number
+    type: Number,
+    default: 0
   },
   numberOfConnectedProfiles: {
     type: Number,
     default: 0
   },
   noOfActiveProducts: {
-    type: Number
+    type: Number,
+    default: 0
   },
   numberOfScheduledPosts: {
-    type: Number
+    type: Number,
+    default: 0
   },
   numberOfPosted: {
-    type: Number
+    type: Number,
+    default: 0
   },
   productsLastUpdated: {
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  cognitoUserCreate: {
+    type: Boolean,
+    default: false
   },
   isCharged: {
     type: Boolean
@@ -159,6 +167,6 @@ storeSchema.set('timestamps', true);
 if (process.env.IS_OFFLINE) {
   delete mongoose.connection.models.Store;
 }
-
+storeSchema.plugin(mongoosePaginate);
 module.exports = mongoose.model('Store', storeSchema);
 

@@ -12,7 +12,14 @@ resources:
 provider:
   name: aws
   runtime: nodejs8.10
-  stage: ${env:STAGE}
+  stage: ${env:STAGE}  
+  vpc:
+    securityGroupIds:
+      - sg-0e0b1c8b49a3919d8
+    subnetIds:
+      - subnet-0be2e1119f5a9942b
+      - subnet-08f8f22623b8c212b
+
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -34,9 +41,7 @@ provider:
         - cognito-idp:*
       Resource: 
         - arn:aws:cognito-idp:us-east-1:*:*
-  environment:
-    STORES_TABLE: "Store"
-    PROFILE_TABLE: "Profile"
+  
 
 functions:
   auth:
@@ -58,6 +63,69 @@ functions:
     events:
       - http:
           path: /partners/{partner_slug}/payment_return
+          method: post
+          cors: true
+  productsCreate:
+    handler: index.productsCreate
+    events:
+      - http:
+          path: /partners/{partner_slug}/productsCreate
+          method: post
+          cors: true
+  productsUpdate:
+    handler: index.productsUpdate
+    events:
+      - http:
+          path: /partners/{partner_slug}/productsUpdate
+          method: post
+          cors: true
+  productsDelete:
+    handler: index.productsDelete
+    events:
+      - http:
+          path: /partners/{partner_slug}/productsDelete
+          method: post
+          cors: true
+  collectionsCreate:
+    handler: index.collectionsCreate
+    events:
+      - http:
+          path: /partners/{partner_slug}/collectionsCreate
+          method: post
+          cors: true
+  collectionsUpdate:
+    handler: index.collectionsUpdate
+    events:
+      - http:
+          path: /partners/{partner_slug}/collectionsUpdate
+          method: post
+          cors: true
+  collectionsDelete:
+    handler: index.collectionsDelete
+    events:
+      - http:
+          path: /partners/{partner_slug}/collectionsDelete
+          method: post
+          cors: true
+  appUninstalled:
+    handler: index.appUninstalled
+    events:
+      - http:
+          path: /partners/{partner_slug}/appUninstalled
+          method: post
+          cors: true
+  shopUpdate:
+    handler: index.shopUpdate
+    events:
+      - http:
+          path: /partners/{partner_slug}/shopUpdate
+          method: post
+          cors: true
+  twitterRequestToken:
+    handler: index.twitterRequestToken
+    events:
+      - http:
+          path: /twitter/getRequestToken
           method: post
           cors: true
 

@@ -2,7 +2,7 @@ const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
 const dbConnection = require('./db');
-const { APPROVED, PENDING, SCHEDULE_TYPE_VARIANT, SCHEDULE_TYPE_PRODUCT } = require('shared/constants');
+const { APPROVED, PENDING, SCHEDULE_TYPE_VARIANT, SCHEDULE_TYPE_PRODUCT, TWITTER_PROFILE, BUFFER_TWITTER_PROFILE } = require('shared/constants');
 
 module.exports = {
   update: async function (event, context) {
@@ -29,12 +29,12 @@ module.exports = {
           service: event.service
         }
       );
-      console.log("TCL: event.storeId", event.storeId)
+      // console.log("TCL: event.storeId", event.storeId)
       if (!_.isNull(event.storeId) && !_.isUndefined(event.storeId)) {
         servicesQuery = servicesQuery.where({ store: event.storeId });
       }
       const updates = await servicesQuery.limit(50);
-      console.log("TCL: updates", updates)
+      // console.log("TCL: updates", updates)
 
       let approvedUpdates = [];
       await Promise.all(updates.map(async update => {
@@ -58,8 +58,12 @@ module.exports = {
             title = productDetail.title;
             price = productDetail.minimumPrice;
           }
-
-          const description = productDetail.description;
+          let description;
+          if (update.serviceProfile === TWITTER_PROFILE || update.BUFFER_TWITTER_PROFILE) {
+            description = '';
+          } else {
+            description = productDetail.description;
+          }
           const defaultShortLinkService = StoreDetail.shortLinkService;
           const productDetailURL = await productDetail.url.map(urls => urls);
           const url = await shortLink.getItemShortLink(defaultShortLinkService, productDetail.partnerSpecificUrl, productDetailURL);

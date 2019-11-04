@@ -1,5 +1,7 @@
 
 exports.FACEBOOK_GRPAHAPI_URL = 'https://graph.facebook.com/v4.0/'
+exports.TWITTER_API_URL = 'https://api.twitter.com/'
+exports.BUFFER_API_URL = 'https://api.bufferapp.com/1/'
 exports.DEV = 'dev'
 exports.TEST = 'test'
 exports.STAGING = 'staging'
@@ -110,7 +112,7 @@ exports.BUFFER_LINKEDIN_GROUP = BUFFER_LINKEDIN_GROUP;
 exports.BUFFER_PINTEREST_PROFILE = BUFFER_PINTEREST_PROFILE;
 
 // service posting options
-const POST_AS_OPTION_NONE = 'none'
+const POST_AS_OPTION_NONE = null
 const POST_AS_OPTION_FB_ALBUM = 'facebookPostAsAlbum'
 const POST_AS_OPTION_FB_LINK = 'facebookPostAsLink'
 const POST_AS_OPTION_FB_PHOTO = 'facebookPostAsPhoto'
@@ -158,6 +160,25 @@ const LINK_SHORTNER_SERVICES_BITLY = 'bit.ly'
 exports.LINK_SHORTNER_SERVICES_NONE = LINK_SHORTNER_SERVICES_NONE;
 exports.LINK_SHORTNER_SERVICES_POOOST = LINK_SHORTNER_SERVICES_POOOST;
 exports.LINK_SHORTNER_SERVICES_BITLY = LINK_SHORTNER_SERVICES_BITLY;
+
+// Product Sorting
+const PRODUCT_SORT_TITLE_ASC = 'title_ASC';
+const PRODUCT_SORT_TITLE_DESC = 'title_DESC';
+const PRODUCT_SORT_CREATED_ASC = 'createdAt_ASC';
+const PRODUCT_SORT_CREATED_DESC = 'createdAt_DESC';
+const PRODUCT_SORT_UPDATED_ASC = 'updatedAt_ASC';
+const PRODUCT_SORT_UPDATED_DESC = 'updatedAt_DESC';
+const PRODUCT_SORT_SCHEDULED_ASC = 'scheduled_ASC';
+const PRODUCT_SORT_SCHEDULED_DESC = 'scheduled_DESC';
+exports.PRODUCT_SORT_TITLE_ASC = PRODUCT_SORT_TITLE_ASC;
+exports.PRODUCT_SORT_TITLE_DESC = PRODUCT_SORT_TITLE_DESC;
+exports.PRODUCT_SORT_CREATED_ASC = PRODUCT_SORT_CREATED_ASC;
+exports.PRODUCT_SORT_CREATED_DESC = PRODUCT_SORT_CREATED_DESC;
+exports.PRODUCT_SORT_UPDATED_ASC = PRODUCT_SORT_UPDATED_ASC;
+exports.PRODUCT_SORT_UPDATED_DESC = PRODUCT_SORT_UPDATED_DESC;
+exports.PRODUCT_SORT_SCHEDULED_ASC = PRODUCT_SORT_SCHEDULED_ASC;
+exports.PRODUCT_SORT_SCHEDULED_DESC = PRODUCT_SORT_SCHEDULED_DESC;
+
 
 exports.PARTNERS = [PARTNERS_SHOPIFY, PARTNERS_BIGCOMMERCE];
 exports.SERVICES = [FACEBOOK_SERVICE, TWITTER_SERVICE, INSTAGRAM_SERVICE, LINKEDIN_SERVICE, PINTEREST_SERVICE, BUFFER_SERVICE];
@@ -208,3 +229,16 @@ exports.INSTAGRAM_DEFAULT_TEXT = '[product-title]' + "\n"
   + '➤ [product-url]' + "\n"
   + '[product-description] ';
 exports.TW_DEFAULT_TEXT = '[product-title] USD [product-price]' + "\n" + '[product-url]';
+
+exports.WEBHOOKS = {
+  shopify: [
+    { webhook: 'products/create', endpoint: 'productsCreate' },
+    { webhook: 'products/update', endpoint: 'productsUpdate' },
+    { webhook: 'products/delete', endpoint: 'productsDelete' },
+    { webhook: 'collections/create', endpoint: 'collectionsCreate' },
+    { webhook: 'collections/update', endpoint: 'collectionsUpdate' },
+    { webhook: 'collections/delete', endpoint: 'collectionsDelete' },
+    { webhook: 'app/uninstalled', endpoint: 'appUninstalled' },
+    { webhook: 'shop/update', endpoint: 'shopUpdate' },
+  ]
+}

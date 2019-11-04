@@ -98,9 +98,9 @@ input UpdateStoreInput {
 }
 
 input ModelStoreFilterInput {
-  partner: ModelStringFilterInput
-  userId: ModelStringFilterInput
-  title: ModelStringFilterInput
+  partner: String
+  userId: String
+  title: String
 }
 
 enum ModelStoreSortInput {
@@ -120,4 +120,9 @@ enum ModelStoreSortInput {
   numberOfScheduledPosts_DESC
   numberOfPosted_ASC
   numberOfPosted_DESC
+}
+
+type ListStoreResponse {
+  totalRecords: Int,
+  stores: [Store]
 }
