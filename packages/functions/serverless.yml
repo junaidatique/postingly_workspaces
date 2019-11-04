@@ -9,7 +9,7 @@ provider:
   name: aws
   runtime: nodejs8.10
   stage: ${env:STAGE}
-  timeout: 10 
+  timeout: 20 
   vpc:
     securityGroupIds:
       - sg-0e0b1c8b49a3919d8
@@ -80,8 +80,10 @@ functions:
     handler: syncStoreData.syncCollectionPage
   sync-products:
     handler: syncStoreData.syncProducts
+    timeout: 120 
   sync-product-page:
     handler: syncStoreData.syncProductPage
+    timeout: 120 
   get-webhooks:
     handler: webhooks.getWebhooks
   data-seed:
@@ -94,6 +96,10 @@ functions:
     handler: seeddata.testFetch
   sync-stores:
     handler: seeddata.syncStores
+    # events:
+    #   - schedule:
+    #       rate: cron(*/5 * * * ? *)
+    #       enabled: true
   
   # cognito 
   cognito-create-auth-challenge:

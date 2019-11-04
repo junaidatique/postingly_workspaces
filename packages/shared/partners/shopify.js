@@ -472,6 +472,7 @@ module.exports = {
 
   syncStoreData: async function (event) {
     console.log('syncStoreData event', event);
+    await this.syncProductCount(event);
     const ProductModel = shared.ProductModel;
     // Collections are reset so that new collections can be assigned to products. 
     const dbCollectionsUpdate = await ProductModel.updateMany({ store: event.storeId }, { collections: [] });
@@ -531,8 +532,8 @@ module.exports = {
       console.log("TCL: syncProductPageLambdaResponse", syncProductPageLambdaResponse)
 
     } else {
-      // await this.syncCollectionPage(syncCustomCollectionPayload);
-      // await this.syncCollectionPage(syncSmartCollectionPayload);
+      await this.syncCollectionPage(syncCustomCollectionPayload);
+      await this.syncCollectionPage(syncSmartCollectionPayload);
       await this.syncProductPage(syncProductPayload);
 
     }
@@ -620,7 +621,7 @@ module.exports = {
             partner: PARTNERS_SHOPIFY,
             uniqKey: `${PARTNERS_SHOPIFY}-${collection.id}`,
             description: stringHelper.stripTags(collection.body_html),
-            active: (collection.published_at.blank) ? true : false,
+            active: (!_.isNull(collection.published_at)) ? true : false,
             store: storeId,
           },
           upsert: true
@@ -631,6 +632,20 @@ module.exports = {
       const r = await CollectionModel.bulkWrite(bulkCollectionInsert);
     }
     return collectionUniqKeys;
+  },
+  syncProductCount: async function (event) {
+    console.log('syncProductPage event', event);
+    const StoreModel = shared.StoreModel;
+    const storeDetail = await StoreModel.findById(event.storeId);
+    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/count.json?published_status=published`;
+    console.log("TCL: syncProductCount url", url)
+    const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
+    if ("error_description" in json || "error" in json || "errors" in json) {
+      throw new Error(json.error_description || json.error || json.errors);
+    }
+    console.log("TCL: syncProductCount json", json);
+    storeDetail.numberOfProducts = json.count;
+    await storeDetail.save();
   },
   syncProductPage: async function (event) {
     console.log('syncProductPage event', event);
@@ -650,12 +665,14 @@ module.exports = {
     console.log("TCL: syncProductPage url", url)
     const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if ("error_description" in json || "error" in json || "errors" in json) {
+      console.log("TCL: syncProductPage json error", json)
       throw new Error(json.error_description || json.error || json.errors);
     }
     const apiProducts = json.products;
     console.log("TCL: apiProducts.length", apiProducts.length)
     await this.syncProducts(event, apiProducts, storeDetail);
     if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
+      console.log("TCL: There is next page. ")
       const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
       if (!_.isNull(pageInfo)) {
         if (process.env.IS_OFFLINE === 'false') {
@@ -675,6 +692,7 @@ module.exports = {
         }
       }
     }
+    console.log("TCL: Sync Prdouct completed for this api call. ")
   },
   addCollectiontoItems: async function (model, items, collectionId) {
     const bulkCollectionUpdate = items.map(item => {
@@ -861,11 +879,6 @@ module.exports = {
       const bulkVariantImages = variantImages.map(variantImage => {
         const image = dbImages.find(dbImage => dbImage.imgUniqKey === `product-${PARTNERS_SHOPIFY}-${variantImage.imagePartnerId}`);
         const variant = dbVariants.find(dbVariant => dbVariant.uniqKey === variantImage.variantUniqKey);
-        if (_.isUndefined(variant)) {
-          console.log("TCL: dbVariants", dbVariants)
-          console.log("TCL: variantImage", variantImage)
-          console.log("TCL: variant", variant)
-        }
         return {
           updateOne: {
             filter: { imgUniqKey: `variant-${PARTNERS_SHOPIFY}-${variantImage.imagePartnerId}` },
@@ -904,7 +917,12 @@ module.exports = {
       if (!_.isEmpty(bulkVariantUpdate)) {
         const s = await VariantModel.bulkWrite(bulkVariantUpdate);
       }
-
+      // update number of products for store
+      const productCount = await ProductModel.countDocuments({ store: storeDetail._id, active: true });
+      console.log("TCL: productCount", productCount)
+      storeDetail.noOfActiveProducts = productCount;
+      await storeDetail.save();
+      console.log("TCL: All Done")
       // all done.
     }
   },

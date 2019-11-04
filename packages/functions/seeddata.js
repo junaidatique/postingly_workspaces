@@ -3,9 +3,17 @@
 const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
-// const dbConnection = require('./db');
+const dbConnection = require('./db');
 // const createUpdates = require('./createUpdates');
+
 const fetch = require('node-fetch');
+let lambda;
+const AWS = require('aws-sdk');
+if (process.env.IS_OFFLINE === 'false') {
+  lambda = new AWS.Lambda({
+    region: process.env.AWS_REGION //change to your region
+  });
+}
 const {
   PARTNERS_SHOPIFY,
   FACEBOOK_SERVICE,
@@ -255,108 +263,169 @@ module.exports = {
     console.log("TCL: exchangeToken res", res)
   },
   syncStores: async function (event, context) {
-    const shopifyAPI = shared.PartnerShopify;
-    const StoreModel = shared.StoreModel;
-    const ProfileModel = shared.ProfileModel;
-    const url = `https://posting.ly/cron/exportStores`;
-    const stores = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      method: "GET",
-    }).then(response => response.json());
-    await Promise.all(stores.map(async store => {
-      console.log("TCL: store", store);
-      const shop = await shopifyAPI.getShop(store.partnerSpecificUrl, store.partnerToken);
-      const storeKey = `shopify-${shop.id}`;
-      console.log("TCL: storeKey", storeKey)
-      let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
-      if (dbStore === null) {
-        const shopParams = {
-          uniqKey: storeKey,
-          userId: shop.email,
-          partner: PARTNERS_SHOPIFY,
-          partnerId: shop.id,
-          partnerPlan: shop.plan_name,
-          title: shop.name,
-          url: shop.domain,
-          partnerSpecificUrl: shop.myshopify_domain,
-          partnerCreatedAt: shop.created_at,
-          partnerUpdatedAt: shop.updated_at,
-          partnerToken: store.partnerToken,
-          timezone: shop.iana_timezone,
-          moneyFormat: shop.money_format,
-          moneyWithCurrencyFormat: shop.money_with_currency_format,
-          isCharged: true,
-          shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
-          chargedMethod: PARTNERS_SHOPIFY,
-          chargeId: store.chargeId,
-          chargeDate: moment(store.chargeDate).toISOString(),
-          isUninstalled: false,
-        };
-        const storeInstance = new StoreModel(shopParams);
-        dbStore = await storeInstance.save();
-      }
-      const storeId = dbStore._id;
-      await Promise.all(store.profiles.map(async profile => {
-        let parent = null;
-        if (!_.isUndefined(profile.parent)) {
-          parent = await module.exports.createProfile(storeId, profile.parent, null)
+    await dbConnection.createConnection(context);
+    try {
+
+
+      const shopifyAPI = shared.PartnerShopify;
+      const StoreModel = shared.StoreModel;
+      const ProfileModel = shared.ProfileModel;
+      const url = `https://posting.ly/cron/exportStores`;
+      const response = await fetch(url, {
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        method: "GET",
+      }).then(response => response.json());
+      let parentIds = [];
+      await Promise.all(response.stores.map(async store => {
+        console.log("TCL: store", store);
+        const shop = await shopifyAPI.getShop(store.partnerSpecificUrl, store.partnerToken);
+        console.log("TCL: shop1", shop)
+        const storeKey = `shopify-${shop.id}`;
+        console.log("TCL: storeKey1", storeKey)
+        let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+        console.log("TCL: dbStore1", dbStore)
+        if (dbStore === null) {
+          const shopParams = {
+            uniqKey: storeKey,
+            userId: shop.email,
+            partner: PARTNERS_SHOPIFY,
+            partnerId: shop.id,
+            partnerPlan: shop.plan_name,
+            title: shop.name,
+            url: shop.domain,
+            partnerSpecificUrl: shop.myshopify_domain,
+            partnerCreatedAt: shop.created_at,
+            partnerUpdatedAt: shop.updated_at,
+            partnerToken: store.partnerToken,
+            timezone: shop.iana_timezone,
+            moneyFormat: shop.money_format,
+            moneyWithCurrencyFormat: shop.money_with_currency_format,
+            isCharged: true,
+            shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
+            chargedMethod: PARTNERS_SHOPIFY,
+            chargeId: store.chargeId,
+            chargeDate: moment(store.chargeDate).toISOString(),
+            isUninstalled: false,
+          };
+          console.log("TCL: shopParams", shopParams)
+          dbStore = await StoreModel.create(shopParams);
         }
-        // let dbProfile = await module.exports.createProfile(storeId, profile.profile, parent)
+        console.log("TCL: dbStore", dbStore)
+        const storeId = dbStore._id;
       }));
-      await Promise.all(store.profiles.map(async profile => {
+      let bulkParentProfiles = [];
+      await Promise.all(response.profiles.map(async profile => {
+        const storeKey = `shopify-${profile.shopId}`;
+        console.log("TCL: storeKey2", storeKey)
+        let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+        const storeId = dbStore._id;
         let parent = null;
         if (!_.isUndefined(profile.parent)) {
           parent = await module.exports.createProfile(storeId, profile.parent, null)
+          bulkParentProfiles.push(parent)
+        }
+      }));
+      console.log("TCL: bulkParentProfiles", bulkParentProfiles);
+      if (!_.isEmpty(bulkParentProfiles)) {
+        const pageProfiles = await ProfileModel.bulkWrite(bulkParentProfiles);
+      }
+      let bulkProfiles = [];
+      await Promise.all(response.profiles.map(async profile => {
+        const storeKey = `shopify-${profile.shopId}`;
+        console.log("TCL: storeKey2", storeKey)
+        let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+        const storeId = dbStore._id;
+        let parent = null;
+        if (!_.isUndefined(profile.parent)) {
+          parentObject = await module.exports.createProfile(storeId, profile.parent, null);
+          parent = await ProfileModel.findOne({ uniqKey: parentObject.updateOne.filter.uniqKey });
+          // console.log("TCL: parent", parent.updateOne.filter.uniqKey)
         }
         let dbProfile = await module.exports.createProfile(storeId, profile.profile, parent)
-        if (!_.isNull(parent)) {
+        bulkProfiles.push(dbProfile);
+      }));
+      const bulkChildProfiles = [];
+      if (!_.isEmpty(bulkProfiles)) {
+        const childProfiles = await ProfileModel.bulkWrite(bulkProfiles);
+      }
+      await Promise.all(response.profiles.map(async profile => {
+        const storeKey = `shopify-${profile.shopId}`;
+        console.log("TCL: storeKey2", storeKey)
+        let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+        const storeId = dbStore._id;
+        let parent = null;
+        if (!_.isUndefined(profile.parent)) {
+          parentObject = await module.exports.createProfile(storeId, profile.parent, null);
+          parent = await ProfileModel.findOne({ uniqKey: parentObject.updateOne.filter.uniqKey });
           const childProfiles = await ProfileModel.find({ parent: parent._id }).select('_id');
-          parent.children = childProfiles;
-          await parent.save();
+          bulkChildProfiles.push({
+            updateOne: {
+              filter: { uniqKey: parentObject.updateOne.filter.uniqKey },
+              update: {
+                children: childProfiles.map(childProfile => childProfile._id),
+              },
+            }
+          })
         }
       }));
-      const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
-      dbStore.profiles = storeProfiles;
-      await dbStore.save();
-      const storePayload = {
-        "storeId": dbStore._id,
-        "partnerStore": PARTNERS_SHOPIFY,
-        "collectionId": null
+      if (!_.isEmpty(bulkChildProfiles)) {
+        const childParentProfiles = await ProfileModel.bulkWrite(bulkChildProfiles);
       }
-      if (process.env.IS_OFFLINE === 'false') {
-        const syncStoreDataParams = {
-          FunctionName: `postingly-functions-${process.env.STAGE}-sync-store-data`,
-          InvocationType: 'Event',
-          LogType: 'Tail',
-          Payload: JSON.stringify(storePayload)
-        };
-        console.log("TCL: lambda.invoke syncStoreDataParams", syncStoreDataParams)
+      await Promise.all(response.stores.map(async store => {
+        const storeKey = `shopify-${store.shopId}`;
+        console.log("TCL: storeKey1", storeKey)
+        let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+        const storeId = dbStore._id;
+        const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
+        dbStore.profiles = storeProfiles;
+        await dbStore.save();
+        const storePayload = {
+          "storeId": dbStore._id,
+          "partnerStore": PARTNERS_SHOPIFY,
+          "collectionId": null
+        }
+        if (process.env.IS_OFFLINE === 'false') {
+          const syncStoreDataParams = {
+            FunctionName: `postingly-functions-${process.env.STAGE}-sync-store-data`,
+            InvocationType: 'Event',
+            LogType: 'Tail',
+            Payload: JSON.stringify(storePayload)
+          };
+          console.log("TCL: lambda.invoke syncStoreDataParams", syncStoreDataParams)
 
-        const syncStoreDataLambdaResponse = await lambda.invoke(syncStoreDataParams).promise();
-        console.log("TCL: syncStoreDataLambdaResponse", syncStoreDataLambdaResponse)
-      }
-      const webhookPayload = {
-        partnerStore: PARTNERS_SHOPIFY,
-        shopURL: dbStore.url,
-        accessToken: dbStore.partnerToken
-      }
-      if (process.env.IS_OFFLINE === 'false') {
-        const webhookParams = {
-          FunctionName: `postingly-functions-${process.env.STAGE}-get-webhooks`,
-          InvocationType: 'Event',
-          LogType: 'Tail',
-          Payload: JSON.stringify(webhookPayload)
-        };
-        console.log("TCL: lambda.invoke webhookParams", webhookParams)
+          const syncStoreDataLambdaResponse = await lambda.invoke(syncStoreDataParams).promise();
+          console.log("TCL: syncStoreDataLambdaResponse", syncStoreDataLambdaResponse)
+        } else {
+          const PartnerShopify = shared.PartnerShopify;
+          await PartnerShopify.syncStoreData(storePayload);
+        }
+        const webhookPayload = {
+          partnerStore: PARTNERS_SHOPIFY,
+          shopURL: dbStore.url,
+          accessToken: dbStore.partnerToken
+        }
+        if (process.env.IS_OFFLINE === 'false') {
+          const webhookParams = {
+            FunctionName: `postingly-functions-${process.env.STAGE}-get-webhooks`,
+            InvocationType: 'Event',
+            LogType: 'Tail',
+            Payload: JSON.stringify(webhookPayload)
+          };
+          console.log("TCL: lambda.invoke webhookParams", webhookParams)
 
-        const webhookLambdaResponse = await lambda.invoke(webhookParams).promise();
-        console.log("TCL: webhookLambdaResponse", webhookLambdaResponse)
-      }
-    }));
+          const webhookLambdaResponse = await lambda.invoke(webhookParams).promise();
+          console.log("TCL: webhookLambdaResponse", webhookLambdaResponse)
+        }
+      }));
+    } catch (error) {
+      console.log("TCL: error", error)
+
+    }
   },
+
   createProfile: async function (storeId, profile, parentId) {
     const ProfileModel = shared.ProfileModel;
     let profileService = '';
@@ -416,37 +485,83 @@ module.exports = {
       profileService = BUFFER_SERVICE;
       profileServiceProfile = BUFFER_INSTAGRAM_BUSINESS;
     }
-    const uniqKey = `${profileService}-${storeId}-${profile.serviceUserId}`;
-    let dbProfile = await ProfileModel.findOne({ uniqKey: uniqKey });
-    console.log('------------------');
-    console.log("TCL: dbProfile DB", dbProfile)
-    console.log('------------------');
-
-    if (_.isNull(dbProfile)) {
-      const profileParams = {
-        store: storeId,
-        parent: (!_.isNull(parentId) ? parentId._id : null),
-        name: profile.name,
-        uniqKey: uniqKey,
-        avatarUrl: profile.avatarUrl,
-        serviceUserId: profile.serviceUserId,
-        serviceUsername: profile.serviceUsername,
-        profileURL: profile.profileURL,
-        accessToken: profile.accessToken,
-        accessTokenSecret: profile.accessTokenSecret,
-        service: profileService,
-        serviceProfile: profileServiceProfile,
-        bufferId: profile.bufferId,
-        isConnected: (profile.isConnected === '0') ? false : true,
-        isTokenExpired: (profile.isTokenExpired === '0') ? false : true,
-        isSharePossible: isSharePossible,
-        fbDefaultAlbum: profile.fbDefaultAlbum,
-      };
-      dbProfile = await ProfileModel.create(profileParams);
+    const uniqKey = `${profileServiceProfile}-${storeId}-${profile.serviceUserId}`;
+    const dbProfile = {
+      updateOne: {
+        filter: { uniqKey: uniqKey },
+        update: {
+          store: storeId,
+          parent: (!_.isNull(parentId) ? parentId._id : null),
+          name: profile.name,
+          uniqKey: uniqKey,
+          avatarUrl: profile.avatarUrl,
+          serviceUserId: profile.serviceUserId,
+          serviceUsername: profile.serviceUsername,
+          profileURL: profile.profileURL,
+          accessToken: profile.accessToken,
+          accessTokenSecret: profile.accessTokenSecret,
+          service: profileService,
+          serviceProfile: profileServiceProfile,
+          bufferId: profile.bufferId,
+          isConnected: (profile.isConnected === '0') ? false : true,
+          isTokenExpired: (profile.isTokenExpired === '0') ? false : true,
+          isSharePossible: isSharePossible,
+          fbDefaultAlbum: profile.fbDefaultAlbum,
+        },
+        upsert: true
+      }
     }
+    // let dbProfile = await ProfileModel.findOne({ uniqKey: uniqKey });
+    // console.log('------------------');
+    // console.log("TCL: dbProfile DB", dbProfile)
+    // console.log('------------------');
+
+    // if (_.isNull(dbProfile)) {
+    //   const profileParams = {
+    //     store: storeId,
+    //     parent: (!_.isNull(parentId) ? parentId._id : null),
+    //     name: profile.name,
+    //     uniqKey: uniqKey,
+    //     avatarUrl: profile.avatarUrl,
+    //     serviceUserId: profile.serviceUserId,
+    //     serviceUsername: profile.serviceUsername,
+    //     profileURL: profile.profileURL,
+    //     accessToken: profile.accessToken,
+    //     accessTokenSecret: profile.accessTokenSecret,
+    //     service: profileService,
+    //     serviceProfile: profileServiceProfile,
+    //     bufferId: profile.bufferId,
+    //     isConnected: (profile.isConnected === '0') ? false : true,
+    //     isTokenExpired: (profile.isTokenExpired === '0') ? false : true,
+    //     isSharePossible: isSharePossible,
+    //     fbDefaultAlbum: profile.fbDefaultAlbum,
+    //   };
+    //   dbProfile = await ProfileModel.create(profileParams);
+    // }
     console.log('===================');
     console.log("TCL: dbProfile", dbProfile)
     console.log('===================');
     return dbProfile;
   }
 }
+async function printFiles() {
+  const files = await getFilePaths();
+
+  await Promise.all(files.map(async (file) => {
+    const contents = await fs.readFile(file, 'utf8')
+    console.log(contents)
+  }));
+}
+// async function printFiles() {
+//   await Promise.all(stores.map(async store => {
+//     await Promise.all(files.map(async (file) => {
+//       await files.reduce(async (promise, file) => {
+//         await stores.reduce(async (promise, store) => {
+//           // This line will wait for the last async function to finish.
+//           // The first iteration uses an already resolved Promise
+//           // so, it will immediately continue.
+//           await promise;
+//           const contents = await fs.readFile(file, 'utf8');
+//           console.log(contents);
+//         }, Promise.resolve());
+//       }

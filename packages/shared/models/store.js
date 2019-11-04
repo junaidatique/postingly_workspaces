@@ -99,20 +99,24 @@ const storeSchema = new mongoose.Schema({
     type: String
   },
   numberOfProducts: {
-    type: Number
+    type: Number,
+    default: 0
   },
   numberOfConnectedProfiles: {
     type: Number,
     default: 0
   },
   noOfActiveProducts: {
-    type: Number
+    type: Number,
+    default: 0
   },
   numberOfScheduledPosts: {
-    type: Number
+    type: Number,
+    default: 0
   },
   numberOfPosted: {
-    type: Number
+    type: Number,
+    default: 0
   },
   productsLastUpdated: {
     type: Date,
