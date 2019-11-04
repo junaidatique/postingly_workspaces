@@ -96,10 +96,10 @@ functions:
     handler: seeddata.testFetch
   sync-stores:
     handler: seeddata.syncStores
-    # events:
-    #   - schedule:
-    #       rate: cron(*/5 * * * ? *)
-    #       enabled: true
+    events:
+      - schedule:
+          rate: cron(*/5 * * * ? *)
+          enabled: true
   
   # cognito 
   cognito-create-auth-challenge:
