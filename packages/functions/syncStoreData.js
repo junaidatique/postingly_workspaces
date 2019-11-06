@@ -34,7 +34,15 @@ module.exports = {
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
       const shopifyAPI = shared.PartnerShopify;
-      await shopifyAPI.syncProductPage(event);
+      await shopifyAPI.syncProductPage(event, context);
+    }
+  },
+  syncVariantPage: async function (event, context) {
+    console.log("TCL: syncVariantPage event", event)
+    await dbConnection.createConnection(context);
+    if (event.partnerStore == PARTNERS_SHOPIFY) {
+      const shopifyAPI = shared.PartnerShopify;
+      await shopifyAPI.syncVariantPage(event, context);
     }
   },
 }

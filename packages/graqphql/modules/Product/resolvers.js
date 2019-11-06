@@ -113,6 +113,7 @@ module.exports = {
       } else {
         // console.log("TCL: storeDetail", storeDetail)
         await PartnerShopify.syncProductPage({ storeId: storeDetail._id, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
+        await PartnerShopify.syncVariantPage({ storeId: storeDetail._id, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
       }
       const storeResult = formattedStore(storeDetail);
       return storeResult;

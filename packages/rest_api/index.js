@@ -16,15 +16,15 @@ exports.activatePayment = async function (event, context) {
 };
 exports.productsCreate = async function (event, context) {
   await dbConnection.createConnection(context);
-  return await partner.productsCreate(event, new Date());
+  return await partner.productsCreate(event, context);
 };
 exports.productsUpdate = async function (event, context) {
   await dbConnection.createConnection(context);
-  return await partner.productsUpdate(event, new Date());
+  return await partner.productsUpdate(event, context);
 };
 exports.productsDelete = async function (event, context) {
   await dbConnection.createConnection(context);
-  return await partner.productsDelete(event, new Date());
+  return await partner.productsDelete(event, context);
 };
 exports.collectionsCreate = async function (event, context) {
   await dbConnection.createConnection(context);

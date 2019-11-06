@@ -5,6 +5,14 @@ plugins:
   - serverless-dotenv-plugin
   - serverless-offline
 
+resources:
+  Resources:
+    MyQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "MyQueue"
+
+
 provider:
   name: aws
   runtime: nodejs8.10
@@ -23,6 +31,11 @@ provider:
         - lambda:InvokeFunction
       Resource:
         - arn:aws:lambda:us-east-1:*:* 
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource:
+        - arn:aws:sqs:us-east-1:*:* 
 functions:
   # create update lambda. this function recieves rule id from either 
   # manage rule resolver or from cron-create-updates-for-next-week lambda function. 
@@ -83,7 +96,12 @@ functions:
     timeout: 360 
   sync-product-page:
     handler: syncStoreData.syncProductPage
+    timeout: 360
+    reservedConcurrency: 20
+  sync-variant-page:
+    handler: syncStoreData.syncVariantPage
     timeout: 360 
+    reservedConcurrency: 20
   get-webhooks:
     handler: webhooks.getWebhooks
   data-seed:
@@ -94,6 +112,16 @@ functions:
     handler: seeddata.testRules
   fetch-test:
     handler: seeddata.testFetch
+    
+  handle-my-queue:
+    handler: seeddata.handleMyQueue
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - MyQueue
+              - Arn
+          batchSize: 1
   sync-stores:
     handler: seeddata.syncStores
     events:
