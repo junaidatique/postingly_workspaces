@@ -387,7 +387,7 @@ module.exports = {
         "collectionId": null
       }
       if (process.env.IS_OFFLINE === 'false') {
-        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncStoreData`;
+        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncStoreData`;
         console.log("TCL: QueueUrl", QueueUrl)
         const params = {
           MessageBody: JSON.stringify(storePayload),
@@ -508,7 +508,7 @@ module.exports = {
     // console.log("TCL: syncProductPayload", syncProductPayload)
     if (process.env.IS_OFFLINE === 'false') {
       // syncing the custome colltions 
-      const QueueUrlCustomCollectionPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncCollectionPage`;
+      const QueueUrlCustomCollectionPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncCollectionPage`;
       console.log("TCL: QueueUrlCustomCollectionPayload", QueueUrlCustomCollectionPayload)
       const paramsCustomCollectionPayload = {
         MessageBody: JSON.stringify(syncCustomCollectionPayload),
@@ -520,7 +520,7 @@ module.exports = {
 
       // syncing the smart collections
       // syncing the custome colltions 
-      const QueueUrlSmartCollectionPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncCollectionPage`;
+      const QueueUrlSmartCollectionPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncCollectionPage`;
       console.log("TCL: QueueUrlSmartCollectionPayload", QueueUrlSmartCollectionPayload)
       const paramsSmartCollectionPayload = {
         MessageBody: JSON.stringify(syncSmartCollectionPayload),
@@ -531,7 +531,7 @@ module.exports = {
       console.log("TCL: responseSmartCollectionPayload", responseSmartCollectionPayload)
 
       // syncing products
-      const QueueUrlProductPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncProductPage`;
+      const QueueUrlProductPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncProductPage`;
       console.log("TCL: QueueUrlProductPayload", QueueUrlProductPayload)
       const paramsProductPayload = {
         MessageBody: JSON.stringify(syncProductPayload),
@@ -542,7 +542,7 @@ module.exports = {
       console.log("TCL: responseProductPayload", responseProductPayload)
 
       // syncing Variants
-      const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncVariantPage`;
+      const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncVariantPage`;
       console.log("TCL: QueueUrlVariantPayload", QueueUrlVariantPayload)
       const paramsVariantPayload = {
         MessageBody: JSON.stringify(syncVariantPayload),
@@ -593,7 +593,7 @@ module.exports = {
         if (!_.isNull(pageInfo)) {
           if (process.env.IS_OFFLINE === 'false') {
             // syncing the custome colltions 
-            const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncCollectionPage`;
+            const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncCollectionPage`;
             console.log("TCL: QueueUrl", QueueUrl)
             const params = {
               MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo }),
@@ -612,7 +612,7 @@ module.exports = {
       await Promise.all(dbCollections.map(async collection => {
         if (process.env.IS_OFFLINE === 'false') {
           // syncing products
-          const QueueUrlProductPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncProductPage`;
+          const QueueUrlProductPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncProductPage`;
           console.log("TCL: QueueUrlProductPayload", QueueUrlProductPayload)
           const paramsProductPayload = {
             MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null }),
@@ -623,7 +623,7 @@ module.exports = {
           console.log("TCL: responseProductPayload", responseProductPayload)
           // sync variant products
           // syncing Variants
-          const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncVariantPage`;
+          const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncVariantPage`;
           console.log("TCL: QueueUrl", QueueUrlVariantPayload)
           const paramsVariantPayload = {
             MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null }),
@@ -728,7 +728,7 @@ module.exports = {
       if (!_.isNull(pageInfo)) {
         if (process.env.IS_OFFLINE === 'false') {
           // syncing products
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncProductPage`;
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncProductPage`;
           console.log("TCL: QueueUrl", QueueUrl)
           const params = {
             MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo }),
@@ -792,7 +792,7 @@ module.exports = {
       if (!_.isNull(pageInfo)) {
         if (process.env.IS_OFFLINE === 'false') {
           // syncing Variants
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncVariantPage`;
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncVariantPage`;
           console.log("TCL: QueueUrl", QueueUrl)
           const params = {
             MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo }),
@@ -1157,7 +1157,7 @@ module.exports = {
       if (process.env.IS_OFFLINE === 'false') {
         const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
         await Promise.all(rules.map(async rule => {
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_scheduleUpdates`;
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}ShareUpdates`;
           console.log("TCL: QueueUrl", QueueUrl)
           const params = {
             MessageBody: JSON.stringify({ ruleId: rule }),

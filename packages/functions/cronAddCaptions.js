@@ -38,7 +38,7 @@ module.exports = {
           if (!_.isEmpty(event) && !_.isUndefined(event) && !_.isNull(event.storeId)) {
             storeId = event.storeId;
           }
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_changeCaption`;
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}ChangeCaption`;
           console.log("TCL: QueueUrl", QueueUrl)
           const params = {
             MessageBody: JSON.stringify({ service: service, storeId: storeId }),

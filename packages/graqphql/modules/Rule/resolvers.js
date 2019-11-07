@@ -102,7 +102,7 @@ module.exports = {
       }
     }
     if (process.env.IS_OFFLINE === 'false') {
-      const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_createUpdates`;
+      const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}CreateUpdates`;
       console.log("TCL: QueueUrl", QueueUrl)
       const params = {
         MessageBody: JSON.stringify({ ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id }),

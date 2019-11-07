@@ -247,19 +247,7 @@ module.exports = {
   //   await createUpdates.createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
   // },
   testFetch: async function (event, context) {
-    console.log("TCL: event", event)
-    let sqs;
-    AWS.config.update({ region: process.env.AWS_REGION });
-    sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
-    const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_MyQueue`;
-    console.log("TCL: QueueUrl", QueueUrl)
-    var params = {
-      MessageBody: JSON.stringify({ store: 123, active: true }),
-      QueueUrl: QueueUrl
-    };
-    console.log("TCL: params", params)
-    const response = await sqs.sendMessage(params).promise();
-    console.log("TCL: response", response)
+
   },
   handleMyQueue: async function (event, context) {
     console.log("TCL: context", context)
@@ -395,7 +383,7 @@ module.exports = {
       //         "collectionId": null
       //       }
       //       if (process.env.IS_OFFLINE === 'false') {
-      //         const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncStoreData`;
+      //         const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncStoreData`;
       //         console.log("TCL: QueueUrl", QueueUrl)
       //         const params = {
       //           MessageBody: JSON.stringify(storePayload),

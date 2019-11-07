@@ -22,7 +22,7 @@ module.exports = {
       const rules = await RuleModel.find({ active: true });
       if (process.env.IS_OFFLINE === 'false') {
         await Promise.all(rules.map(async ruleDetail => {
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_createUpdates`;
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}CreateUpdates`;
           console.log("TCL: QueueUrl", QueueUrl)
           const params = {
             MessageBody: JSON.stringify({ ruleId: ruleDetail._id, scheduleWeek: 'next' }),
@@ -156,7 +156,7 @@ module.exports = {
       console.log("TCL: event.ruleIdForScheduler", event.ruleIdForScheduler)
       if (!_.isNull(event.ruleIdForScheduler) && !_.isUndefined(event.ruleIdForScheduler)) {
         if (process.env.IS_OFFLINE === 'false') {
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_scheduleUpdates`;
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}ScheduleUpdates`;
           console.log("TCL: QueueUrl", QueueUrl)
           const params = {
             MessageBody: JSON.stringify({ ruleId: event.ruleIdForScheduler }),

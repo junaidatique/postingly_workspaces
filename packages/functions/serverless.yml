@@ -7,45 +7,85 @@ plugins:
 
 resources:
   Resources:
-    createUpdates:
+    stagingCreateUpdates:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: ${env:STAGE}_createUpdates
+        QueueName: stagingCreateUpdates
         VisibilityTimeout: 3600
-    scheduleUpdates:
+    stagingScheduleUpdates:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: ${env:STAGE}_scheduleUpdates
+        QueueName: stagingScheduleUpdates
         VisibilityTimeout: 3600
-    changeCaption:
+    stagingChangeCaption:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: ${env:STAGE}_changeCaption
+        QueueName: stagingChangeCaption
         VisibilityTimeout: 3600
-    shareUpdates:
+    stagingShareUpdates:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: ${env:STAGE}_shareUpdates
+        QueueName: stagingShareUpdates
         VisibilityTimeout: 3600
-    syncStoreData:
+    stagingSyncStoreData:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: ${env:STAGE}_syncStoreData
+        QueueName: stagingSyncStoreData
         VisibilityTimeout: 3600
-    syncCollectionPage:
+    stagingSyncCollectionPage:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: ${env:STAGE}_syncCollectionPage
+        QueueName: stagingSyncCollectionPage
         VisibilityTimeout: 3600
-    syncProductPage:
+    stagingSyncProductPage:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: ${env:STAGE}_syncProductPage
+        QueueName: stagingSyncProductPage
         VisibilityTimeout: 3600
-    syncVariantPage:
+    stagingSyncVariantPage:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: ${env:STAGE}_syncVariantPage
+        QueueName: stagingSyncVariantPage
+        VisibilityTimeout: 3600
+    productionCreateUpdates:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionCreateUpdates
+        VisibilityTimeout: 3600
+    productionScheduleUpdates:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionScheduleUpdates
+        VisibilityTimeout: 3600
+    productionChangeCaption:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionChangeCaption
+        VisibilityTimeout: 3600
+    productionShareUpdates:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionShareUpdates
+        VisibilityTimeout: 3600
+    productionSyncStoreData:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionSyncStoreData
+        VisibilityTimeout: 3600
+    productionSyncCollectionPage:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionSyncCollectionPage
+        VisibilityTimeout: 3600
+    productionSyncProductPage:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionSyncProductPage
+        VisibilityTimeout: 3600
+    productionSyncVariantPage:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionSyncVariantPage
         VisibilityTimeout: 3600
 
 

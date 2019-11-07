@@ -30,7 +30,7 @@ module.exports = {
       );
       if (process.env.IS_OFFLINE === 'false') {
         await Promise.all(rules.map(async rule => {
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_scheduleUpdates`;
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}ShareUpdates`;
           console.log("TCL: QueueUrl", QueueUrl)
           const params = {
             MessageBody: JSON.stringify({ ruleId: rule }),

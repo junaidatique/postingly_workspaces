@@ -103,7 +103,7 @@ module.exports = {
           "partnerStore": storeDetail.partner,
           "collectionId": null
         }
-        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncStoreData`;
+        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncStoreData`;
         console.log("TCL: QueueUrl", QueueUrl)
         const params = {
           MessageBody: JSON.stringify(storePayload),
