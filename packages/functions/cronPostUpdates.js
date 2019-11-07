@@ -27,16 +27,15 @@ module.exports = {
       // console.log("TCL: updates", updates)
       if (process.env.IS_OFFLINE === 'false') {
         await Promise.all(updates.map(async update => {
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_shareUpdates`;
+          console.log("TCL: QueueUrl", QueueUrl)
           const params = {
-            FunctionName: `postingly-functions-${process.env.STAGE}-share-updates`,
-            InvocationType: 'Event',
-            LogType: 'Tail',
-            Payload: JSON.stringify({ updateId: update._id })
+            MessageBody: JSON.stringify({ updateId: update._id }),
+            QueueUrl: QueueUrl
           };
-          console.log("TCL: lambda.invoke params", params)
-          console.log("TCL: lambda", lambda)
-          const lambdaResponse = await lambda.invoke(params).promise();
-          console.log("TCL: lambdaResponse", lambdaResponse)
+          console.log("TCL: params", params)
+          const response = await sqs.sendMessage(params).promise();
+          console.log("TCL: response", response)
         }));
       } else {
         console.log("TCL: cronPostUpdates.share event", event);

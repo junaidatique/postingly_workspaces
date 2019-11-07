@@ -16,11 +16,14 @@ const {
   PRODUCT_SORT_SCHEDULED_DESC
 } = require('shared/constants');
 let lambda;
+let sqs;
 const AWS = require('aws-sdk');
 if (process.env.IS_OFFLINE === 'false') {
   lambda = new AWS.Lambda({
     region: process.env.AWS_REGION //change to your region
   });
+  AWS.config.update({ region: process.env.AWS_REGION });
+  sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 }
 
 module.exports = {
@@ -100,16 +103,15 @@ module.exports = {
           "partnerStore": storeDetail.partner,
           "collectionId": null
         }
-        const syncStoreDataParams = {
-          FunctionName: `postingly-functions-${process.env.STAGE}-sync-store-data`,
-          InvocationType: 'Event',
-          LogType: 'Tail',
-          Payload: JSON.stringify(storePayload)
+        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncStoreData`;
+        console.log("TCL: QueueUrl", QueueUrl)
+        const params = {
+          MessageBody: JSON.stringify(storePayload),
+          QueueUrl: QueueUrl
         };
-        console.log("TCL: lambda.invoke syncStoreDataParams", syncStoreDataParams)
-
-        const syncStoreDataLambdaResponse = await lambda.invoke(syncStoreDataParams).promise();
-        console.log("TCL: syncStoreDataLambdaResponse", syncStoreDataLambdaResponse)
+        console.log("TCL: params", params)
+        const response = await sqs.sendMessage(params).promise();
+        console.log("TCL: response", response)
       } else {
         // console.log("TCL: storeDetail", storeDetail)
         await PartnerShopify.syncProductPage({ storeId: storeDetail._id, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });

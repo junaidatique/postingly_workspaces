@@ -1,11 +1,9 @@
 const shared = require('shared');
-const syncStoreData = require('functions').syncStoreData.syncStoreData;
-const syncCollectionPage = require('functions').syncStoreData.syncCollectionPage;
-const syncProductPage = require('functions').syncStoreData.syncProductPage;
 const { PARTNERS_SHOPIFY } = require('shared/constants')
 module.exports = {
   execute: async function (event, context) {
     const StoreModel = shared.StoreModel;
+    const PartnerShopify = shared.PartnerShopify;
     const storeDetail = await StoreModel.findOne().limit(1)
     const storeId = storeDetail._id;
     const CollectionModel = shared.CollectionModel;
@@ -22,7 +20,7 @@ module.exports = {
     await VariantModel.collection.deleteMany({ _id: { $exists: true } });
 
 
-    await syncStoreData({
+    await PartnerShopify.syncStoreData({
       "storeId": storeId,
       "partnerStore": "shopify",
       "collectionId": null

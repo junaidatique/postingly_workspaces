@@ -11,11 +11,11 @@ let lambda;
 let sqs;
 const AWS = require('aws-sdk');
 if (process.env.IS_OFFLINE === 'false') {
-  AWS.config.update({ region: process.env.AWS_REGION });
   lambda = new AWS.Lambda({
     region: process.env.AWS_REGION //change to your region
   });
   // Create an SQS service object
+  AWS.config.update({ region: process.env.AWS_REGION });
   sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 }
 const {
@@ -248,26 +248,15 @@ module.exports = {
   // },
   testFetch: async function (event, context) {
     console.log("TCL: event", event)
+    let sqs;
+    AWS.config.update({ region: process.env.AWS_REGION });
+    sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
+    const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_MyQueue`;
+    console.log("TCL: QueueUrl", QueueUrl)
     var params = {
-      DelaySeconds: 0,
-      MessageAttributes: {
-        "Title": {
-          DataType: "String",
-          StringValue: "The Whistler"
-        },
-        "Author": {
-          DataType: "String",
-          StringValue: "John Grisham"
-        },
-        "WeeksOn": {
-          DataType: "Number",
-          StringValue: "6"
-        }
-      },
       MessageBody: JSON.stringify({ store: 123, active: true }),
-      QueueUrl: `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/MyQueue`
+      QueueUrl: QueueUrl
     };
-
     console.log("TCL: params", params)
     const response = await sqs.sendMessage(params).promise();
     console.log("TCL: response", response)
@@ -280,170 +269,168 @@ module.exports = {
 
   },
   syncStores: async function (event, context) {
-    // await dbConnection.createConnection(context);
-    // try {
+    await dbConnection.createConnection(context);
+    if (process.env.STAGE === 'production') {
+      // try {
+      //   const shopifyAPI = shared.PartnerShopify;
+      //   const StoreModel = shared.StoreModel;
+      //   const ProfileModel = shared.ProfileModel;
+      //   const url = `https://posting.ly/cron/exportStores`;
+      //   const response = await fetch(url, {
+      //     headers: {
+      //       "Accept": "application/json",
+      //       "Content-Type": "application/json",
+      //     },
+      //     method: "GET",
+      //   }).then(response => response.json());
+      //   console.log("TCL: response", response)
+      //   let parentIds = [];
+      //   if (!_.isEmpty(response.stores)) {
+      //     await Promise.all(response.stores.map(async store => {
+      //       console.log("TCL: store", store);
+      //       const shop = await shopifyAPI.getShop(store.partnerSpecificUrl, store.partnerToken);
+      //       console.log("TCL: shop1", shop)
+      //       const storeKey = `shopify-${shop.id}`;
+      //       console.log("TCL: storeKey1", storeKey)
+      //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+      //       console.log("TCL: dbStore1", dbStore)
+      //       if (dbStore === null) {
+      //         const shopParams = {
+      //           uniqKey: storeKey,
+      //           userId: shop.email,
+      //           partner: PARTNERS_SHOPIFY,
+      //           partnerId: shop.id,
+      //           partnerPlan: shop.plan_name,
+      //           title: shop.name,
+      //           url: shop.domain,
+      //           partnerSpecificUrl: shop.myshopify_domain,
+      //           partnerCreatedAt: shop.created_at,
+      //           partnerUpdatedAt: shop.updated_at,
+      //           partnerToken: store.partnerToken,
+      //           timezone: shop.iana_timezone,
+      //           moneyFormat: shop.money_format,
+      //           moneyWithCurrencyFormat: shop.money_with_currency_format,
+      //           isCharged: true,
+      //           shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
+      //           chargedMethod: PARTNERS_SHOPIFY,
+      //           chargeId: store.chargeId,
+      //           chargeDate: moment(store.chargeDate).toISOString(),
+      //           isUninstalled: false,
+      //         };
+      //         console.log("TCL: shopParams", shopParams)
+      //         dbStore = await StoreModel.create(shopParams);
+      //       }
+      //       console.log("TCL: dbStore", dbStore)
+      //       const storeId = dbStore._id;
+      //     }));
+      //     let bulkParentProfiles = [];
+      //     await Promise.all(response.profiles.map(async profile => {
+      //       const storeKey = `shopify-${profile.shopId}`;
+      //       console.log("TCL: storeKey2", storeKey)
+      //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+      //       const storeId = dbStore._id;
+      //       let parent = null;
+      //       if (!_.isUndefined(profile.parent)) {
+      //         parent = await module.exports.createProfile(storeId, profile.parent, null)
+      //         bulkParentProfiles.push(parent)
+      //       }
+      //     }));
+      //     console.log("TCL: bulkParentProfiles", bulkParentProfiles);
+      //     if (!_.isEmpty(bulkParentProfiles)) {
+      //       const pageProfiles = await ProfileModel.bulkWrite(bulkParentProfiles);
+      //     }
+      //     let bulkProfiles = [];
+      //     await Promise.all(response.profiles.map(async profile => {
+      //       const storeKey = `shopify-${profile.shopId}`;
+      //       console.log("TCL: storeKey2", storeKey)
+      //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+      //       const storeId = dbStore._id;
+      //       let parent = null;
+      //       if (!_.isUndefined(profile.parent)) {
+      //         parentObject = await module.exports.createProfile(storeId, profile.parent, null);
+      //         parent = await ProfileModel.findOne({ uniqKey: parentObject.updateOne.filter.uniqKey });
+      //         // console.log("TCL: parent", parent.updateOne.filter.uniqKey)
+      //       }
+      //       let dbProfile = await module.exports.createProfile(storeId, profile.profile, parent)
+      //       bulkProfiles.push(dbProfile);
+      //     }));
+      //     const bulkChildProfiles = [];
+      //     if (!_.isEmpty(bulkProfiles)) {
+      //       const childProfiles = await ProfileModel.bulkWrite(bulkProfiles);
+      //     }
+      //     await Promise.all(response.profiles.map(async profile => {
+      //       const storeKey = `shopify-${profile.shopId}`;
+      //       console.log("TCL: storeKey2", storeKey)
+      //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+      //       const storeId = dbStore._id;
+      //       let parent = null;
+      //       if (!_.isUndefined(profile.parent)) {
+      //         parentObject = await module.exports.createProfile(storeId, profile.parent, null);
+      //         parent = await ProfileModel.findOne({ uniqKey: parentObject.updateOne.filter.uniqKey });
+      //         const childProfiles = await ProfileModel.find({ parent: parent._id }).select('_id');
+      //         bulkChildProfiles.push({
+      //           updateOne: {
+      //             filter: { uniqKey: parentObject.updateOne.filter.uniqKey },
+      //             update: {
+      //               children: childProfiles.map(childProfile => childProfile._id),
+      //             },
+      //           }
+      //         })
+      //       }
+      //     }));
+      //     if (!_.isEmpty(bulkChildProfiles)) {
+      //       const childParentProfiles = await ProfileModel.bulkWrite(bulkChildProfiles);
+      //     }
+      //     await Promise.all(response.stores.map(async store => {
+      //       const storeKey = `shopify-${store.shopId}`;
+      //       console.log("TCL: storeKey1", storeKey)
+      //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
+      //       const storeId = dbStore._id;
+      //       const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
+      //       dbStore.profiles = storeProfiles;
+      //       await dbStore.save();
+      //       const storePayload = {
+      //         "storeId": dbStore._id,
+      //         "partnerStore": PARTNERS_SHOPIFY,
+      //         "collectionId": null
+      //       }
+      //       if (process.env.IS_OFFLINE === 'false') {
+      //         const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncStoreData`;
+      //         console.log("TCL: QueueUrl", QueueUrl)
+      //         const params = {
+      //           MessageBody: JSON.stringify(storePayload),
+      //           QueueUrl: QueueUrl
+      //         };
+      //         console.log("TCL: params", params)
+      //         const response = await sqs.sendMessage(params).promise();
+      //         console.log("TCL: response", response)
+      //       } else {
+      //         const PartnerShopify = shared.PartnerShopify;
+      //         await PartnerShopify.syncStoreData(storePayload);
+      //       }
+      //       const webhookPayload = {
+      //         partnerStore: PARTNERS_SHOPIFY,
+      //         shopURL: dbStore.url,
+      //         accessToken: dbStore.partnerToken
+      //       }
+      //       if (process.env.IS_OFFLINE === 'false') {
+      //         const webhookParams = {
+      //           FunctionName: `postingly-functions-${process.env.STAGE}-get-webhooks`,
+      //           InvocationType: 'Event',
+      //           LogType: 'Tail',
+      //           Payload: JSON.stringify(webhookPayload)
+      //         };
+      //         console.log("TCL: lambda.invoke webhookParams", webhookParams)
 
-
-    //   const shopifyAPI = shared.PartnerShopify;
-    //   const StoreModel = shared.StoreModel;
-    //   const ProfileModel = shared.ProfileModel;
-    //   const url = `https://posting.ly/cron/exportStores`;
-    //   const response = await fetch(url, {
-    //     headers: {
-    //       "Accept": "application/json",
-    //       "Content-Type": "application/json",
-    //     },
-    //     method: "GET",
-    //   }).then(response => response.json());
-    //   console.log("TCL: response", response)
-    //   let parentIds = [];
-    //   if (!_.isEmpty(response.stores)) {
-    //     await Promise.all(response.stores.map(async store => {
-    //       console.log("TCL: store", store);
-    //       const shop = await shopifyAPI.getShop(store.partnerSpecificUrl, store.partnerToken);
-    //       console.log("TCL: shop1", shop)
-    //       const storeKey = `shopify-${shop.id}`;
-    //       console.log("TCL: storeKey1", storeKey)
-    //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
-    //       console.log("TCL: dbStore1", dbStore)
-    //       if (dbStore === null) {
-    //         const shopParams = {
-    //           uniqKey: storeKey,
-    //           userId: shop.email,
-    //           partner: PARTNERS_SHOPIFY,
-    //           partnerId: shop.id,
-    //           partnerPlan: shop.plan_name,
-    //           title: shop.name,
-    //           url: shop.domain,
-    //           partnerSpecificUrl: shop.myshopify_domain,
-    //           partnerCreatedAt: shop.created_at,
-    //           partnerUpdatedAt: shop.updated_at,
-    //           partnerToken: store.partnerToken,
-    //           timezone: shop.iana_timezone,
-    //           moneyFormat: shop.money_format,
-    //           moneyWithCurrencyFormat: shop.money_with_currency_format,
-    //           isCharged: true,
-    //           shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
-    //           chargedMethod: PARTNERS_SHOPIFY,
-    //           chargeId: store.chargeId,
-    //           chargeDate: moment(store.chargeDate).toISOString(),
-    //           isUninstalled: false,
-    //         };
-    //         console.log("TCL: shopParams", shopParams)
-    //         dbStore = await StoreModel.create(shopParams);
-    //       }
-    //       console.log("TCL: dbStore", dbStore)
-    //       const storeId = dbStore._id;
-    //     }));
-    //     let bulkParentProfiles = [];
-    //     await Promise.all(response.profiles.map(async profile => {
-    //       const storeKey = `shopify-${profile.shopId}`;
-    //       console.log("TCL: storeKey2", storeKey)
-    //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
-    //       const storeId = dbStore._id;
-    //       let parent = null;
-    //       if (!_.isUndefined(profile.parent)) {
-    //         parent = await module.exports.createProfile(storeId, profile.parent, null)
-    //         bulkParentProfiles.push(parent)
-    //       }
-    //     }));
-    //     console.log("TCL: bulkParentProfiles", bulkParentProfiles);
-    //     if (!_.isEmpty(bulkParentProfiles)) {
-    //       const pageProfiles = await ProfileModel.bulkWrite(bulkParentProfiles);
-    //     }
-    //     let bulkProfiles = [];
-    //     await Promise.all(response.profiles.map(async profile => {
-    //       const storeKey = `shopify-${profile.shopId}`;
-    //       console.log("TCL: storeKey2", storeKey)
-    //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
-    //       const storeId = dbStore._id;
-    //       let parent = null;
-    //       if (!_.isUndefined(profile.parent)) {
-    //         parentObject = await module.exports.createProfile(storeId, profile.parent, null);
-    //         parent = await ProfileModel.findOne({ uniqKey: parentObject.updateOne.filter.uniqKey });
-    //         // console.log("TCL: parent", parent.updateOne.filter.uniqKey)
-    //       }
-    //       let dbProfile = await module.exports.createProfile(storeId, profile.profile, parent)
-    //       bulkProfiles.push(dbProfile);
-    //     }));
-    //     const bulkChildProfiles = [];
-    //     if (!_.isEmpty(bulkProfiles)) {
-    //       const childProfiles = await ProfileModel.bulkWrite(bulkProfiles);
-    //     }
-    //     await Promise.all(response.profiles.map(async profile => {
-    //       const storeKey = `shopify-${profile.shopId}`;
-    //       console.log("TCL: storeKey2", storeKey)
-    //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
-    //       const storeId = dbStore._id;
-    //       let parent = null;
-    //       if (!_.isUndefined(profile.parent)) {
-    //         parentObject = await module.exports.createProfile(storeId, profile.parent, null);
-    //         parent = await ProfileModel.findOne({ uniqKey: parentObject.updateOne.filter.uniqKey });
-    //         const childProfiles = await ProfileModel.find({ parent: parent._id }).select('_id');
-    //         bulkChildProfiles.push({
-    //           updateOne: {
-    //             filter: { uniqKey: parentObject.updateOne.filter.uniqKey },
-    //             update: {
-    //               children: childProfiles.map(childProfile => childProfile._id),
-    //             },
-    //           }
-    //         })
-    //       }
-    //     }));
-    //     if (!_.isEmpty(bulkChildProfiles)) {
-    //       const childParentProfiles = await ProfileModel.bulkWrite(bulkChildProfiles);
-    //     }
-    //     await Promise.all(response.stores.map(async store => {
-    //       const storeKey = `shopify-${store.shopId}`;
-    //       console.log("TCL: storeKey1", storeKey)
-    //       let dbStore = await StoreModel.findOne({ uniqKey: storeKey });
-    //       const storeId = dbStore._id;
-    //       const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
-    //       dbStore.profiles = storeProfiles;
-    //       await dbStore.save();
-    //       const storePayload = {
-    //         "storeId": dbStore._id,
-    //         "partnerStore": PARTNERS_SHOPIFY,
-    //         "collectionId": null
-    //       }
-    //       if (process.env.IS_OFFLINE === 'false') {
-    //         const syncStoreDataParams = {
-    //           FunctionName: `postingly-functions-${process.env.STAGE}-sync-store-data`,
-    //           InvocationType: 'Event',
-    //           LogType: 'Tail',
-    //           Payload: JSON.stringify(storePayload)
-    //         };
-    //         console.log("TCL: lambda.invoke syncStoreDataParams", syncStoreDataParams)
-
-    //         const syncStoreDataLambdaResponse = await lambda.invoke(syncStoreDataParams).promise();
-    //         console.log("TCL: syncStoreDataLambdaResponse", syncStoreDataLambdaResponse)
-    //       } else {
-    //         const PartnerShopify = shared.PartnerShopify;
-    //         await PartnerShopify.syncStoreData(storePayload);
-    //       }
-    //       const webhookPayload = {
-    //         partnerStore: PARTNERS_SHOPIFY,
-    //         shopURL: dbStore.url,
-    //         accessToken: dbStore.partnerToken
-    //       }
-    //       if (process.env.IS_OFFLINE === 'false') {
-    //         const webhookParams = {
-    //           FunctionName: `postingly-functions-${process.env.STAGE}-get-webhooks`,
-    //           InvocationType: 'Event',
-    //           LogType: 'Tail',
-    //           Payload: JSON.stringify(webhookPayload)
-    //         };
-    //         console.log("TCL: lambda.invoke webhookParams", webhookParams)
-
-    //         const webhookLambdaResponse = await lambda.invoke(webhookParams).promise();
-    //         console.log("TCL: webhookLambdaResponse", webhookLambdaResponse)
-    //       }
-    //     }));
-    //   }
-    // } catch (error) {
-    //   console.log("TCL: error", error)
-
-    // }
+      //         const webhookLambdaResponse = await lambda.invoke(webhookParams).promise();
+      //         console.log("TCL: webhookLambdaResponse", webhookLambdaResponse)
+      //       }
+      //     }));
+      //   }
+      // } catch (error) {
+      //   console.log("TCL: error", error)
+      // }
+    }
   },
 
   createProfile: async function (storeId, profile, parentId) {

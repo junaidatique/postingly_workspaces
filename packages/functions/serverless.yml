@@ -7,10 +7,46 @@ plugins:
 
 resources:
   Resources:
-    MyQueue:
+    createUpdates:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: "MyQueue"
+        QueueName: ${env:STAGE}_createUpdates
+        VisibilityTimeout: 3600
+    scheduleUpdates:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${env:STAGE}_scheduleUpdates
+        VisibilityTimeout: 3600
+    changeCaption:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${env:STAGE}_changeCaption
+        VisibilityTimeout: 3600
+    shareUpdates:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${env:STAGE}_shareUpdates
+        VisibilityTimeout: 3600
+    syncStoreData:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${env:STAGE}_syncStoreData
+        VisibilityTimeout: 3600
+    syncCollectionPage:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${env:STAGE}_syncCollectionPage
+        VisibilityTimeout: 3600
+    syncProductPage:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${env:STAGE}_syncProductPage
+        VisibilityTimeout: 3600
+    syncVariantPage:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${env:STAGE}_syncVariantPage
+        VisibilityTimeout: 3600
 
 
 provider:
@@ -42,6 +78,11 @@ functions:
   # this function creates updates with rule id. 
   create-updates:
     handler: createUpdates.createUpdates
+    reservedConcurrency: 30
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}_createUpdates
+          batchSize: 1
   # creates update for the next week. this lambda will execute on every 
   # wednesday midnight
   cron-create-updates-for-next-week:
@@ -61,6 +102,11 @@ functions:
   # This updates simply takes the rule id and schedule all the not scheduled updates. 
   schedule-updates:
     handler: scheduleProductUpdates.schedule
+    reservedConcurrency: 30
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}_scheduleUpdates
+          batchSize: 1
   # This lambda takes the cron and add captions to the scheduled updates. plus also approve them. 
   cron-add-captions:
     handler: cronAddCaptions.execute
@@ -71,6 +117,11 @@ functions:
   # This updates simply takes the rule id and schedule all the not scheduled updates. 
   change-caption:
     handler: changeCaption.update
+    reservedConcurrency: 30
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}_changeCaption
+          batchSize: 1
   # this lambda runs every 5 minutes and call share-updates lambda to post updates. 
   cron-post-updates:
     handler: cronPostUpdates.share
@@ -81,16 +132,28 @@ functions:
   # This lambda post updates to social media. 
   share-updates:
     handler: shareUpdates.share
-  
-  
-  
+    reservedConcurrency: 20
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}_shareUpdates
+          batchSize: 1
   #  product sync data.
   sync-store-data:
     handler: syncStoreData.syncStoreData  
+    reservedConcurrency: 10
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}_syncStoreData
+          batchSize: 1
   sync-collections:
     handler: syncStoreData.syncCollections
   sync-collection-page:
     handler: syncStoreData.syncCollectionPage
+    reservedConcurrency: 10
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}_syncCollectionPage
+          batchSize: 1
   sync-products:
     handler: syncStoreData.syncProducts
     timeout: 360 
@@ -98,10 +161,18 @@ functions:
     handler: syncStoreData.syncProductPage
     timeout: 360
     reservedConcurrency: 20
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}_syncProductPage
+          batchSize: 1
   sync-variant-page:
     handler: syncStoreData.syncVariantPage
     timeout: 360 
     reservedConcurrency: 20
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}_syncVariantPage
+          batchSize: 1
   get-webhooks:
     handler: webhooks.getWebhooks
   data-seed:
@@ -112,16 +183,7 @@ functions:
     handler: seeddata.testRules
   fetch-test:
     handler: seeddata.testFetch
-    
-  handle-my-queue:
-    handler: seeddata.handleMyQueue
-    events:
-      - sqs:
-          arn:
-            Fn::GetAtt:
-              - MyQueue
-              - Arn
-          batchSize: 1
+
   sync-stores:
     handler: seeddata.syncStores
     events:

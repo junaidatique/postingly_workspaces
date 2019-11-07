@@ -5,8 +5,15 @@ const dbConnection = require('./db');
 const { APPROVED, PENDING, SCHEDULE_TYPE_VARIANT, SCHEDULE_TYPE_PRODUCT, TWITTER_PROFILE, BUFFER_TWITTER_PROFILE } = require('shared/constants');
 
 module.exports = {
-  update: async function (event, context) {
-    console.log("TCL: event", event)
+  update: async function (eventSQS, context) {
+    let event;
+    console.log("TCL: changeCaption update eventSQS", eventSQS)
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: changeCaption update event", event)
     await dbConnection.createConnection(context);
     try {
       const UpdateModel = shared.UpdateModel;

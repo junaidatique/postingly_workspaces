@@ -208,7 +208,7 @@ module.exports = {
       const pageResponse = await pagesDetailResponse.json();
       if (pagesDetailResponse.status === 200) {
         console.log("FB getPages Recieved", pageResponse);
-        if (!_.isUndefined(pageResponse.accounts) && !_.isEmpty(pageResponse.accounts)) {
+        if (!_.isUndefined(pageResponse.accounts) && !_.isNull(pageResponse.accounts) && !_.isEmpty(pageResponse.accounts.data)) {
           const bulkProfileInsert = pageResponse.accounts.data.map(pageProfile => {
             const uniqKey = `${FACEBOOK_PAGE}-${storeId}-${pageProfile.id}`;
             return {
@@ -231,8 +231,8 @@ module.exports = {
               }
             }
           });
+          const pageProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
         }
-        const pageProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
         const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
         const store = await StoreModel.findById(storeId);
         store.profiles = storeProfiles;

@@ -1,4 +1,5 @@
 const shared = require('shared');
+const _ = require('lodash');
 const {
   FACEBOOK_SERVICE, POST_AS_OPTION_FB_ALBUM, POST_AS_OPTION_FB_LINK, POST_AS_OPTION_FB_PHOTO,
   TWITTER_SERVICE, TWITTER_PROFILE, BUFFER_SERVICE
@@ -8,7 +9,15 @@ const TwitterService = require('shared').TwitterService;
 const BufferService = require('shared').BufferService;
 const dbConnection = require('./db');
 module.exports = {
-  share: async function (event, context) {
+  share: async function (eventSQS, context) {
+    let event;
+    console.log("TCL: shareUpdates eventSQS", eventSQS)
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: shareUpdates event", event)
     await dbConnection.createConnection(context);
     const UpdateModel = shared.UpdateModel;
     const update = await UpdateModel.findById(event.updateId);

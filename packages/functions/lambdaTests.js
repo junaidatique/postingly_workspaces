@@ -16,25 +16,24 @@ module.exports = {
         const ProductModel = shared.ProductModel;
         const storeDetail = await StoreModel.findOne()
         console.log("TCL: storeDetail", storeDetail)
-        const productCount = await ProductModel.countDocuments({ store: storeDetail._id, active: true });
-        console.log("TCL: productCount", productCount)
-        // const UpdateModel = shared.UpdateModel;
-        // const storeId = storeDetail._id;
-        // const RuleModel = shared.RuleModel;
 
-        // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
-        // const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
-        // await createUpdates({ ruleId: ruleDetail._id });
+        const UpdateModel = shared.UpdateModel;
+        const storeId = storeDetail._id;
+        const RuleModel = shared.RuleModel;
+
+        await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+        const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
+        await createUpdates({ ruleId: ruleDetail._id });
         // await createUpdatesforNextWeek();
         // await cronThisWeekRulesForUpdates();
 
-        // await schedule({ ruleId: ruleDetail._id });
+        await schedule({ ruleId: ruleDetail._id });
         // await cronAddCaptions();
-        // await changeCaption({ service: BUFFER_SERVICE, storeId: null });
+        await changeCaption({ service: FACEBOOK_SERVICE, storeId: null });
         // await cronPostUpdates();
-        // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
+        updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
         // console.log("TCL: updates", updates)
-        // await shareUpdates({ updateId: updates._id });
+        await shareUpdates({ updateId: updates._id });
 
 
     }

@@ -4,11 +4,14 @@ const _ = require('lodash');
 const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
 const dbConnection = require('./db');
 let lambda;
+let sqs;
 const AWS = require('aws-sdk');
 if (process.env.IS_OFFLINE === 'false') {
   lambda = new AWS.Lambda({
     region: process.env.AWS_REGION //change to your region
   });
+  AWS.config.update({ region: process.env.AWS_REGION });
+  sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 }
 module.exports = {
   // event = null
@@ -19,15 +22,16 @@ module.exports = {
       const rules = await RuleModel.find({ active: true });
       if (process.env.IS_OFFLINE === 'false') {
         await Promise.all(rules.map(async ruleDetail => {
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_createUpdates`;
+          console.log("TCL: QueueUrl", QueueUrl)
           const params = {
-            FunctionName: `postingly-functions-${process.env.STAGE}-create-updates`,
-            InvocationType: 'Event',
-            LogType: 'Tail',
-            Payload: JSON.stringify({ ruleId: ruleDetail._id, scheduleWeek: 'next' })
+            MessageBody: JSON.stringify({ ruleId: ruleDetail._id, scheduleWeek: 'next' }),
+            QueueUrl: QueueUrl
           };
-          console.log("TCL: lambda.invoke params", params)
-          const lambdaResponse = await lambda.invoke(params).promise();
-          console.log("TCL: lambdaResponse", lambdaResponse)
+          console.log("TCL: params", params)
+          const response = await sqs.sendMessage(params).promise();
+          console.log("TCL: response", response)
+
 
         }));
       } else {
@@ -39,8 +43,15 @@ module.exports = {
     }
   },
   // event = { ruleId: ruleDetail._id, scheduleWeek: "next" | datetime | undefined  }
-  createUpdates: async function (event, context) {
-    console.log("TCL: event", event)
+  createUpdates: async function (eventSQS, context) {
+    let event;
+    console.log("TCL: createUpdates eventSQS", eventSQS)
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: createUpdates event", event)
     await dbConnection.createConnection(context);
     try {
       let updateTimes = [];
@@ -145,16 +156,15 @@ module.exports = {
       console.log("TCL: event.ruleIdForScheduler", event.ruleIdForScheduler)
       if (!_.isNull(event.ruleIdForScheduler) && !_.isUndefined(event.ruleIdForScheduler)) {
         if (process.env.IS_OFFLINE === 'false') {
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_scheduleUpdates`;
+          console.log("TCL: QueueUrl", QueueUrl)
           const params = {
-            FunctionName: `postingly-functions-${process.env.STAGE}-schedule-updates`,
-            InvocationType: 'Event',
-            LogType: 'Tail',
-            Payload: JSON.stringify({ ruleId: event.ruleIdForScheduler })
+            MessageBody: JSON.stringify({ ruleId: event.ruleIdForScheduler }),
+            QueueUrl: QueueUrl
           };
-          console.log("TCL: lambda.invoke params", params)
-          console.log("TCL: lambda", lambda)
-          const lambdaResponse = await lambda.invoke(params).promise();
-          console.log("TCL: lambdaResponse", lambdaResponse)
+          console.log("TCL: params", params)
+          const response = await sqs.sendMessage(params).promise();
+          console.log("TCL: response", response)
         } else {
           console.log("TCL: cronThisWeekRulesForUpdates event", event)
         }

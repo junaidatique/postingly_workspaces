@@ -20,11 +20,15 @@ const querystring = require('querystring')
 const jsonwebtoken = require('jsonwebtoken');
 
 let lambda;
+let sqs;
+
 const AWS = require('aws-sdk');
 if (process.env.IS_OFFLINE === 'false') {
   lambda = new AWS.Lambda({
     region: process.env.AWS_REGION //change to your region
   });
+  AWS.config.update({ region: process.env.AWS_REGION });
+  sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 }
 module.exports = {
   getAuthURL: async function (event, now) {
@@ -383,16 +387,15 @@ module.exports = {
         "collectionId": null
       }
       if (process.env.IS_OFFLINE === 'false') {
-        const syncStoreDataParams = {
-          FunctionName: `postingly-functions-${process.env.STAGE}-sync-store-data`,
-          InvocationType: 'Event',
-          LogType: 'Tail',
-          Payload: JSON.stringify(storePayload)
+        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncStoreData`;
+        console.log("TCL: QueueUrl", QueueUrl)
+        const params = {
+          MessageBody: JSON.stringify(storePayload),
+          QueueUrl: QueueUrl
         };
-        console.log("TCL: lambda.invoke syncStoreDataParams", syncStoreDataParams)
-
-        const syncStoreDataLambdaResponse = await lambda.invoke(syncStoreDataParams).promise();
-        console.log("TCL: syncStoreDataLambdaResponse", syncStoreDataLambdaResponse)
+        console.log("TCL: params", params)
+        const response = await sqs.sendMessage(params).promise();
+        console.log("TCL: response", response)
       } else {
         this.syncStoreData(storePayload);
       }
@@ -505,49 +508,49 @@ module.exports = {
     // console.log("TCL: syncProductPayload", syncProductPayload)
     if (process.env.IS_OFFLINE === 'false') {
       // syncing the custome colltions 
-      const syncCustomCollectionPageParams = {
-        FunctionName: `postingly-functions-${process.env.STAGE}-sync-collection-page`,
-        InvocationType: 'Event',
-        LogType: 'Tail',
-        Payload: JSON.stringify(syncCustomCollectionPayload)
+      const QueueUrlCustomCollectionPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncCollectionPage`;
+      console.log("TCL: QueueUrlCustomCollectionPayload", QueueUrlCustomCollectionPayload)
+      const paramsCustomCollectionPayload = {
+        MessageBody: JSON.stringify(syncCustomCollectionPayload),
+        QueueUrl: QueueUrlCustomCollectionPayload
       };
-      console.log("TCL: lambda.invoke syncCustomCollectionPageParams params", syncCustomCollectionPageParams)
-      const syncCustomCollectionPageLambdaResponse = await lambda.invoke(syncCustomCollectionPageParams).promise();
-      console.log("TCL: syncCustomCollectionPageLambdaResponse", syncCustomCollectionPageLambdaResponse);
+      console.log("TCL: paramsCustomCollectionPayload", paramsCustomCollectionPayload)
+      const responseCustomCollectionPayload = await sqs.sendMessage(paramsCustomCollectionPayload).promise();
+      console.log("TCL: responseCustomCollectionPayload", responseCustomCollectionPayload)
 
       // syncing the smart collections
-      const syncSmartCollectionPageParams = {
-        FunctionName: `postingly-functions-${process.env.STAGE}-sync-collection-page`,
-        InvocationType: 'Event',
-        LogType: 'Tail',
-        Payload: JSON.stringify(syncSmartCollectionPayload)
+      // syncing the custome colltions 
+      const QueueUrlSmartCollectionPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncCollectionPage`;
+      console.log("TCL: QueueUrlSmartCollectionPayload", QueueUrlSmartCollectionPayload)
+      const paramsSmartCollectionPayload = {
+        MessageBody: JSON.stringify(syncSmartCollectionPayload),
+        QueueUrl: QueueUrlSmartCollectionPayload
       };
-      console.log("TCL: lambda.invoke syncSmartCollectionPageParams params", syncSmartCollectionPageParams)
-      const syncSmartCollectionPageLambdaResponse = await lambda.invoke(syncSmartCollectionPageParams).promise();
-      console.log("TCL: syncSmartCollectionPageLambdaResponse", syncSmartCollectionPageLambdaResponse);
+      console.log("TCL: paramsSmartCollectionPayload", paramsSmartCollectionPayload)
+      const responseSmartCollectionPayload = await sqs.sendMessage(paramsSmartCollectionPayload).promise();
+      console.log("TCL: responseSmartCollectionPayload", responseSmartCollectionPayload)
 
       // syncing products
-      const syncProductPageParams = {
-        FunctionName: `postingly-functions-${process.env.STAGE}-sync-product-page`,
-        InvocationType: 'Event',
-        LogType: 'Tail',
-        Payload: JSON.stringify(syncProductPayload)
+      const QueueUrlProductPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncProductPage`;
+      console.log("TCL: QueueUrlProductPayload", QueueUrlProductPayload)
+      const paramsProductPayload = {
+        MessageBody: JSON.stringify(syncProductPayload),
+        QueueUrl: QueueUrlProductPayload
       };
-      console.log("TCL: lambda.invoke syncProductPageParams params", syncProductPageParams);
-      const syncProductPageLambdaResponse = await lambda.invoke(syncProductPageParams).promise();
-      console.log("TCL: syncProductPageLambdaResponse", syncProductPageLambdaResponse);
+      console.log("TCL: paramsProductPayload", paramsProductPayload)
+      const responseProductPayload = await sqs.sendMessage(paramsProductPayload).promise();
+      console.log("TCL: responseProductPayload", responseProductPayload)
 
       // syncing Variants
-      const syncVariantPageParams = {
-        FunctionName: `postingly-functions-${process.env.STAGE}-sync-variant-page`,
-        InvocationType: 'Event',
-        LogType: 'Tail',
-        Payload: JSON.stringify(syncVariantPayload)
+      const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncVariantPage`;
+      console.log("TCL: QueueUrlVariantPayload", QueueUrlVariantPayload)
+      const paramsVariantPayload = {
+        MessageBody: JSON.stringify(syncVariantPayload),
+        QueueUrl: QueueUrlVariantPayload
       };
-      console.log("TCL: lambda.invoke syncVariantPageParams params", syncVariantPageParams)
-
-      const syncVariantPageLambdaResponse = await lambda.invoke(syncVariantPageParams).promise();
-      console.log("TCL: syncVariantPageLambdaResponse", syncVariantPageLambdaResponse)
+      console.log("TCL: paramsVariantPayload", paramsVariantPayload)
+      const responseVariantPayload = await sqs.sendMessage(paramsVariantPayload).promise();
+      console.log("TCL: responseVariantPayload", responseVariantPayload)
 
     } else {
       await this.syncCollectionPage(syncCustomCollectionPayload);
@@ -589,16 +592,16 @@ module.exports = {
         const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
         if (!_.isNull(pageInfo)) {
           if (process.env.IS_OFFLINE === 'false') {
-            const syncCustomCollectionPageParams = {
-              FunctionName: `postingly-functions-${process.env.STAGE}-sync-collection-page`,
-              InvocationType: 'Event',
-              LogType: 'Tail',
-              Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo, productId: event.productId })
+            // syncing the custome colltions 
+            const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncCollectionPage`;
+            console.log("TCL: QueueUrl", QueueUrl)
+            const params = {
+              MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo }),
+              QueueUrl: QueueUrl
             };
-            console.log("TCL: lambda.invoke syncCustomCollectionPageParams", syncCustomCollectionPageParams)
-
-            const syncCustomCollectionPageLambdaResponse = await lambda.invoke(syncCustomCollectionPageParams).promise();
-            console.log("TCL: syncCustomCollectionPageLambdaResponse", syncCustomCollectionPageLambdaResponse)
+            console.log("TCL: params", params)
+            const response = await sqs.sendMessage(params).promise();
+            console.log("TCL: response", response)
           } else {
             await this.syncCollectionPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo });
           }
@@ -609,24 +612,26 @@ module.exports = {
       await Promise.all(dbCollections.map(async collection => {
         if (process.env.IS_OFFLINE === 'false') {
           // syncing products
-          const syncProductPageParams = {
-            FunctionName: `postingly-functions-${process.env.STAGE}-sync-product-page`,
-            InvocationType: 'Event',
-            LogType: 'Tail',
-            Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null })
+          const QueueUrlProductPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncProductPage`;
+          console.log("TCL: QueueUrlProductPayload", QueueUrlProductPayload)
+          const paramsProductPayload = {
+            MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null }),
+            QueueUrl: QueueUrlProductPayload
           };
-          console.log("TCL: lambda.invoke syncProductPageParams", syncProductPageParams);
-          const syncProductPageLambdaResponse = await lambda.invoke(syncProductPageParams).promise();
-          console.log("TCL: syncProductPageLambdaResponse", syncProductPageLambdaResponse);
-          const syncVariantPageParams = {
-            FunctionName: `postingly-functions-${process.env.STAGE}-sync-product-page`,
-            InvocationType: 'Event',
-            LogType: 'Tail',
-            Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null })
+          console.log("TCL: paramsProductPayload", paramsProductPayload)
+          const responseProductPayload = await sqs.sendMessage(paramsProductPayload).promise();
+          console.log("TCL: responseProductPayload", responseProductPayload)
+          // sync variant products
+          // syncing Variants
+          const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncVariantPage`;
+          console.log("TCL: QueueUrl", QueueUrlVariantPayload)
+          const paramsVariantPayload = {
+            MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null }),
+            QueueUrl: QueueUrlVariantPayload
           };
-          console.log("TCL: lambda.invoke syncVariantPageParams", syncVariantPageParams);
-          const syncVariantPageLambdaResponse = await lambda.invoke(syncVariantPageParams).promise();
-          console.log("TCL: syncVariantPageLambdaResponse", syncVariantPageLambdaResponse);
+          console.log("TCL: paramsVariantPayload", paramsVariantPayload)
+          const responseVariantPayload = await sqs.sendMessage(paramsVariantPayload).promise();
+          console.log("TCL: responseVariantPayload", responseVariantPayload)
         } else {
           const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null };
           console.log("TCL: syncCollectionPage payload", payload)
@@ -722,16 +727,16 @@ module.exports = {
       const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
       if (!_.isNull(pageInfo)) {
         if (process.env.IS_OFFLINE === 'false') {
-          const syncProductPageParams = {
-            FunctionName: `postingly-functions-${process.env.STAGE}-sync-product-page`,
-            InvocationType: 'Event',
-            LogType: 'Tail',
-            Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo })
+          // syncing products
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncProductPage`;
+          console.log("TCL: QueueUrl", QueueUrl)
+          const params = {
+            MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo }),
+            QueueUrl: QueueUrl
           };
-          console.log("TCL: lambda.invoke syncProductPageParams", syncProductPageParams)
-
-          // const syncProductPageParamsLambdaResponse = await lambda.invoke(syncProductPageParams).promise();
-          // console.log("TCL: syncProductPageParamsLambdaResponse", syncProductPageParamsLambdaResponse)
+          console.log("TCL: params", params)
+          const response = await sqs.sendMessage(params).promise();
+          console.log("TCL: response", response)
         } else {
           const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
           await this.syncProductPage(payload);
@@ -763,7 +768,7 @@ module.exports = {
         collectionQuery = `&collection_id=${collectionDetail.partnerId}`;
       }
     }
-    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=75${collectionQuery}${pageInfoQuery}`;
+    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=50${collectionQuery}${pageInfoQuery}`;
     console.log("TCL: syncVariantPage url", url)
     const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if ("error_description" in json || "error" in json || "errors" in json) {
@@ -775,7 +780,9 @@ module.exports = {
     if (!_.isUndefined(context)) {
       console.log('syncVariantPage event after api call', (context.getRemainingTimeInMillis() / 1000));
     }
-    await this.syncVariants(event, apiProducts, storeDetail, context);
+    if (apiProducts.length > 0) {
+      await this.syncVariants(event, apiProducts, storeDetail, context);
+    }
     if (!_.isUndefined(context)) {
       console.log('syncVariantPage event after syncVariants', (context.getRemainingTimeInMillis() / 1000));
     }
@@ -784,16 +791,16 @@ module.exports = {
       const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
       if (!_.isNull(pageInfo)) {
         if (process.env.IS_OFFLINE === 'false') {
-          const syncVariantPageParams = {
-            FunctionName: `postingly-functions-${process.env.STAGE}-sync-variant-page`,
-            InvocationType: 'Event',
-            LogType: 'Tail',
-            Payload: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo })
+          // syncing Variants
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_syncVariantPage`;
+          console.log("TCL: QueueUrl", QueueUrl)
+          const params = {
+            MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo }),
+            QueueUrl: QueueUrl
           };
-          console.log("TCL: lambda.invoke syncVariantPageParams", syncVariantPageParams)
-
-          const syncVariantPageParamsLambdaResponse = await lambda.invoke(syncVariantPageParams).promise();
-          console.log("TCL: syncVariantPageParamsLambdaResponse", syncVariantPageParamsLambdaResponse)
+          console.log("TCL: params", params)
+          const response = await sqs.sendMessage(params).promise();
+          console.log("TCL: response", response)
         } else {
           const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
           await this.syncVariantPage(payload);
@@ -960,13 +967,12 @@ module.exports = {
     let bulkVariantInsert = [];
     apiProducts.forEach(product => {
       const productForVariant = dbProducts.find(dbProduct => dbProduct.uniqKey === `${PARTNERS_SHOPIFY}-${product.id}`);
-
+      // console.log("TCL: product.variants", product.variants)
       product.variants.forEach(variant => {
         const onSale = ((variant.compare_at_price != variant.price)) ? true : false;
         if (variant.image_id) {
           variantImages.push({ variantUniqKey: `${PARTNERS_SHOPIFY}-${variant.id}`, imagePartnerId: variant.image_id });
         }
-
         bulkVariantInsert.push({
           updateOne: {
             filter: { uniqKey: `${PARTNERS_SHOPIFY}-${variant.id}` },
@@ -997,10 +1003,11 @@ module.exports = {
         });
       })
     });
+
+    console.log("TCL: syncVariants bulkVariantInsert.length", bulkVariantInsert.length);
     if (!_.isEmpty(bulkVariantInsert)) {
       const variants = await VariantModel.bulkWrite(bulkVariantInsert);
     }
-    console.log("TCL: syncVariants bulkVariantInsert.length", bulkVariantInsert.length);
     if (!_.isUndefined(context)) {
       console.log('syncVariants event after variants', (context.getRemainingTimeInMillis() / 1000));
     }
@@ -1150,16 +1157,15 @@ module.exports = {
       if (process.env.IS_OFFLINE === 'false') {
         const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
         await Promise.all(rules.map(async rule => {
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_scheduleUpdates`;
+          console.log("TCL: QueueUrl", QueueUrl)
           const params = {
-            FunctionName: `postingly-functions-${process.env.STAGE}-schedule-updates`,
-            InvocationType: 'Event',
-            LogType: 'Tail',
-            Payload: JSON.stringify({ ruleId: rule })
+            MessageBody: JSON.stringify({ ruleId: rule }),
+            QueueUrl: QueueUrl
           };
-          console.log("TCL: lambda.invoke params", params)
-          console.log("TCL: lambda", lambda)
-          const lambdaResponse = await lambda.invoke(params).promise();
-          console.log("TCL: lambdaResponse", lambdaResponse)
+          console.log("TCL: params", params)
+          const response = await sqs.sendMessage(params).promise();
+          console.log("TCL: response", response)
         }));
       }
       return httpHelper.ok(
@@ -1363,6 +1369,7 @@ module.exports = {
       await this.sleep(12000);
     }
     const json = await res.json();
+    await this.sleep(1000);
     if ("error_description" in json || "error" in json || "errors" in json) {
       console.log("TCL: shopifyAPICall error url", url)
       console.error(json.error_description || json.error || json.errors);

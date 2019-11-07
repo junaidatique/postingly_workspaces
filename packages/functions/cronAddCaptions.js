@@ -5,11 +5,14 @@ const { SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT, PENDING } = require('share
 
 const dbConnection = require('./db');
 let lambda;
+let sqs;
 const AWS = require('aws-sdk');
 if (process.env.IS_OFFLINE === 'false') {
   lambda = new AWS.Lambda({
     region: process.env.AWS_REGION //change to your region
   });
+  AWS.config.update({ region: process.env.AWS_REGION });
+  sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 }
 module.exports = {
   execute: async function (event, context) {
@@ -35,16 +38,15 @@ module.exports = {
           if (!_.isEmpty(event) && !_.isUndefined(event) && !_.isNull(event.storeId)) {
             storeId = event.storeId;
           }
+          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}_changeCaption`;
+          console.log("TCL: QueueUrl", QueueUrl)
           const params = {
-            FunctionName: `postingly-functions-${process.env.STAGE}-change-caption`,
-            InvocationType: 'Event',
-            LogType: 'Tail',
-            Payload: JSON.stringify({ service: service, storeId: storeId })
+            MessageBody: JSON.stringify({ service: service, storeId: storeId }),
+            QueueUrl: QueueUrl
           };
-          console.log("TCL: lambda.invoke params", params)
-          const lambdaResponse = await lambda.invoke(params).promise();
-          console.log("TCL: lambdaResponse", lambdaResponse)
-          // await changeCaption.update();
+          console.log("TCL: params", params)
+          const response = await sqs.sendMessage(params).promise();
+          console.log("TCL: response", response)
         }));
       } else {
         console.log("TCL: cronAddCaptions event", event)

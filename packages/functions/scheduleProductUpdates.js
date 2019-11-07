@@ -16,8 +16,15 @@ const dbConnection = require('./db');
 const schedulerHelper = require('./helpers/productScheduleFns')
 module.exports = {
   // event = { ruleId: ID }
-  schedule: async function (event, context) {
-    console.log("TCL: event", event)
+  schedule: async function (eventSQS, context) {
+    let event;
+    console.log("TCL: schedule eventSQS", eventSQS)
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
     await dbConnection.createConnection(context);
     try {
       // load models
