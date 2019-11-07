@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");;
 
 module.exports = {
   createUser: async function (username, email, shopDomain) {
+    console.log("TCL: username", username)
     console.log("createUser email", email);
     console.log("createUser shopDomain", shopDomain);
     const awsConfig = { accessKeyId: process.env.LOCAL_AWS_KEY, secretAccessKey: process.env.LOCAL_AWS_SECRET_KEY, region: process.env.AWS_REGION };

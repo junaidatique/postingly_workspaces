@@ -128,24 +128,24 @@ module.exports = {
         throw new Error("response[\"access_token\"] is undefined");
       }
       const shop = await this.getShop(shopDomain, accessToken);
-      let cognitoUser;
+
 
       const storeKey = `shopify-${shop.id}`;
       console.log("TCL: storeKey", storeKey)
       let store = await StoreModel.findOne({ uniqKey: storeKey });
       console.log("TCL: store", store)
       let isCharged = false;
+      let createUserUsername = shop.email;
+      let createUserEmail = shop.email;
+      if (!_.isUndefined(username) && !_.isNull(username) && username !== 'undefined' && username !== 'null') {
+        createUserUsername = username;
+      }
+      if (!_.isUndefined(email) && !_.isNull(email) && email !== 'undefined' && email !== 'null') {
+        createUserEmail = email;
+      }
+      const cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
       if (store === null) {
         console.log("verifyCallback new signup");
-        let createUserUsername = shop.email;
-        let createUserEmail = shop.email;
-        if (!_.isUndefined(username) && !_.isNull(username)) {
-          createUserUsername = username;
-        }
-        if (!_.isUndefined(email) && !_.isNull(email) && email !== 'undefined') {
-          createUserEmail = email;
-        }
-        cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
         const shopParams = {
           uniqKey: storeKey,
           userId: cognitoUser,
@@ -171,19 +171,7 @@ module.exports = {
         store = await storeInstance.save();
         console.log("TCL: store", store);
       } else {
-        if (!store.cognitoUserCreate) {
-          let createUserUsername = shop.email;
-          let createUserEmail = shop.email;
-          if (!_.isUndefined(username) && !_.isNull(username)) {
-            createUserUsername = username;
-          }
-          if (!_.isUndefined(email) && !_.isNull(email) && email !== 'undefined') {
-            createUserEmail = email;
-          }
-          cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
-        } else {
-          cognitoUser = store.userId;
-        }
+
         isCharged = store.isCharged;
         store.isUninstalled = false;
         await store.save();
@@ -419,6 +407,7 @@ module.exports = {
         // this.getWebhooks(webhookPayload);
       }
     } catch (err) {
+      console.log("TCL: err", err.message)
       console.log("activatePayment: Store can't be saved");
     }
     console.log("-----------------------------activatePayment Completed-----------------------------");
@@ -556,7 +545,6 @@ module.exports = {
       await this.syncCollectionPage(syncCustomCollectionPayload);
       await this.syncCollectionPage(syncSmartCollectionPayload);
       await this.syncProductPage(syncProductPayload);
-      await this.syncVariantPage(syncVariantPayload);
     }
   },
 
@@ -621,22 +609,11 @@ module.exports = {
           console.log("TCL: paramsProductPayload", paramsProductPayload)
           const responseProductPayload = await sqs.sendMessage(paramsProductPayload).promise();
           console.log("TCL: responseProductPayload", responseProductPayload)
-          // sync variant products
-          // syncing Variants
-          const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncVariantPage`;
-          console.log("TCL: QueueUrl", QueueUrlVariantPayload)
-          const paramsVariantPayload = {
-            MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null }),
-            QueueUrl: QueueUrlVariantPayload
-          };
-          console.log("TCL: paramsVariantPayload", paramsVariantPayload)
-          const responseVariantPayload = await sqs.sendMessage(paramsVariantPayload).promise();
-          console.log("TCL: responseVariantPayload", responseVariantPayload)
+
         } else {
           const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null };
           console.log("TCL: syncCollectionPage payload", payload)
           await this.syncProductPage(payload);
-          await this.syncVariantPage(payload);
         }
       }));
     }
@@ -744,6 +721,23 @@ module.exports = {
       }
       if (!_.isUndefined(context)) {
         console.log('syncProductPage event after lambda.invoke', (context.getRemainingTimeInMillis() / 1000));
+      }
+    } else {
+      console.log("All products are now sycned. its time to sync variants. ")
+      if (process.env.IS_OFFLINE === 'false') {
+        // sync variant products
+        // syncing Variants
+        const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncVariantPage`;
+        console.log("TCL: QueueUrl", QueueUrlVariantPayload)
+        const paramsVariantPayload = {
+          MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: null }),
+          QueueUrl: QueueUrlVariantPayload
+        };
+        console.log("TCL: paramsVariantPayload", paramsVariantPayload)
+        const responseVariantPayload = await sqs.sendMessage(paramsVariantPayload).promise();
+        console.log("TCL: responseVariantPayload", responseVariantPayload)
+      } else {
+        await this.syncVariantPage(payload);
       }
     }
     console.log("TCL: Sync Prdouct completed for this api call. ")

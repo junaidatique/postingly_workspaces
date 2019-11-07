@@ -41,7 +41,11 @@ provider:
         - cognito-idp:*
       Resource: 
         - arn:aws:cognito-idp:us-east-1:*:*
-  
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource:
+        - arn:aws:sqs:us-east-1:*:* 
 
 functions:
   auth:

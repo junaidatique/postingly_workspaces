@@ -29,7 +29,12 @@ provider:
         - ec2:DescribeInstances
         - ec2:AttachNetworkInterface
       Resource:
-        - arn:aws:lambda:us-east-1:*:* 
+        - arn:aws:lambda:us-east-1:*:*
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource:
+        - arn:aws:sqs:us-east-1:*:*  
   
 
 functions:
