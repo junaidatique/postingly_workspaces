@@ -16,7 +16,7 @@
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
-    "mongoose": "^5.5.9",
+    "mongoose": "^5.7.5",
     "mongoose-paginate": "^5.0.3",
     "oauth": "^0.9.15",
     "require-graphql-file": "^1.0.1",
