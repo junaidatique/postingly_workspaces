@@ -4,6 +4,7 @@ const dbConnection = require('./db');
 module.exports = {
   syncStoreData: async function (eventSQS, context) {
     const event = JSON.parse(eventSQS.Records[0].body);
+    console.log("TCL: syncStoreData event", event)
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
       const shopifyAPI = shared.PartnerShopify;
