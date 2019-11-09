@@ -222,6 +222,8 @@ functions:
     handler: seeddata.testData
   rule-test:
     handler: seeddata.testRules
+  updates-test:
+    handler: seeddata.testUpdates
   fetch-test:
     handler: seeddata.testFetch
 

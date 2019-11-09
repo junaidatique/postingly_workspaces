@@ -684,7 +684,7 @@ module.exports = {
         collectionQuery = `&collection_id=${collectionDetail.partnerId}`;
       }
     }
-    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=150${collectionQuery}${pageInfoQuery}`;
+    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=75${collectionQuery}${pageInfoQuery}`;
     console.log("TCL: syncProductPage url", url)
     const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if ("error_description" in json || "error" in json || "errors" in json) {
@@ -784,7 +784,7 @@ module.exports = {
         collectionQuery = `&collection_id=${collectionDetail.partnerId}`;
       }
     }
-    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=30${collectionQuery}${pageInfoQuery}`;
+    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=20${collectionQuery}${pageInfoQuery}`;
     console.log("TCL: syncVariantPage url", url)
     const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if ("error_description" in json || "error" in json || "errors" in json) {

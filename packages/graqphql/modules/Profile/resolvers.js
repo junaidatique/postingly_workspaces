@@ -4,6 +4,7 @@ const BufferService = require('shared').BufferService;
 const { FACEBOOK_SERVICE, TEST, TWITTER_SERVICE, BUFFER_SERVICE } = require('shared/constants');
 const formattedProfile = require('./functions').formattedProfile;
 const ProfileModel = require('shared').ProfileModel;
+const StoreModel = require('shared').StoreModel;
 const _ = require('lodash')
 const profileFns = require('shared').profileFns;
 module.exports = {
@@ -66,7 +67,18 @@ module.exports = {
         }));
       }
       const profiles = await ProfileModel.where('store').eq(args.storeId);
-      console.log("TCL: profiles", profiles)
+      connectedProfiles = profiles.map(profile => {
+        if (profile.isConnected && profile.isSharePossible) {
+          return profile;
+        } else {
+          return undefined;
+        }
+      }).filter(item => !_.isUndefined(item));
+      const storeDetail = await StoreModel.findById(args.storeId);
+      storeDetail.numberOfConnectedProfiles = connectedProfiles.length;
+      await storeDetail.save();
+      console.log("TCL: connectedProfiles", connectedProfiles);
+
       return profiles.map(profile => {
         return formattedProfile(profile);
       })

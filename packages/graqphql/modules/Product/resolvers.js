@@ -42,6 +42,22 @@ module.exports = {
           searchQuery["shareHistory.profile"] = { $ne: args.filter.profile }
         }
       }
+      if (!_.isUndefined(args.filter.postableIsNew)) {
+        searchQuery["postableIsNew"] = args.filter.postableIsNew;
+      }
+      if (!_.isUndefined(args.filter.postableByPrice)) {
+        searchQuery["postableByPrice"] = args.filter.postableByPrice;
+      }
+      if (!_.isUndefined(args.filter.postableByImage)) {
+        searchQuery["postableByImage"] = args.filter.postableByImage;
+      }
+      if (!_.isUndefined(args.filter.postableByQuantity)) {
+        searchQuery["postableByQuantity"] = args.filter.postableByQuantity;
+      }
+      if (!_.isUndefined(args.filter.active)) {
+        searchQuery["active"] = args.filter.active;
+      }
+
       if (!_.isEmpty(args.filter.collections)) {
         searchQuery.collections = { $in: args.filter.collections }
       }

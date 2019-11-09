@@ -24,7 +24,8 @@ const SHARE_HISTORY = {
 const productSchema = new Schema({
   store: {
     type: Schema.Types.ObjectId,
-    ref: 'Store'
+    ref: 'Store',
+    index: true
   },
   collections: [
     {

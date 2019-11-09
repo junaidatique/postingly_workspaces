@@ -58,7 +58,7 @@ const createProductStub = async (storeId, numberOfProducts, collectionIds) => {
       postableByPrice = (minimumPrice > 0) ? true : false;
       postableIsNew = false;
       postableBySale = false;
-      postableByImage = true;
+      postableByImage = ((Math.floor(Math.random() * 10) + 1) > 2) ? true : false;
       description = faker.lorem.sentences(5);
       partnerSpecificUrl = faker.internet.url();
       productParams = {
@@ -85,7 +85,7 @@ const createProductStub = async (storeId, numberOfProducts, collectionIds) => {
         collections: collectionIds,
       };
       product = await ProductModel.create(productParams);
-      if ((Math.floor(Math.random() * 10) + 1) > 2) {
+      if (postableByImage) {
         images = await createImageStub(storeDetail.partner, 'product', product._id);
         await Promise.all(images.map(async image => {
           await product.images.push(image._id);
@@ -193,6 +193,7 @@ const createImageStub = async (partner, ref, reference_id) => {
     } else {
       imageParams['variant'] = reference_id;
     }
+    // console.log("TCL: createImageStub -> imageParams", imageParams)
     image = await ImageModel.create(imageParams);
     images.push(image);
   }

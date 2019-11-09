@@ -39,10 +39,12 @@ module.exports = {
       let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting, updateData;
       // get rule and store
       const ruleDetail = await RuleModel.findById(event.ruleId);
+      console.log("TCL: ruleDetail", ruleDetail)
       if (ruleDetail === null) {
         throw new Error(`rule not found for ${event.ruleId}`);
       }
       const StoreDetail = await StoreModel.findById(ruleDetail.store);
+      // console.log("TCL: StoreDetail", StoreDetail)
       const defaultShortLinkService = StoreDetail.shortLinkService;
       // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
       if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
@@ -64,6 +66,7 @@ module.exports = {
           }
         ).sort({ scheduleTime: 1 });
         // if there are any updates that are not scheduled yet. 
+        console.log("TCL: updates.length", updates.length)
         if (updates.length > 0) {
           // get variants or products based on the rule settings. 
           if (ruleDetail.postAsVariants) {
@@ -76,12 +79,18 @@ module.exports = {
             itemType = SCHEDULE_TYPE_PRODUCT;
           }
           counter = 0;
+          // console.log("TCL: postItems", postItems)
+          console.log("TCL: postItems.length", postItems.length)
           await Promise.all(postItems.map(async item => {
             if (item.images.length === 0 && itemType === SCHEDULE_TYPE_VARIANT) {
               productImages = await ImageModel.find({ product: item.product });
               itemImages = _.orderBy(productImages, ['position'], ['asc']);
             } else {
               itemImages = _.orderBy(item.images, ['position'], ['asc']);
+            }
+            console.log("TCL: itemImages.length", itemImages.length)
+            if (itemImages.length === 0) {
+              return;
             }
             if (imageLimit == 1) {
               if (ruleDetail.rotateImages && (ruleDetail.postAsOption === POST_AS_OPTION_FB_PHOTO || ruleDetail.postAsOption === POST_AS_OPTION_TW_PHOTO)) {
@@ -182,6 +191,7 @@ module.exports = {
         const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
       }
     } catch (error) {
+      console.log("TCL: error", error)
       console.error(error.message);
     }
   },

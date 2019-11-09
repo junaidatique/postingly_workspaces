@@ -69,7 +69,7 @@ module.exports = {
         endOfWeek = moment().add(1, 'weeks').tz(storeDetail.timezone).endOf('isoWeek');
       } else if (!_.isUndefined(event.scheduleWeek)) {
         startOfWeek = moment(event.scheduleWeek);
-        endOfWeek = moment().add(7, 'days');
+        endOfWeek = moment(event.scheduleWeek).add(7, 'days');
       } else {
         // startOfWeek = moment.unix(moment().unix() - (moment().unix() % (ruleDetail.postTimings[0].postingInterval * 60)));
         startOfWeek = moment().tz(storeDetail.timezone).startOf('isoWeek')
@@ -111,8 +111,12 @@ module.exports = {
       //     scheduleState: { $in: [NOT_SCHEDULED, PENDING] }
       //   }
       // );
+      console.log("TCL: -------------------------")
+      console.log("TCL: updateTimes.length", updateTimes.length)
+      console.log("TCL: -------------------------")
       if (updateTimes.length > 0) {
         const bulkUpdatesWrite = updateTimes.map(updateTime => {
+          // console.log("TCL: updateTime", updateTime);
           return ruleDetail.profiles.map(profile => {
             return {
               updateOne: {
@@ -125,6 +129,8 @@ module.exports = {
                   serviceProfile: profile.serviceProfile,
                   postAsOption: ruleDetail.postAsOption,
                   scheduleTime: updateTime,
+                  scheduleWeek: moment(updateTime).week(),
+                  scheduleDayOfYear: moment(updateTime).dayOfYear(),
                   postType: ruleDetail.type,
                   scheduleType: (ruleDetail.postAsVariants) ? SCHEDULE_TYPE_VARIANT : SCHEDULE_TYPE_PRODUCT,
                   autoApproveUpdates: storeDetail.autoApproveUpdates,
@@ -137,6 +143,7 @@ module.exports = {
             }
           });
         });
+
         const updates = await UpdateModel.bulkWrite([].concat.apply([], bulkUpdatesWrite));
         // scheduleState is set seperately because there may be some updates that are updated. so scheduleState is updated for only newly created updates.
         if (updates.result.nUpserted > 0) {

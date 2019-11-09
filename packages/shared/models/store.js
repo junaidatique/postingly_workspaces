@@ -8,24 +8,6 @@ const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
 
 
 const storeSchema = new mongoose.Schema({
-  products: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Profile'
-    }
-  ],
-  collections: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Collection'
-    }
-  ],
-  variants: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Variant'
-    }
-  ],
   profiles: [
     {
       type: Schema.Types.ObjectId,
@@ -36,12 +18,6 @@ const storeSchema = new mongoose.Schema({
     {
       type: Schema.Types.ObjectId,
       ref: 'Rule'
-    }
-  ],
-  updates: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Update'
     }
   ],
   userId: {
@@ -100,11 +76,13 @@ const storeSchema = new mongoose.Schema({
   },
   numberOfProducts: {
     type: Number,
-    default: 0
+    default: 0,
+    index: true
   },
   numberOfConnectedProfiles: {
     type: Number,
-    default: 0
+    default: 0,
+    index: true
   },
   noOfActiveProducts: {
     type: Number,
@@ -112,11 +90,13 @@ const storeSchema = new mongoose.Schema({
   },
   numberOfScheduledPosts: {
     type: Number,
-    default: 0
+    default: 0,
+    index: true
   },
   numberOfPosted: {
     type: Number,
-    default: 0
+    default: 0,
+    index: true
   },
   productsLastUpdated: {
     type: Date,
@@ -154,6 +134,7 @@ const storeSchema = new mongoose.Schema({
   isUninstalled: {
     type: Boolean,
     default: false,
+    index: true
   },
   uninstalledDate: {
     type: Date,

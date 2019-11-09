@@ -22,9 +22,11 @@ type Product {
   onSale: Boolean
   shortUrl: String
   postableByQuantity: Boolean
+  postableByImage: Boolean
   postableByPrice: Boolean
   postableIsNew: Boolean
   postableBySale: Boolean
+  active: Boolean
   collections: [Collection]
   updates: [Update]
   variants: [Variant]
@@ -92,6 +94,11 @@ input ModelProductFilterInput {
   title: String
   profile: ID
   scheduledOnProfile: Boolean
+  postableIsNew: Boolean
+  postableByPrice: Boolean
+  postableByQuantity: Boolean
+  postableByImage: Boolean
+  active: Boolean
   collections: [ID]
 }
 input ModelCollectionFilterInput {
@@ -105,6 +112,8 @@ enum ModelProductSortInput {
   createdAt_DESC
   updatedAt_ASC
   updatedAt_DESC
+  scheduled_ASC
+  scheduled_DESC
 }
 
 type ListProductResponse {
