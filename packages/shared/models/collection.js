@@ -4,18 +4,21 @@ const { PARTNERS } = require('shared/constants');
 const collectionSchema = new Schema({
   store: {
     type: Schema.Types.ObjectId,
-    ref: 'Store'
+    ref: 'Store',
+    index: true,
   },
   products: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Product'
+      ref: 'Product',
+      index: true,
     }
   ],
   variants: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Variant'
+      ref: 'Variant',
+      index: true,
     }
   ],
   title: {
@@ -37,10 +40,12 @@ const collectionSchema = new Schema({
   },
   partnerCreatedAt: {
     type: Date,
+    index: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
   partnerUpdatedAt: {
     type: Date,
+    index: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
   uniqKey: {
