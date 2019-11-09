@@ -5,7 +5,8 @@ const Schema = mongoose.Schema;
 const SHARE_HISTORY = {
   profile: {
     type: Schema.Types.ObjectId,
-    ref: 'Profile'
+    ref: 'Profile',
+    index: true,
   },
   counter: Number
 }
@@ -13,15 +14,18 @@ const SHARE_HISTORY = {
 const imageSchema = new Schema({
   store: {
     type: Schema.Types.ObjectId,
-    ref: 'Store'
+    ref: 'Store',
+    index: true,
   },
   product: {
     type: Schema.Types.ObjectId,
-    ref: 'Product'
+    ref: 'Product',
+    index: true,
   },
   variant: {
     type: Schema.Types.ObjectId,
-    ref: 'Variant'
+    ref: 'Variant',
+    index: true,
   },
   partnerId: {
     type: String,

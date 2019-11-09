@@ -14,22 +14,26 @@ const SHARE_HISTORY = {
 const variantSchema = new Schema({
   store: {
     type: Schema.Types.ObjectId,
-    ref: 'Store'
+    ref: 'Store',
+    index: true,
   },
   collections: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Collection'
+      ref: 'Collection',
+      index: true,
     }
   ],
   product: {
     type: Schema.Types.ObjectId,
-    ref: 'Product'
+    ref: 'Product',
+    index: true,
   },
   images: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Image'
+      ref: 'Image',
+      index: true,
     }
   ],
   title: {
@@ -48,10 +52,12 @@ const variantSchema = new Schema({
   },
   partnerCreatedAt: {
     type: Date,
+    index: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
   partnerUpdatedAt: {
     type: Date,
+    index: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
   uniqKey: {

@@ -6,6 +6,8 @@ const { SERVICES, SCHEDULE_STATE, POST_AS_OPTION, RULE_TYPE, SCHEDULE_TYPE, NOT_
 const IMAGE = {
   imageId: {
     type: Schema.Types.ObjectId,
+    ref: 'Image',
+    index: true,
   },
   url: {
     type: String
@@ -50,23 +52,28 @@ const updateResponse = {
 const updateSchema = new mongoose.Schema({
   store: {
     type: Schema.Types.ObjectId,
-    ref: 'Store'
+    ref: 'Store',
+    index: true,
   },
   product: {
     type: Schema.Types.ObjectId,
-    ref: 'Proudct'
+    ref: 'Proudct',
+    index: true,
   },
   variant: {
     type: Schema.Types.ObjectId,
-    ref: 'Variant'
+    ref: 'Variant',
+    index: true,
   },
   rule: {
     type: Schema.Types.ObjectId,
-    ref: 'Rule'
+    ref: 'Rule',
+    index: true,
   },
   profile: {
     type: Schema.Types.ObjectId,
-    ref: 'Profile'
+    ref: 'Profile',
+    index: true,
   },
   uniqKey: {
     type: String,
@@ -76,19 +83,23 @@ const updateSchema = new mongoose.Schema({
   images: [IMAGE],
   scheduleType: {
     type: String,
-    enum: SCHEDULE_TYPE // product, blog etc
+    enum: SCHEDULE_TYPE,
+    index: true, // product, blog etc
   },
   postType: {
     type: String,
-    enum: RULE_TYPE // 'old', 'new', 'sale'
+    enum: RULE_TYPE,
+    index: true, // 'old', 'new', 'sale'
   },
   service: {
     type: String,
-    enum: SERVICES
+    enum: SERVICES,
+    index: true,
   },
   serviceProfile: {
     type: String,
-    enum: SERVICE_PROFILES
+    enum: SERVICE_PROFILES,
+    index: true,
   },
   autoApproveUpdates: {
     type: Boolean,
@@ -101,25 +112,30 @@ const updateSchema = new mongoose.Schema({
   captionsUpdated: {
     type: Boolean,
     default: false,
+    index: true,
   },
   postAsOption: {
     type: String,
-    enum: POST_AS_OPTION
+    enum: POST_AS_OPTION,
+    index: true,
   },
   scheduleTime: {
     type: Date,
     required: true,
+    index: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
   scheduleWeek: {
     type: Number,
     required: false,
     default: null,
+    index: true,
   },
   scheduleDayOfYear: {
     type: Number,
     required: false,
     default: null,
+    index: true,
   },
   text: {
     type: String
@@ -130,7 +146,8 @@ const updateSchema = new mongoose.Schema({
   scheduleState: {
     type: String,
     enum: SCHEDULE_STATE, // NOT_SCHEDULED, SCHEDULED, POSTED, FAILED, PAUSED
-    default: NOT_SCHEDULED
+    default: NOT_SCHEDULED,
+    index: true,
   },
   isPaused: {
     type: Boolean,
@@ -141,7 +158,8 @@ const updateSchema = new mongoose.Schema({
   },
   userEdited: {
     type: Boolean,
-    default: false
+    default: false,
+    index: true,
   },
   response: updateResponse
 });

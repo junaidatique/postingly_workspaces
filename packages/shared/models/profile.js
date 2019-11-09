@@ -4,16 +4,19 @@ const { SERVICES, SERVICE_PROFILES } = require('shared/constants');
 const profileSchema = new mongoose.Schema({
   store: {
     type: Schema.Types.ObjectId,
-    ref: 'Store'
+    ref: 'Store',
+    index: true,
   },
   parent: {
     type: Schema.Types.ObjectId,
-    ref: 'Profile'
+    ref: 'Profile',
+    index: true,
   },
   children: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Profile'
+      ref: 'Profile',
+      index: true,
     }
   ],
   name: {
@@ -28,7 +31,8 @@ const profileSchema = new mongoose.Schema({
     type: String
   },
   serviceUserId: {
-    type: String
+    type: String,
+    index: true,
   },
   serviceUsername: {
     type: String
@@ -44,11 +48,13 @@ const profileSchema = new mongoose.Schema({
   },
   service: {
     type: String,
-    enum: SERVICES
+    enum: SERVICES,
+    index: true,
   },
   serviceProfile: {
     type: String,
-    enum: SERVICE_PROFILES
+    enum: SERVICE_PROFILES,
+    index: true,
   },
   bufferId: {
     type: String
@@ -56,10 +62,12 @@ const profileSchema = new mongoose.Schema({
   isConnected: {
     type: Boolean,
     default: false,
+    index: true,
   },
   isTokenExpired: {
     type: Boolean,
     default: false,
+    index: true,
   },
   isSharePossible: {
     type: Boolean,
