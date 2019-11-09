@@ -91,7 +91,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs10.x
   stage: ${env:STAGE}
   timeout: 120 
   memorySize: 256
@@ -119,7 +119,7 @@ functions:
   # this function creates updates with rule id. 
   create-updates:
     handler: createUpdates.createUpdates
-    reservedConcurrency: 30
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_CREATE_UPDATES}
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}CreateUpdates
@@ -143,7 +143,7 @@ functions:
   # This updates simply takes the rule id and schedule all the not scheduled updates. 
   schedule-updates:
     handler: scheduleProductUpdates.schedule
-    reservedConcurrency: 30
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_SCHEDULE_PRODUCT_UPDATES}
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ScheduleUpdates
@@ -158,7 +158,7 @@ functions:
   # This updates simply takes the rule id and schedule all the not scheduled updates. 
   change-caption:
     handler: changeCaption.update
-    reservedConcurrency: 30
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_CHANGE_CAPTION}
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ChangeCaption
@@ -173,7 +173,7 @@ functions:
   # This lambda post updates to social media. 
   share-updates:
     handler: shareUpdates.share
-    reservedConcurrency: 20
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_SHARE_UPDATES}
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ShareUpdates
@@ -181,7 +181,7 @@ functions:
   #  product sync data.
   sync-store-data:
     handler: syncStoreData.syncStoreData  
-    reservedConcurrency: 10
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_SYNC_STORE_DATA}
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}SyncStoreData
@@ -190,26 +190,26 @@ functions:
     handler: syncStoreData.syncCollections
   sync-collection-page:
     handler: syncStoreData.syncCollectionPage
-    reservedConcurrency: 10
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_SYNC_COLLECTION_PAGE}
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}SyncCollectionPage
           batchSize: 1
   sync-products:
     handler: syncStoreData.syncProducts
-    timeout: 360 
+    timeout: 720 
   sync-product-page:
     handler: syncStoreData.syncProductPage
-    timeout: 360
-    reservedConcurrency: 10
+    timeout: 720
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_SYNC_PRODUCT_PAGE}
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}SyncProductPage
           batchSize: 1
   sync-variant-page:
     handler: syncStoreData.syncVariantPage
-    timeout: 360 
-    reservedConcurrency: 10
+    timeout: 720 
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_SYNC_VARIANT_PAGE}
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}SyncVariantPage
