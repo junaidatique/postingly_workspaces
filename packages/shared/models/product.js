@@ -16,7 +16,8 @@ const SHORT_LINK = {
 const SHARE_HISTORY = {
   profile: {
     type: Schema.Types.ObjectId,
-    ref: 'Profile'
+    ref: 'Profile',
+    index: true,
   },
   counter: Number
 }
@@ -30,7 +31,8 @@ const productSchema = new Schema({
   collections: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Collection'
+      ref: 'Collection',
+      index: true
     }
   ],
   variants: [
@@ -71,10 +73,12 @@ const productSchema = new Schema({
   },
   partnerCreatedAt: {
     type: Date,
+    index: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
   partnerUpdatedAt: {
     type: Date,
+    index: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
   uniqKey: {

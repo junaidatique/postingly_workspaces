@@ -52,7 +52,8 @@ const CAPTION = {
   collections: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Collection'
+      ref: 'Collection',
+      index: true,
     }
   ],
   isDefault: {
@@ -65,20 +66,24 @@ const CAPTION = {
 const ruleSchema = new mongoose.Schema({
   store: {
     type: Schema.Types.ObjectId,
-    ref: 'Store'
+    ref: 'Store',
+    index: true,
   },
   service: {
     type: String,
-    enum: SERVICES
+    enum: SERVICES,
+    index: true,
   },
   type: {
     type: String,
-    enum: RULE_TYPE
+    enum: RULE_TYPE,
+    index: true,
   },
   profiles: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Profile'
+      ref: 'Profile',
+      index: true,
     }
   ],
 
@@ -91,7 +96,8 @@ const ruleSchema = new mongoose.Schema({
   postTimings: [POST_TIMING], // actual timings. 
   postAsOption: {
     type: String,
-    enum: POST_AS_OPTION // post as link, phtot etc.
+    enum: POST_AS_OPTION,
+    index: true, // post as link, phtot etc.
   },
   collectionOption: {
     type: String,
@@ -100,19 +106,23 @@ const ruleSchema = new mongoose.Schema({
   collections: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'Collection'
+      ref: 'Collection',
+      index: true,
     }
   ],
   allowZeroQuantity: {
-    type: Boolean
+    type: Boolean,
+    index: true,
   },
   postAsVariants: {
     type: Boolean,
     default: false,
+    index: true,
   },
   rotateImages: {
     type: Boolean,
     default: false,
+    index: true,
   },
   rotateImageLimit: {
     type: Number,
@@ -123,7 +133,8 @@ const ruleSchema = new mongoose.Schema({
   },
   postingProductOrder: {
     type: String,
-    enum: POSTING_SORTORDER
+    enum: POSTING_SORTORDER,
+    index: true,
   },
   queueOption: {
     type: String,
