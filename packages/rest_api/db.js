@@ -12,7 +12,8 @@ module.exports = {
             bufferMaxEntries: 0,
             ssl: true,
             sslCA: returnCerts(),
-            dbName: process.env.STAGE
+            dbName: process.env.STAGE,
+            useUnifiedTopology: true
           });
 
         } catch (error) {
