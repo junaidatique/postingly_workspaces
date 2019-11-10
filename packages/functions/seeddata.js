@@ -1,13 +1,13 @@
 const faker = require('faker');
-const productStubs = require('../graqphql/__tests__/product/stubs');
+// const productStubs = require('../graqphql/__tests__/product/stubs');
 const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
 const dbConnection = require('./db');
-const createUpdates = require('./createUpdates');
-const scheduleProductUpdates = require('./scheduleProductUpdates');
-const shareUpdates = require('./shareUpdates');
-const changeCaption = require('./changeCaption');
+// const createUpdates = require('./createUpdates');
+// const scheduleProductUpdates = require('./scheduleProductUpdates');
+// const shareUpdates = require('./shareUpdates');
+// const changeCaption = require('./changeCaption');
 const fetch = require('node-fetch');
 let lambda;
 let sqs;
@@ -173,13 +173,13 @@ module.exports = {
     const StoreModel = require('shared').StoreModel;
     const stores = await StoreModel.find({ _id: { $exists: true } });
     console.log("TCL: stores", stores.length)
-    await Promise.all(stores.map(async store => {
-      console.log("TCL: store", store._id)
-      const numberOfConnectedProfiles = await ProfileModel.countDocuments({ 'store': store._id, isConnected: true, isSharePossible: true });
-      console.log("TCL: numberOfConnectedProfiles", numberOfConnectedProfiles)
-      store.numberOfConnectedProfiles = numberOfConnectedProfiles;
-      await store.save();
-    }));
+    // await Promise.all(stores.map(async store => {
+    //   console.log("TCL: store", store._id)
+    //   const numberOfConnectedProfiles = await ProfileModel.countDocuments({ 'store': store._id, isConnected: true, isSharePossible: true });
+    //   console.log("TCL: numberOfConnectedProfiles", numberOfConnectedProfiles)
+    //   store.numberOfConnectedProfiles = numberOfConnectedProfiles;
+    //   await store.save();
+    // }));
   },
   handleMyQueue: async function (event, context) {
     console.log("TCL: context", context)
