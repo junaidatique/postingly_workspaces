@@ -4,11 +4,15 @@ const { APPROVED } = require('shared/constants');
 
 const dbConnection = require('./db');
 let lambda;
+let sqs;
 const AWS = require('aws-sdk');
 if (process.env.IS_OFFLINE === 'false') {
   lambda = new AWS.Lambda({
     region: process.env.AWS_REGION //change to your region
   });
+  // Create an SQS service object
+  AWS.config.update({ region: process.env.AWS_REGION });
+  sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 }
 module.exports = {
   share: async function (event, context) {
