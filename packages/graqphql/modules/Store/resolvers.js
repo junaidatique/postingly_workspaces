@@ -12,7 +12,7 @@ module.exports = {
       let searchQuery = {}
       if (!_.isUndefined(args.filter)) {
         if (!_.isEmpty(args.filter.userId)) {
-          searchQuery.userId = args.filter.userId;
+          searchQuery.userId = new RegExp(args.filter.userId, "i");
         }
         if (!_.isEmpty(args.filter.partner)) {
           searchQuery.partner = args.filter.partner;
@@ -20,7 +20,7 @@ module.exports = {
         if (!_.isEmpty(args.filter.partnerId)) {
           searchQuery.partnerId = args.filter.partnerId;
         }
-        if (!_.isEmpty(args.filter.id)) {
+        if (!_.isEmpty(args.filter.id) && args.filter.id.match(/^[0-9a-fA-F]{24}$/)) {
           searchQuery._id = args.filter.id;
         }
         if (!_.isEmpty(args.filter.title)) {

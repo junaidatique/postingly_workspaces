@@ -104,7 +104,7 @@ input ModelStoreFilterInput {
   partner: String
   userId: String
   title: String
-  id: ID
+  id: String
   partnerId: String
 }
 
