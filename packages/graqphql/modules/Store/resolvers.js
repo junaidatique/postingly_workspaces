@@ -6,7 +6,7 @@ let conn;
 const query = require('shared').query
 module.exports = {
   listStores: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
+    console.log("TCL: listStores args", args)
     const StoreModel = shared.StoreModel;
     try {
       let searchQuery = {}
@@ -16,6 +16,12 @@ module.exports = {
         }
         if (!_.isEmpty(args.filter.partner)) {
           searchQuery.partner = args.filter.partner;
+        }
+        if (!_.isEmpty(args.filter.partnerId)) {
+          searchQuery.partnerId = args.filter.partnerId;
+        }
+        if (!_.isEmpty(args.filter.id)) {
+          searchQuery._id = args.filter.id;
         }
         if (!_.isEmpty(args.filter.title)) {
           searchQuery.title = new RegExp(args.filter.title, "i");

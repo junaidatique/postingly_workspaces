@@ -8,8 +8,8 @@ const { APPROVED } = require('shared/constants');
 const str = require('shared').stringHelper;
 module.exports = {
   listUpdates: async (obj, args, context, info) => {
-    console.log("TCL: args", args.filter.product)
-    console.log("TCL: args", args)
+    console.log("TCL: listUpdates args", args.filter.product)
+    console.log("TCL: listUpdates args", args)
     try {
 
       searchQuery = {
@@ -64,7 +64,7 @@ module.exports = {
 
   },
   createUpdate: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
+    console.log("TCL: createUpdate args", args)
     try {
       const profiles = await ProfileModel.where('_id').in(args.input.profiles);
       const bulkUpdate = profiles.map(profile => {

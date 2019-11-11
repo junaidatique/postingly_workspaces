@@ -54,15 +54,15 @@ module.exports = {
   updateProfile: async (obj, args, context, info) => {
     try {
       let res;
-      console.log("TCL: args", args)
+      console.log("TCL: updateProfile args", args)
       if (!_.isEmpty(args)) {
-        console.log("TCL: args.input", args.input)
+        console.log("TCL: updateProfile args.input", args.input)
         await Promise.all(args.input.map(async value => {
           // _.each(args.input, async (value, key) => {
           if (value.isConnected) {
-            console.log("TCL: value", value)
+            console.log("TCL: updateProfile value", value)
             res = await ProfileModel.updateOne({ _id: value.id }, { isConnected: value.isConnected });
-            console.log("TCL: res", res)
+            console.log("TCL: updateProfile res", res)
           }
         }));
       }
@@ -87,7 +87,7 @@ module.exports = {
     }
   },
   deleteProfile: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
+    console.log("TCL: deleteProfile args", args)
     try {
       let res;
       profileDetail = await ProfileModel.findById(args.profileId);

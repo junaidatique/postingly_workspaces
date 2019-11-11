@@ -1,5 +1,6 @@
 const shared = require('shared');
 const _ = require('lodash');
+const moment = require('moment')
 const {
   FACEBOOK_SERVICE, POST_AS_OPTION_FB_ALBUM, POST_AS_OPTION_FB_LINK, POST_AS_OPTION_FB_PHOTO,
   TWITTER_SERVICE, TWITTER_PROFILE, BUFFER_SERVICE, POSTED
@@ -53,6 +54,7 @@ module.exports = {
     update.scheduleState = response.scheduleState;
     update.failedMessage = response.failedMessage;
     update.response = response.response;
+    update.postingTime = moment().toISOString();
     await update.save();
   },
 
