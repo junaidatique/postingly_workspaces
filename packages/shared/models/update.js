@@ -125,6 +125,11 @@ const updateSchema = new mongoose.Schema({
     index: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
+  postingTime: {
+    type: Date,
+    index: true,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
   scheduleWeek: {
     type: Number,
     required: false,

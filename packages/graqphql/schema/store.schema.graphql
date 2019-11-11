@@ -1,9 +1,9 @@
 # Store type and inputs
 type Store {
   id: ID!
+  userId: String!
   title: String!
   url: String
-  userId: String!
   partner: Partner
   partnerId: String!
   partnerPlan: String
@@ -16,15 +16,18 @@ type Store {
   moneyFormat: String
   moneyWithCurrencyFormat: String
   numberOfProducts: Int
+  numberOfConnectedProfiles: Int
   noOfActiveProducts: Int
   numberOfScheduledPosts: Int
   numberOfPosted: Int
-  numberOfConnectedProfiles: Int
   productsLastUpdated: String
+  cognitoUserCreate: Boolean
   isCharged: Boolean
   chargedMethod: String
   chargeId: String
   chargeDate: String
+  autoApproveUpdates: Boolean
+  autoAddCaptionOfUpdates: Boolean
   isUninstalled: Boolean
   uninstalledDate: String
   shortLinkService: ShortLinkServices
@@ -101,6 +104,8 @@ input ModelStoreFilterInput {
   partner: String
   userId: String
   title: String
+  id: ID
+  partnerId: String
 }
 
 enum ModelStoreSortInput {
