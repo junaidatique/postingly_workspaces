@@ -172,14 +172,34 @@ module.exports = {
     const ProfileModel = require('shared').ProfileModel;
     const StoreModel = require('shared').StoreModel;
     const stores = await StoreModel.find({ _id: { $exists: true } });
-    console.log("TCL: stores", stores.length)
-    // await Promise.all(stores.map(async store => {
-    //   console.log("TCL: store", store._id)
-    //   const numberOfConnectedProfiles = await ProfileModel.countDocuments({ 'store': store._id, isConnected: true, isSharePossible: true });
-    //   console.log("TCL: numberOfConnectedProfiles", numberOfConnectedProfiles)
-    //   store.numberOfConnectedProfiles = numberOfConnectedProfiles;
-    //   await store.save();
-    // }));
+    console.log("TCL: stores", stores.length);
+    let webhookPayload;
+    await Promise.all(stores.map(async store => {
+      // console.log("TCL: store", store._id)
+      // const numberOfConnectedProfiles = await ProfileModel.countDocuments({ 'store': store._id, isConnected: true, isSharePossible: true });
+      // console.log("TCL: numberOfConnectedProfiles", numberOfConnectedProfiles)
+      // store.numberOfConnectedProfiles = numberOfConnectedProfiles;
+      // await store.save();
+
+      webhookPayload = {
+        partnerStore: PARTNERS_SHOPIFY,
+        shopURL: store.url,
+        accessToken: store.partnerToken
+      }
+      console.log("TCL: webhookPayload", webhookPayload)
+      if (process.env.IS_OFFLINE === 'false') {
+        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}CreateWebhooks`;
+        console.log("TCL: QueueUrl", QueueUrl)
+        const params = {
+          MessageBody: JSON.stringify(storePayload),
+          QueueUrl: QueueUrl
+        };
+        console.log("TCL: params", params)
+        const response = await sqs.sendMessage(params).promise();
+        console.log("TCL: response", response)
+      }
+
+    }));
   },
   handleMyQueue: async function (event, context) {
     console.log("TCL: context", context)
