@@ -1152,15 +1152,17 @@ module.exports = {
   getWebhooks: async function (event) {
     const webhooksAPIUrl = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
     const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, null, 'get', event.accessToken);
+    console.log("TCL: json", json)
     if ("error_description" in json || "error" in json || "errors" in json) {
       console.log("TCL: getWebhooks json", json)
       throw new Error(json.error_description || json.error || json.errors);
     }
-    if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
-      await this.createWebhooks(event);
-    }
+    // if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
+    //   await this.createWebhooks(event);
+    // }
   },
   createWebhooks: async function (event) {
+    console.log("TCL: event", event)
     const webhooksAPIUrl = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
     let body;
     await Promise.all(WEBHOOKS[PARTNERS_SHOPIFY].map(async item => {
@@ -1171,8 +1173,10 @@ module.exports = {
           "format": "json"
         }
       });
+      console.log("TCL: createWebhooks body", body)
 
       const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, body, 'post', event.accessToken);
+      console.log("TCL: createWebhooks json", json)
       if ("error_description" in json || "error" in json || "errors" in json) {
         console.log("TCL: createWebhooks json", json)
         console.error(json.error_description || json.error || json.errors);
@@ -1182,8 +1186,8 @@ module.exports = {
   deleteWebhooks: async function (event) {
     const webhooksAPIUrl = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
     const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, null, 'get', event.accessToken);
+    console.log("TCL: deleteWebhooks json", json)
     if ("error_description" in json || "error" in json || "errors" in json) {
-      console.log("TCL: deleteWebhooks json", json)
       throw new Error(json.error_description || json.error || json.errors);
     }
     let deleteWebhookURL = '';
@@ -1191,6 +1195,7 @@ module.exports = {
       await Promise.all(json.webhooks.map(async item => {
         deleteWebhookURL = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks/${item.id}.json`;
         const { json, res } = await this.shopifyAPICall(deleteWebhookURL, null, 'delete', event.accessToken);
+        console.log("TCL: deleteWebhookURL json", json)
       }));
     }
   },

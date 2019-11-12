@@ -47,6 +47,21 @@ plugins:
 #       Properties:
 #         QueueName: stagingSyncVariantPage
 #         VisibilityTimeout: 3600
+#     stagingGetWebhooks:
+#       Type: "AWS::SQS::Queue"
+#       Properties:
+#         QueueName: stagingGetWebhooks
+#         VisibilityTimeout: 3600
+#     stagingCreateWebhooks:
+#       Type: "AWS::SQS::Queue"
+#       Properties:
+#         QueueName: stagingCreateWebhooks
+#         VisibilityTimeout: 3600
+#     stagingDeleteWebhooks:
+#       Type: "AWS::SQS::Queue"
+#       Properties:
+#         QueueName: stagingDeleteWebhooks
+#         VisibilityTimeout: 3600
 #     productionCreateUpdates:
 #       Type: "AWS::SQS::Queue"
 #       Properties:
@@ -86,6 +101,21 @@ plugins:
 #       Type: "AWS::SQS::Queue"
 #       Properties:
 #         QueueName: productionSyncVariantPage
+#         VisibilityTimeout: 3600
+#     productionGetWebhooks:
+#       Type: "AWS::SQS::Queue"
+#       Properties:
+#         QueueName: productionGetWebhooks
+#         VisibilityTimeout: 3600
+#     productionCreateWebhooks:
+#       Type: "AWS::SQS::Queue"
+#       Properties:
+#         QueueName: productionCreateWebhooks
+#         VisibilityTimeout: 3600
+#     productionDeleteWebhooks:
+#       Type: "AWS::SQS::Queue"
+#       Properties:
+#         QueueName: productionDeleteWebhooks
 #         VisibilityTimeout: 3600
 
 
@@ -216,6 +246,22 @@ functions:
           batchSize: 1
   get-webhooks:
     handler: webhooks.getWebhooks
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}GetWebhooks
+          batchSize: 1
+  create-webhooks:
+    handler: webhooks.createWebhooks
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}CreateWebhooks
+          batchSize: 1
+  delete-webhooks:
+    handler: webhooks.deleteWebhooks
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}DeleteWebhooks
+          batchSize: 1
   data-seed:
     handler: seeddata.createStore
   data-test:
