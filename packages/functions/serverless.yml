@@ -102,7 +102,7 @@ resources:
       Properties:
         QueueName: productionSyncVariantPage
         VisibilityTimeout: 3600
-            productionGetWebhooks:
+    productionGetWebhooks:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: productionGetWebhooks
