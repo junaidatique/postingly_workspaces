@@ -248,19 +248,19 @@ functions:
     handler: webhooks.getWebhooks
     events:
       - sqs:
-          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}getWebhooks
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}GetWebhooks
           batchSize: 1
   create-webhooks:
     handler: webhooks.createWebhooks
     events:
       - sqs:
-          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}createWebhooks
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}CreateWebhooks
           batchSize: 1
   delete-webhooks:
     handler: webhooks.deleteWebhooks
     events:
       - sqs:
-          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}deleteWebhooks
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}DeleteWebhooks
           batchSize: 1
   data-seed:
     handler: seeddata.createStore
