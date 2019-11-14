@@ -11,30 +11,33 @@ const shareUpdates = require('functions').shareUpdates.share;
 
 const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE, APPROVED } = require('shared/constants')
 module.exports = {
-    execute: async function (event, context) {
-        const StoreModel = shared.StoreModel;
-        const ProductModel = shared.ProductModel;
-        const storeDetail = await StoreModel.findOne()
-        console.log("TCL: storeDetail", storeDetail)
+  execute: async function (event, context) {
+    const StoreModel = shared.StoreModel;
+    console.log("TCL: StoreModel", StoreModel)
+    const ProductModel = shared.ProductModel;
+    const storeDetail = await StoreModel.findOne()
+    console.log("TCL: storeDetail", storeDetail)
 
-        const UpdateModel = shared.UpdateModel;
-        const storeId = storeDetail._id;
-        const RuleModel = shared.RuleModel;
+    const UpdateModel = shared.UpdateModel;
+    const storeId = storeDetail._id;
+    const PartnerShopify = shared.PartnerShopify;
+    await PartnerShopify.confirmUninstalled(storeId);
+    // const RuleModel = shared.RuleModel;
 
-        await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
-        const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
-        await createUpdates({ ruleId: ruleDetail._id });
-        // await createUpdatesforNextWeek();
-        // await cronThisWeekRulesForUpdates();
+    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    // const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
+    // await createUpdates({ ruleId: ruleDetail._id });
+    // // await createUpdatesforNextWeek();
+    // // await cronThisWeekRulesForUpdates();
 
-        await schedule({ ruleId: ruleDetail._id });
-        // await cronAddCaptions();
-        await changeCaption({ service: FACEBOOK_SERVICE, storeId: null });
-        // await cronPostUpdates();
-        updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
-        // console.log("TCL: updates", updates)
-        await shareUpdates({ updateId: updates._id });
+    // await schedule({ ruleId: ruleDetail._id });
+    // // await cronAddCaptions();
+    // await changeCaption({ service: FACEBOOK_SERVICE, storeId: null });
+    // // await cronPostUpdates();
+    // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
+    // // console.log("TCL: updates", updates)
+    // await shareUpdates({ updateId: updates._id });
 
 
-    }
+  }
 }

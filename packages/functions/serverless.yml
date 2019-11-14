@@ -62,6 +62,21 @@ resources:
       Properties:
         QueueName: stagingDeleteWebhooks
         VisibilityTimeout: 3600
+    stagingProductsCreate:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: stagingProductsCreate
+        VisibilityTimeout: 3600
+    stagingProductsUpdate:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: stagingProductsUpdate
+        VisibilityTimeout: 3600
+    stagingProductsDelete:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: stagingProductsDelete
+        VisibilityTimeout: 3600
     productionCreateUpdates:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -116,6 +131,21 @@ resources:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: productionDeleteWebhooks
+        VisibilityTimeout: 3600
+    productionProductsCreate:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionProductsCreate
+        VisibilityTimeout: 3600
+    productionProductsUpdate:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionProductsUpdate
+        VisibilityTimeout: 3600
+    productionProductsDelete:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: productionProductsDelete
         VisibilityTimeout: 3600
 
 
@@ -261,6 +291,30 @@ functions:
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}DeleteWebhooks
+          batchSize: 1
+  products-create:
+    handler: webhooks.productsCreate
+    timeout: 720 
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_WEBHOOK_CREATE_PRODUCT}
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ProductsCreate
+          batchSize: 1
+  products-update:
+    handler: webhooks.productsCreate
+    timeout: 720 
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_WEBHOOK_UPDATE_PRODUCT}
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ProductsUpdate
+          batchSize: 1
+  products-delete:
+    handler: webhooks.productsDelete
+    timeout: 720 
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_WEBHOOK_DELETE_PRODUCT}
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ProductsDelete
           batchSize: 1
   data-seed:
     handler: seeddata.createStore
