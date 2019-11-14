@@ -184,7 +184,8 @@ module.exports = {
       webhookPayload = {
         partnerStore: PARTNERS_SHOPIFY,
         shopURL: store.url,
-        accessToken: store.partnerToken
+        accessToken: store.partnerToken,
+        storeId: store._id
       }
       console.log("TCL: webhookPayload", webhookPayload)
       if (process.env.IS_OFFLINE === 'false') {

@@ -5,9 +5,6 @@ plugins:
   - serverless-dotenv-plugin
   - serverless-offline
 
-resources:
-  # API Gateway Errors
-  - ${file(resources/api-gateway-errors.yml)}
 
 provider:
   name: aws
