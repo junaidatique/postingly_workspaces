@@ -1114,9 +1114,11 @@ module.exports = {
     const webhooksAPIUrl = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
     const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, null, 'get', event.accessToken);
     console.log("TCL: json", json)
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      console.log("TCL: getWebhooks json", json)
-      throw new Error(json.error_description || json.error || json.errors);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        throw new Error(error);
+      }
+      return;
     }
     console.log("TCL: WEBHOOKS[PARTNERS_SHOPIFY].length", WEBHOOKS[PARTNERS_SHOPIFY].length)
     console.log("TCL: json.webhooks.length", json.webhooks.length)
@@ -1145,9 +1147,11 @@ module.exports = {
 
       const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, body, 'post', event.accessToken);
       console.log("TCL: createWebhooks json", json)
-      if ("error_description" in json || "error" in json || "errors" in json) {
-        console.log("TCL: createWebhooks json erro", json)
-        console.error(json.error_description || json.error || json.errors);
+      if (_.isNull(json)) {
+        if (!_.isNull(error)) {
+          throw new Error(error);
+        }
+        return;
       }
     }));
   },
@@ -1465,6 +1469,9 @@ module.exports = {
         await this.confirmUninstalled(storeDetail._id);
         return { json: null, res: res, error: null };
       } else if (errorResponse.indexOf('Not Found') >= 0) {
+        console.log("TCL: errorResponse", errorResponse)
+        return { json: null, res: res, error: null };
+      } else if (errorResponse.indexOf('for this topic has already been taken') >= 0) {
         console.log("TCL: errorResponse", errorResponse)
         return { json: null, res: res, error: null };
       } else {
