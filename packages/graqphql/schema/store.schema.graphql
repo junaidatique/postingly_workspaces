@@ -106,6 +106,7 @@ input ModelStoreFilterInput {
   title: String
   id: String
   partnerId: String
+  isUninstalled: Boolean
 }
 
 enum ModelStoreSortInput {

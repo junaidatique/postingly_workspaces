@@ -23,7 +23,6 @@ const getStoreByUniqKey = async (uniqKey) => {
 }
 const getStoreByID = async (storeId) => {
   const storeDetail = await StoreModel.findById(storeId);
-  console.log("TCL: getStoreByID -> storeDetail", storeDetail)
   if (storeDetail === null) {
     throw new Error('Store not found.');
   }

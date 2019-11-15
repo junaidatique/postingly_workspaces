@@ -26,6 +26,7 @@ module.exports = {
         if (!_.isEmpty(args.filter.title)) {
           searchQuery.title = new RegExp(args.filter.title, "i");
         }
+        searchQuery.isUninstalled = (_.isUndefined(args.filter.isUninstalled)) ? false : args.filter.isUninstalled;
       }
       const searchOptions = {
         sort: { createdAt: -1 },
