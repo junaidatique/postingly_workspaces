@@ -460,33 +460,6 @@ module.exports = {
         upsert: true
       }
     }
-    // let dbProfile = await ProfileModel.findOne({ uniqKey: uniqKey });
-    // console.log('------------------');
-    // console.log("TCL: dbProfile DB", dbProfile)
-    // console.log('------------------');
-
-    // if (_.isNull(dbProfile)) {
-    //   const profileParams = {
-    //     store: storeId,
-    //     parent: (!_.isNull(parentId) ? parentId._id : null),
-    //     name: profile.name,
-    //     uniqKey: uniqKey,
-    //     avatarUrl: profile.avatarUrl,
-    //     serviceUserId: profile.serviceUserId,
-    //     serviceUsername: profile.serviceUsername,
-    //     profileURL: profile.profileURL,
-    //     accessToken: profile.accessToken,
-    //     accessTokenSecret: profile.accessTokenSecret,
-    //     service: profileService,
-    //     serviceProfile: profileServiceProfile,
-    //     bufferId: profile.bufferId,
-    //     isConnected: (profile.isConnected === '0') ? false : true,
-    //     isTokenExpired: (profile.isTokenExpired === '0') ? false : true,
-    //     isSharePossible: isSharePossible,
-    //     fbDefaultAlbum: profile.fbDefaultAlbum,
-    //   };
-    //   dbProfile = await ProfileModel.create(profileParams);
-    // }
     console.log('===================');
     console.log("TCL: dbProfile", dbProfile)
     console.log('===================');
