@@ -14,21 +14,19 @@ const stringHelper = require('shared').stringHelper;
 const httpHelper = require('shared').httpHelper
 const cognitoHelper = require('shared').cognitoHelper
 const jwt = require('shared').jwtHelper;
+const sqsHelper = require('shared').sqsHelper;
 const StoreModel = require('shared').StoreModel
 
 const querystring = require('querystring')
 const jsonwebtoken = require('jsonwebtoken');
 
 let lambda;
-let sqs;
 
 const AWS = require('aws-sdk');
 if (process.env.IS_OFFLINE === 'false') {
   lambda = new AWS.Lambda({
     region: process.env.AWS_REGION //change to your region
   });
-  AWS.config.update({ region: process.env.AWS_REGION });
-  sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 }
 module.exports = {
   getAuthURL: async function (event, now) {
@@ -128,6 +126,7 @@ module.exports = {
         throw new Error("response[\"access_token\"] is undefined");
       }
       const shop = await this.getShop(shopDomain, accessToken);
+      console.log("TCL: accessToken", accessToken)
 
 
       const storeKey = `shopify-${shop.id}`;
@@ -173,8 +172,16 @@ module.exports = {
       } else {
 
         isCharged = store.isCharged;
+        const shopUpdateParams = {
+          userId: cognitoUser,
+          partnerToken: accessToken,
+          isUninstalled: false,
+        };
+        console.log("TCL: shopUpdateParams", shopUpdateParams)
         store.isUninstalled = false;
-        await store.save();
+        store.userId = cognitoUser;
+        store.partnerToken = accessToken;
+        await StoreModel.updateOne({ _id: store._id }, shopUpdateParams);
       }
       let chargeAuthorizationUrl = null
       if (!isCharged) {
@@ -271,10 +278,13 @@ module.exports = {
       }
     });
     const url = `https://${shop}/admin/api/${process.env.SHOPIFY_API_VERSION}/recurring_application_charges.json`;
-    const { json, res } = await this.shopifyAPICall(url, body, 'post', accessToken);
+    const { json, res, error } = await this.shopifyAPICall(url, body, 'post', accessToken);
     console.log("createCharge json", json);
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      throw new Error(json.error_description || json.error || json.errors);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        throw new Error(error);
+      }
+      return;
     }
     return json.recurring_application_charge.confirmation_url;
   },
@@ -316,10 +326,13 @@ module.exports = {
 
   getShop: async function (shopDomain, accessToken) {
     console.log("getShop shop", shopDomain);
-    const { json, res } = await this.shopifyAPICall(`https://${shopDomain}/admin/shop.json`, null, 'get', accessToken);
+    const { json, res, error } = await this.shopifyAPICall(`https://${shopDomain}/admin/shop.json`, null, 'get', accessToken);
     console.log("getShop json", json.shop);
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      throw new Error(json.error_description || json.error || json.errors);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        throw new Error(error);
+      }
+      return;
     }
     return json.shop;
   },
@@ -375,22 +388,15 @@ module.exports = {
         "collectionId": null
       }
       if (process.env.IS_OFFLINE === 'false') {
-        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncStoreData`;
-        console.log("TCL: QueueUrl", QueueUrl)
-        const params = {
-          MessageBody: JSON.stringify(storePayload),
-          QueueUrl: QueueUrl
-        };
-        console.log("TCL: params", params)
-        const response = await sqs.sendMessage(params).promise();
-        console.log("TCL: response", response)
+        await sqsHelper.addToQueue('SyncStoreData', storePayload);
       } else {
         this.syncStoreData(storePayload);
       }
       const webhookPayload = {
         partnerStore: PARTNERS_SHOPIFY,
-        shopURL: store.url,
-        accessToken: store.partnerToken
+        shopURL: store.partnerSpecificUrl,
+        accessToken: store.partnerToken,
+        storeId: store._id
       }
       if (process.env.IS_OFFLINE === 'false') {
         const webhookParams = {
@@ -422,16 +428,18 @@ module.exports = {
     console.log("getCharge shop", shop);
     console.log("getCharge charge_id", charge_id);
     const url = `https://${shop}/admin/api/${process.env.SHOPIFY_API_VERSION}/recurring_application_charges/${charge_id}.json`;
-    const { json, res } = await this.shopifyAPICall(url, null, 'get', accessToken);
+    const { json, res, error } = await this.shopifyAPICall(url, null, 'get', accessToken);
     console.log("getCharge json response", json);
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      throw new Error(json.error_description || json.error || json.errors);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        throw new Error(error);
+      }
+      return;
     }
     return json.recurring_application_charge;
   },
 
   activateCharge: async function (shop, chargeResponse, accessToken) {
-
     console.log("activateCharge shop", shop);
     console.log("activateCharge chargeResponse", chargeResponse);
     const body = JSON.stringify({
@@ -454,11 +462,13 @@ module.exports = {
       }
     });
     const url = `https://${shop}/admin/api/${process.env.SHOPIFY_API_VERSION}/recurring_application_charges/${chargeResponse.id}/activate.json`;
-    const { json, res } = await this.shopifyAPICall(url, body, 'post', accessToken);
+    const { json, res, error } = await this.shopifyAPICall(url, body, 'post', accessToken);
     console.log("activateCharge json", json);
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      console.log("TCL: json", json)
-      throw new Error(json.error_description || json.error || json.errors);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        throw new Error(error);
+      }
+      return;
     }
     return json.recurring_application_charge;
   },
@@ -498,50 +508,13 @@ module.exports = {
     // console.log("TCL: syncProductPayload", syncProductPayload)
     if (process.env.IS_OFFLINE === 'false') {
       // syncing the custome colltions 
-      const QueueUrlCustomCollectionPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncCollectionPage`;
-      console.log("TCL: QueueUrlCustomCollectionPayload", QueueUrlCustomCollectionPayload)
-      const paramsCustomCollectionPayload = {
-        MessageBody: JSON.stringify(syncCustomCollectionPayload),
-        QueueUrl: QueueUrlCustomCollectionPayload
-      };
-      console.log("TCL: paramsCustomCollectionPayload", paramsCustomCollectionPayload)
-      const responseCustomCollectionPayload = await sqs.sendMessage(paramsCustomCollectionPayload).promise();
-      console.log("TCL: responseCustomCollectionPayload", responseCustomCollectionPayload)
-
-      // syncing the smart collections
+      await sqsHelper.addToQueue('SyncCollectionPage', syncCustomCollectionPayload);
       // syncing the custome colltions 
-      const QueueUrlSmartCollectionPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncCollectionPage`;
-      console.log("TCL: QueueUrlSmartCollectionPayload", QueueUrlSmartCollectionPayload)
-      const paramsSmartCollectionPayload = {
-        MessageBody: JSON.stringify(syncSmartCollectionPayload),
-        QueueUrl: QueueUrlSmartCollectionPayload
-      };
-      console.log("TCL: paramsSmartCollectionPayload", paramsSmartCollectionPayload)
-      const responseSmartCollectionPayload = await sqs.sendMessage(paramsSmartCollectionPayload).promise();
-      console.log("TCL: responseSmartCollectionPayload", responseSmartCollectionPayload)
-
+      await sqsHelper.addToQueue('SyncCollectionPage', syncSmartCollectionPayload);
       // syncing products
-      const QueueUrlProductPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncProductPage`;
-      console.log("TCL: QueueUrlProductPayload", QueueUrlProductPayload)
-      const paramsProductPayload = {
-        MessageBody: JSON.stringify(syncProductPayload),
-        QueueUrl: QueueUrlProductPayload
-      };
-      console.log("TCL: paramsProductPayload", paramsProductPayload)
-      const responseProductPayload = await sqs.sendMessage(paramsProductPayload).promise();
-      console.log("TCL: responseProductPayload", responseProductPayload)
-
+      await sqsHelper.addToQueue('SyncProductPage', syncProductPayload);
       // syncing Variants
-      const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncVariantPage`;
-      console.log("TCL: QueueUrlVariantPayload", QueueUrlVariantPayload)
-      const paramsVariantPayload = {
-        MessageBody: JSON.stringify(syncVariantPayload),
-        QueueUrl: QueueUrlVariantPayload
-      };
-      console.log("TCL: paramsVariantPayload", paramsVariantPayload)
-      const responseVariantPayload = await sqs.sendMessage(paramsVariantPayload).promise();
-      console.log("TCL: responseVariantPayload", responseVariantPayload)
-
+      await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayload);
     } else {
       await this.syncCollectionPage(syncCustomCollectionPayload);
       await this.syncCollectionPage(syncSmartCollectionPayload);
@@ -554,6 +527,10 @@ module.exports = {
     const StoreModel = shared.StoreModel;
     const CollectionModel = shared.CollectionModel;
     const storeDetail = await StoreModel.findById(event.storeId);
+    if (storeDetail.isUninstalled) {
+      console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
+      return false;
+    }
     let productQuery = '';
 
     let pageInfoQuery = '';
@@ -566,13 +543,27 @@ module.exports = {
       }
     }
     const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/${event.collectionType}.json?limit=250${productQuery}${pageInfoQuery}`;
-    const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      console.log("TCL: syncCollectionPage json", json)
-      throw new Error(json.error_description || json.error || json.errors);
+    const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        console.log("TCL: syncCollectionPage error", error)
+        if (error.indexOf('Exceeded') >= 0) {
+          if (process.env.IS_OFFLINE === 'false') {
+            // retry this event
+            await sqsHelper.addToQueue('SyncCollectionPage', event);
+          }
+          return;
+        } else {
+          throw new Error(error);
+        }
+      }
+      return;
     }
     console.log("TCL: syncCollectionPage json", json[event.collectionType].length);
-    let collectionUniqKeys = await this.syncCollections(storeDetail._id, json[event.collectionType]);
+    let collectionUniqKeys;
+    if (json[event.collectionType].length > 0) {
+      collectionUniqKeys = await this.syncCollections(storeDetail._id, json[event.collectionType]);
+    }
     console.log("TCL: syncCollectionPage collectionUniqKeys", collectionUniqKeys)
 
     if (!_.isNull(event.productId)) {
@@ -582,42 +573,28 @@ module.exports = {
         const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
         if (!_.isNull(pageInfo)) {
           if (process.env.IS_OFFLINE === 'false') {
-            // syncing the custome colltions 
-            const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncCollectionPage`;
-            console.log("TCL: QueueUrl", QueueUrl)
-            const params = {
-              MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo }),
-              QueueUrl: QueueUrl
-            };
-            console.log("TCL: params", params)
-            const response = await sqs.sendMessage(params).promise();
-            console.log("TCL: response", response)
+            const collectionPayload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo };
+            await sqsHelper.addToQueue('SyncCollectionPage', collectionPayload);
           } else {
             await this.syncCollectionPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo });
           }
         }
       }
-      const dbCollections = await CollectionModel.where('uniqKey').in(collectionUniqKeys.map(collection => collection)).select('_id');
-      console.log("TCL: syncCollectionPage dbCollections", dbCollections);
-      await Promise.all(dbCollections.map(async collection => {
-        if (process.env.IS_OFFLINE === 'false') {
-          // syncing products
-          const QueueUrlProductPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncProductPage`;
-          console.log("TCL: QueueUrlProductPayload", QueueUrlProductPayload)
-          const paramsProductPayload = {
-            MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null }),
-            QueueUrl: QueueUrlProductPayload
-          };
-          console.log("TCL: paramsProductPayload", paramsProductPayload)
-          const responseProductPayload = await sqs.sendMessage(paramsProductPayload).promise();
-          console.log("TCL: responseProductPayload", responseProductPayload)
+      if (!_.isUndefined(collectionUniqKeys)) {
+        const dbCollections = await CollectionModel.where('uniqKey').in(collectionUniqKeys.map(collection => collection)).select('_id');
+        console.log("TCL: syncCollectionPage dbCollections", dbCollections);
+        await Promise.all(dbCollections.map(async collection => {
+          if (process.env.IS_OFFLINE === 'false') {
+            // syncing products for this collection
+            await sqsHelper.addToQueue('SyncProductPage', { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null });
+          } else {
+            const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null };
+            console.log("TCL: syncCollectionPage payload", payload)
+            await this.syncProductPage(payload);
+          }
+        }));
+      }
 
-        } else {
-          const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null };
-          console.log("TCL: syncCollectionPage payload", payload)
-          await this.syncProductPage(payload);
-        }
-      }));
     }
 
   },
@@ -653,12 +630,18 @@ module.exports = {
     console.log('syncProductCount event', event);
     const StoreModel = shared.StoreModel;
     const storeDetail = await StoreModel.findById(event.storeId);
+    if (storeDetail.isUninstalled) {
+      console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
+      return false;
+    }
     const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/count.json?published_status=published`;
     console.log("TCL: syncProductCount url", url)
-    const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      console.log("TCL: syncProductCount json", json)
-      throw new Error(json.error_description || json.error || json.errors);
+    const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        throw new Error(error);
+      }
+      return;
     }
     console.log("TCL: syncProductCount json", json);
     storeDetail.numberOfProducts = json.count;
@@ -672,6 +655,10 @@ module.exports = {
     const StoreModel = shared.StoreModel;
     const CollectionModel = shared.CollectionModel;
     const storeDetail = await StoreModel.findById(event.storeId);
+    if (storeDetail.isUninstalled) {
+      console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
+      return false;
+    }
     let collectionQuery = '';
     let pageInfoQuery = '';
 
@@ -686,83 +673,61 @@ module.exports = {
     }
     const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=75${collectionQuery}${pageInfoQuery}`;
     console.log("TCL: syncProductPage url", url)
-    const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      console.log("TCL: syncProductPage json error", json)
-      // 
-      if ((json.error_description || json.error || json.errors).indexOf('Exceeded') >= 0) {
+    const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        if (error.indexOf('Exceeded') >= 0) {
+          if (process.env.IS_OFFLINE === 'false') {
+            // retry this event
+            await sqsHelper.addToQueue('SyncProductPage', event);
+          }
+          return;
+        } else {
+          throw new Error(error);
+        }
+      }
+      return;
+    }
+    const apiProducts = json.products;
+    console.log("TCL: apiProducts.length", apiProducts.length);
+    if (!_.isUndefined(context)) {
+      console.log('syncProductPage event after api call', (context.getRemainingTimeInMillis() / 1000));
+    }
+    if (apiProducts.length > 0) {
+      await this.syncProducts(event, apiProducts, storeDetail, context);
+    }
+    if (!_.isUndefined(context)) {
+      console.log('syncProductPage event after syncProducts', (context.getRemainingTimeInMillis() / 1000));
+    }
+    if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
+      console.log("TCL: There is next page. ")
+      const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
+      if (!_.isNull(pageInfo)) {
         if (process.env.IS_OFFLINE === 'false') {
           // syncing products
-          const QueueUrlSyncProductPage = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncProductPage`;
-          console.log("TCL: QueueUrlSyncProductPage", QueueUrlSyncProductPage)
-          const paramsSyncProductPage = {
-            MessageBody: JSON.stringify(event),
-            QueueUrl: QueueUrlSyncProductPage
-          };
-          console.log("TCL: paramsSyncProductPage", paramsSyncProductPage)
-          const responseSyncProductPage = await sqs.sendMessage(paramsSyncProductPage).promise();
-          console.log("TCL: responseSyncProductPage", responseSyncProductPage)
-
-        }
-      } else {
-        throw new Error(json.error_description || json.error || json.errors);
-      }
-
-    } else {
-      const apiProducts = json.products;
-      console.log("TCL: apiProducts.length", apiProducts.length);
-      if (!_.isUndefined(context)) {
-        console.log('syncProductPage event after api call', (context.getRemainingTimeInMillis() / 1000));
-      }
-      if (apiProducts.length > 0) {
-        await this.syncProducts(event, apiProducts, storeDetail, context);
-      }
-      if (!_.isUndefined(context)) {
-        console.log('syncProductPage event after syncProducts', (context.getRemainingTimeInMillis() / 1000));
-      }
-      if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
-        console.log("TCL: There is next page. ")
-        const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
-        if (!_.isNull(pageInfo)) {
-          if (process.env.IS_OFFLINE === 'false') {
-            // syncing products
-            const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncProductPage`;
-            console.log("TCL: QueueUrl", QueueUrl)
-            const params = {
-              MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo }),
-              QueueUrl: QueueUrl
-            };
-            console.log("TCL: params", params)
-            const response = await sqs.sendMessage(params).promise();
-            console.log("TCL: response", response)
-          } else {
-            const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
-            await this.syncProductPage(payload);
-          }
-        }
-        if (!_.isUndefined(context)) {
-          console.log('syncProductPage event after lambda.invoke', (context.getRemainingTimeInMillis() / 1000));
-        }
-      } else {
-        console.log("All products are now sycned. its time to sync variants. ")
-        if (process.env.IS_OFFLINE === 'false') {
-          // sync variant products
-          // syncing Variants
-          const QueueUrlVariantPayload = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncVariantPage`;
-          console.log("TCL: QueueUrl", QueueUrlVariantPayload)
-          const paramsVariantPayload = {
-            MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: null }),
-            QueueUrl: QueueUrlVariantPayload
-          };
-          console.log("TCL: paramsVariantPayload", paramsVariantPayload)
-          const responseVariantPayload = await sqs.sendMessage(paramsVariantPayload).promise();
-          console.log("TCL: responseVariantPayload", responseVariantPayload)
+          const pageInfoProductPayload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
+          await sqsHelper.addToQueue('SyncProductPage', pageInfoProductPayload);
         } else {
-          await this.syncVariantPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: null });
+          const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
+          await this.syncProductPage(payload);
         }
       }
-      console.log("TCL: Sync Prdouct completed for this api call. ")
+      if (!_.isUndefined(context)) {
+        console.log('syncProductPage event after lambda.invoke', (context.getRemainingTimeInMillis() / 1000));
+      }
+    } else {
+      console.log("All products are now sycned. its time to sync variants. ")
+      if (process.env.IS_OFFLINE === 'false') {
+        // sync variant products
+        // syncing Variants
+        const syncVariantPayload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: null };
+        await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayload);
+
+      } else {
+        await this.syncVariantPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: null });
+      }
     }
+    console.log("TCL: Sync Prdouct completed for this api call. ")
   },
   syncVariantPage: async function (event, context) {
     console.log('syncVariantPage event', event);
@@ -772,6 +737,10 @@ module.exports = {
     const StoreModel = shared.StoreModel;
     const CollectionModel = shared.CollectionModel;
     const storeDetail = await StoreModel.findById(event.storeId);
+    if (storeDetail.isUninstalled) {
+      console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
+      return false;
+    }
     let collectionQuery = '';
     let pageInfoQuery = '';
 
@@ -786,65 +755,51 @@ module.exports = {
     }
     const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=20${collectionQuery}${pageInfoQuery}`;
     console.log("TCL: syncVariantPage url", url)
-    const { json, res } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      console.log("TCL: syncVariantPage json error", json);
-      if ((json.error_description || json.error || json.errors).indexOf('Exceeded') >= 0) {
+    const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        if (error.indexOf('Exceeded') >= 0) {
+          if (process.env.IS_OFFLINE === 'false') {
+            // retry this event
+            await sqsHelper.addToQueue('SyncVariantPage', event);
+          }
+          return;
+        } else {
+          throw new Error(error);
+        }
+      }
+      return;
+    }
+    const apiProducts = json.products;
+    console.log("TCL: apiProducts.length", apiProducts.length);
+    if (!_.isUndefined(context)) {
+      console.log('syncVariantPage event after api call', (context.getRemainingTimeInMillis() / 1000));
+    }
+    if (apiProducts.length > 0) {
+      await this.syncVariants(event, apiProducts, storeDetail, context);
+    }
+    if (!_.isUndefined(context)) {
+      console.log('syncVariantPage event after syncVariants', (context.getRemainingTimeInMillis() / 1000));
+    }
+    if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
+      console.log("TCL: There is next page. ")
+      const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
+      if (!_.isNull(pageInfo)) {
         if (process.env.IS_OFFLINE === 'false') {
           // syncing Variants
-          const QueueUrlSyncVariantPage = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncVariantPage`;
-          console.log("TCL: QueueUrlSyncVariantPage", QueueUrlSyncVariantPage)
-          const paramsSyncVariantPage = {
-            MessageBody: JSON.stringify(event),
-            QueueUrl: QueueUrlSyncVariantPage
-          };
-          console.log("TCL: paramsSyncVariantPage", paramsSyncVariantPage)
-          const responseSyncVariantPage = await sqs.sendMessage(paramsSyncVariantPage).promise();
-          console.log("TCL: responseSyncVariantPage", responseSyncVariantPage)
+          const syncVariantPayloadPageInfo = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
+          await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayload);
+
+        } else {
+          const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
+          await this.syncVariantPage(payload);
         }
-      } else {
-        throw new Error(json.error_description || json.error || json.errors);
-      }
-    } else {
-
-
-      const apiProducts = json.products;
-      console.log("TCL: apiProducts.length", apiProducts.length);
-      if (!_.isUndefined(context)) {
-        console.log('syncVariantPage event after api call', (context.getRemainingTimeInMillis() / 1000));
-      }
-      if (apiProducts.length > 0) {
-        await this.syncVariants(event, apiProducts, storeDetail, context);
       }
       if (!_.isUndefined(context)) {
-        console.log('syncVariantPage event after syncVariants', (context.getRemainingTimeInMillis() / 1000));
+        console.log('syncVariantPage event after lambda.invoke', (context.getRemainingTimeInMillis() / 1000));
       }
-      if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
-        console.log("TCL: There is next page. ")
-        const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
-        if (!_.isNull(pageInfo)) {
-          if (process.env.IS_OFFLINE === 'false') {
-            // syncing Variants
-            const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncVariantPage`;
-            console.log("TCL: QueueUrl", QueueUrl)
-            const params = {
-              MessageBody: JSON.stringify({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo }),
-              QueueUrl: QueueUrl
-            };
-            console.log("TCL: params", params)
-            const response = await sqs.sendMessage(params).promise();
-            console.log("TCL: response", response)
-          } else {
-            const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
-            await this.syncVariantPage(payload);
-          }
-        }
-        if (!_.isUndefined(context)) {
-          console.log('syncVariantPage event after lambda.invoke', (context.getRemainingTimeInMillis() / 1000));
-        }
-      }
-      console.log("TCL: Sync Prdouct completed for this api call. ")
     }
+    console.log("TCL: Sync Prdouct completed for this api call. ")
   },
   addCollectiontoItems: async function (model, items, collectionId) {
     if (items.length > 0) {
@@ -1150,6 +1105,12 @@ module.exports = {
     }
   },
   getWebhooks: async function (event) {
+    console.log("TCL: event", event)
+    const storeDetail = await shared.StoreModel.findById(event.storeId);
+    if (storeDetail.isUninstalled) {
+      console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
+      return false;
+    }
     const webhooksAPIUrl = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
     const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, null, 'get', event.accessToken);
     console.log("TCL: json", json)
@@ -1157,12 +1118,19 @@ module.exports = {
       console.log("TCL: getWebhooks json", json)
       throw new Error(json.error_description || json.error || json.errors);
     }
-    // if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
-    //   await this.createWebhooks(event);
-    // }
+    console.log("TCL: WEBHOOKS[PARTNERS_SHOPIFY].length", WEBHOOKS[PARTNERS_SHOPIFY].length)
+    console.log("TCL: json.webhooks.length", json.webhooks.length)
+    if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
+      await this.createWebhooks(event);
+    }
   },
   createWebhooks: async function (event) {
     console.log("TCL: event", event)
+    const storeDetail = await shared.StoreModel.findById(event.storeId);
+    if (storeDetail.isUninstalled) {
+      console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
+      return false;
+    }
     const webhooksAPIUrl = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
     let body;
     await Promise.all(WEBHOOKS[PARTNERS_SHOPIFY].map(async item => {
@@ -1178,54 +1146,87 @@ module.exports = {
       const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, body, 'post', event.accessToken);
       console.log("TCL: createWebhooks json", json)
       if ("error_description" in json || "error" in json || "errors" in json) {
-        console.log("TCL: createWebhooks json", json)
+        console.log("TCL: createWebhooks json erro", json)
         console.error(json.error_description || json.error || json.errors);
       }
     }));
   },
   deleteWebhooks: async function (event) {
+    console.log("TCL: event", event)
+    const storeDetail = await shared.StoreModel.findById(event.storeId);
+    if (storeDetail.isUninstalled) {
+      console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
+      return false;
+    }
     const webhooksAPIUrl = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
-    const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, null, 'get', event.accessToken);
-    console.log("TCL: deleteWebhooks json", json)
-    if ("error_description" in json || "error" in json || "errors" in json) {
-      throw new Error(json.error_description || json.error || json.errors);
+    const { json, res, error } = await this.shopifyAPICall(webhooksAPIUrl, null, 'get', event.accessToken);
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        throw new Error(error);
+      }
+      return;
     }
     let deleteWebhookURL = '';
     if (json.webhooks.length > 0) {
       await Promise.all(json.webhooks.map(async item => {
-        deleteWebhookURL = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks/${item.id}.json`;
-        const { json, res } = await this.shopifyAPICall(deleteWebhookURL, null, 'delete', event.accessToken);
-        console.log("TCL: deleteWebhookURL json", json)
+        if (item.address.indexOf(process.env.REST_API_URL) >= 0) {
+          console.log("TCL: item", item)
+          deleteWebhookURL = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks/${item.id}.json`;
+          console.log("TCL: deleteWebhookURL", deleteWebhookURL)
+          const { json, res, error } = await this.shopifyAPICall(deleteWebhookURL, null, 'delete', event.accessToken);
+          console.log("TCL: deleteWebhooks deleteWebhookURL json", json)
+          if (_.isNull(json)) {
+            if (!_.isNull(error)) {
+              throw new Error(error);
+            }
+            return;
+          }
+        }
       }));
     }
   },
   productsCreate: async function (event, context) {
-    if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
-      const shopDomain = event.headers['x-shopify-shop-domain'];
+    console.log("TCL: event", event)
+    if (!_.isNull(event) && !_.isUndefined(event)) {
+      const shopDomain = event.shopDomain;
+      console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ url: shopDomain });
-      const apiProducts = [JSON.parse(event.body)];
+      console.log("TCL: storeDetail", storeDetail);
+      const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
+      console.log("TCL: productsCreate url", url)
+      const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
+      if (_.isNull(json)) {
+        if (!_.isNull(error)) {
+          if (error.indexOf('Exceeded') >= 0) {
+            if (process.env.IS_OFFLINE === 'false') {
+              // retry this event
+              await sqsHelper.addToQueue('ProductsCreate', event);
+            }
+            return;
+          } else {
+            throw new Error(error);
+          }
+        }
+        return;
+      }
+      const apiProducts = [json.product];
+      console.log("TCL: apiProducts", apiProducts)
 
       const syncEvent = {
         "storeId": storeDetail._id,
         "partnerStore": PARTNERS_SHOPIFY,
         "collectionId": null
       }
+      console.log("TCL: syncEvent", syncEvent)
       await this.syncProducts(syncEvent, apiProducts, storeDetail, context);
       await this.syncVariants(syncEvent, apiProducts, storeDetail, context);
       await this.syncWebhookProductCollections(apiProducts, storeDetail);
+      await this.syncProductCount(syncEvent);
       if (process.env.IS_OFFLINE === 'false') {
         const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
         await Promise.all(rules.map(async rule => {
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}ShareUpdates`;
-          console.log("TCL: QueueUrl", QueueUrl)
-          const params = {
-            MessageBody: JSON.stringify({ ruleId: rule }),
-            QueueUrl: QueueUrl
-          };
-          console.log("TCL: params", params)
-          const response = await sqs.sendMessage(params).promise();
-          console.log("TCL: response", response)
+          await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule });
         }));
       }
       return httpHelper.ok(
@@ -1236,11 +1237,28 @@ module.exports = {
     }
   },
   productsUpdate: async function (event, context) {
-    if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
-      const shopDomain = event.headers['x-shopify-shop-domain'];
+    if (!_.isNull(event) && !_.isUndefined(event)) {
+      const shopDomain = event.shopDomain;
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ url: shopDomain });
-      const apiProducts = [JSON.parse(event.body)];
+      const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
+      console.log("TCL: productsCreate url", url)
+      const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
+      if (_.isNull(json)) {
+        if (!_.isNull(error)) {
+          if (error.indexOf('Exceeded') >= 0) {
+            if (process.env.IS_OFFLINE === 'false') {
+              // retry this event
+              await sqsHelper.addToQueue('ProductsCreate', event);
+            }
+            return;
+          } else {
+            throw new Error(error);
+          }
+        }
+        return;
+      }
+      const apiProducts = [json.product];
       const syncEvent = {
         "storeId": storeDetail._id,
         "partnerStore": PARTNERS_SHOPIFY,
@@ -1249,6 +1267,7 @@ module.exports = {
       await this.syncProducts(syncEvent, apiProducts, storeDetail, context);
       await this.syncVariants(syncEvent, apiProducts, storeDetail, context);
       await this.syncWebhookProductCollections(apiProducts, storeDetail);
+      await this.syncProductCount(syncEvent);
       return httpHelper.ok(
         {
           message: "Recieved"
@@ -1294,13 +1313,14 @@ module.exports = {
     }
   },
   productsDelete: async function (event, context) {
-    if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
-      const productDetail = await shared.ProductModel.findOne({ partnerId: JSON.parse(event.body).id });
+    if (!_.isNull(event) && !_.isUndefined(event)) {
+      const productDetail = await shared.ProductModel.findOne({ partnerId: event.partnerId });
       if (!_.isNull(productDetail)) {
         const variantDelete = await shared.VariantModel.deleteMany({ product: productDetail._id });
         const imageDelete = await shared.ImageModel.deleteMany({ product: productDetail._id });
         const updateDelete = await shared.UpdateModel.deleteMany({ product: productDetail._id, scheduleState: { $in: [PENDING, APPROVED] }, });
         const productDelete = await shared.ProductModel.deleteOne({ _id: productDetail._id });
+        console.log("TCL: productDelete", productDelete)
       }
       return httpHelper.ok(
         {
@@ -1311,7 +1331,7 @@ module.exports = {
   },
   collectionsCreate: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
-      const shopDomain = event.headers['x-shopify-shop-domain'];
+      const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ url: shopDomain });
       const apiCollections = [JSON.parse(event.body)];
@@ -1325,7 +1345,7 @@ module.exports = {
   },
   collectionsUpdate: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
-      const shopDomain = event.headers['x-shopify-shop-domain'];
+      const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ url: shopDomain });
       const apiCollections = [JSON.parse(event.body)];
@@ -1362,21 +1382,11 @@ module.exports = {
   },
   appUninstalled: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
-      const shopDomain = event.headers['x-shopify-shop-domain'];
+      const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ url: shopDomain });
       if (!_.isNull(storeDetail)) {
-        const collectionDelete = await shared.CollectionModel.deleteMany({ store: storeDetail._id });
-        const imageDelete = await shared.ImageModel.deleteMany({ store: storeDetail._id });
-        const productDelete = await shared.ProductModel.deleteMany({ store: storeDetail._id });
-        const profileDelete = await shared.ProfileModel.deleteMany({ store: storeDetail._id });
-        const ruleDelete = await shared.RuleModel.deleteMany({ store: storeDetail._id });
-        const updateDelete = await shared.UpdateModel.deleteMany({ store: storeDetail._id });
-        const variantDelete = await shared.VariantModel.deleteMany({ store: storeDetail._id });
-        storeDetail.isUninstalled = true;
-        storeDetail.uninstalledDate = new Date().toISOString();
-        storeDetail.isCharged = false;
-        await storeDetail.save();
+        await this.confirmUninstalled(storeDetail._id);
       }
       return httpHelper.ok(
         {
@@ -1387,10 +1397,11 @@ module.exports = {
   },
   shopUpdate: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
-      const shopDomain = event.headers['x-shopify-shop-domain'];
+      const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ url: shopDomain });
       const shop = JSON.parse(event.body);
+      console.log("TCL: shopUpdate shop", shop)
       const shopUpdate = {
         partnerPlan: shop.plan_name,
         title: shop.name,
@@ -1431,13 +1442,69 @@ module.exports = {
     const json = await res.json();
     await this.sleep(1000);
     if ("error_description" in json || "error" in json || "errors" in json) {
-      console.log("TCL: shopifyAPICall error url", url)
+      console.log("TCL: error json", json)
+      console.error("TCL: shopifyAPICall error url", url)
       console.error(json.error_description || json.error || json.errors);
-      // return {json: json};
+      console.log("TCL: json.errors", json.errors)
+      console.log("TCL: json.error", json.error)
+      console.log("TCL: json.error_description", json.error_description)
+      let errorResponse;
+      if (!_.isUndefined(json.error_description)) {
+        errorResponse = json.error_description;
+      } else if (!_.isUndefined(json.errors)) {
+        errorResponse = json.errors;
+      } else if (!_.isUndefined(json.error)) {
+        errorResponse = json.error;
+      }
+      const shopUrl = url.split('/admin')[0].replace('https://', '');;
+      console.log("TCL: shopUrl", shopUrl);
+      console.log("TCL: shopUrl1", shopUrl);
+      if (errorResponse.indexOf('[API] Invalid API') >= 0) {
+        const StoreModel = shared.StoreModel;
+        const storeDetail = await StoreModel.findOne({ $or: [{ "partnerSpecificUrl": shopUrl }, { "url": shopUrl }] })
+        await this.confirmUninstalled(storeDetail._id);
+        return { json: null, res: res, error: null };
+      } else if (errorResponse.indexOf('Not Found') >= 0) {
+        console.log("TCL: errorResponse", errorResponse)
+        return { json: null, res: res, error: null };
+      } else {
+        return { json: null, res: res, error: errorResponse };
+      }
     }
-    return { json: json, res: res };
+    return { json: json, res: res, error: null };
   },
   sleep: async function (seconds) {
     return new Promise(resolve => setTimeout(resolve, seconds));
+  },
+  confirmUninstalled: async function (storeId) {
+    try {
+      console.log("TCL: confirmUninstalled storeId", storeId)
+      const StoreModel = shared.StoreModel;
+      const storeDetail = await StoreModel.findById(storeId);
+      console.log("TCL: confirmUninstalled storeDetail", storeDetail)
+      if (!_.isNull(storeDetail)) {
+        const collectionDelete = await shared.CollectionModel.deleteMany({ store: storeDetail._id });
+        console.log("TCL: collectionDelete", collectionDelete)
+        const imageDelete = await shared.ImageModel.deleteMany({ store: storeDetail._id });
+        console.log("TCL: imageDelete", imageDelete)
+        const productDelete = await shared.ProductModel.deleteMany({ store: storeDetail._id });
+        console.log("TCL: productDelete", productDelete)
+        const profileDelete = await shared.ProfileModel.deleteMany({ store: storeDetail._id });
+        console.log("TCL: profileDelete", profileDelete)
+        const ruleDelete = await shared.RuleModel.deleteMany({ store: storeDetail._id });
+        console.log("TCL: ruleDelete", ruleDelete)
+        const updateDelete = await shared.UpdateModel.deleteMany({ store: storeDetail._id });
+        console.log("TCL: updateDelete", updateDelete)
+        const variantDelete = await shared.VariantModel.deleteMany({ store: storeDetail._id });
+        console.log("TCL: variantDelete", variantDelete)
+        storeDetail.isUninstalled = true;
+        storeDetail.uninstalledDate = new Date().toISOString();
+        storeDetail.isCharged = false;
+        await storeDetail.save();
+      }
+    } catch (error) {
+      console.error("TCL: error", error)
+
+    }
   }
 }

@@ -9,6 +9,7 @@ exports.stringHelper = require('./helpers/string');
 exports.query = require('./helpers/query');
 exports.shortLink = require('./helpers/shortLinks');
 exports.dateTime = require('./helpers/dateTime');
+exports.sqsHelper = require('./helpers/sqsHelper');
 
 // models
 exports.StoreModel = require('./models/store');
