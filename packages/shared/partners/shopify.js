@@ -1454,11 +1454,11 @@ module.exports = {
       console.log("TCL: json.error_description", json.error_description)
       let errorResponse;
       if (!_.isUndefined(json.error_description)) {
-        errorResponse = json.error_description;
+        errorResponse = JSON.stringify(json.error_description);
       } else if (!_.isUndefined(json.errors)) {
-        errorResponse = json.errors;
+        errorResponse = JSON.stringify(json.errors);
       } else if (!_.isUndefined(json.error)) {
-        errorResponse = json.error;
+        errorResponse = JSON.stringify(json.error);
       }
       const shopUrl = url.split('/admin')[0].replace('https://', '');;
       console.log("TCL: shopUrl", shopUrl);
