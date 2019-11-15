@@ -126,6 +126,7 @@ module.exports = {
         throw new Error("response[\"access_token\"] is undefined");
       }
       const shop = await this.getShop(shopDomain, accessToken);
+      console.log("TCL: accessToken", accessToken)
 
 
       const storeKey = `shopify-${shop.id}`;
@@ -171,8 +172,16 @@ module.exports = {
       } else {
 
         isCharged = store.isCharged;
+        const shopUpdateParams = {
+          userId: cognitoUser,
+          partnerToken: accessToken,
+          isUninstalled: false,
+        };
+        console.log("TCL: shopUpdateParams", shopUpdateParams)
         store.isUninstalled = false;
-        await store.save();
+        store.userId = cognitoUser;
+        store.partnerToken = accessToken;
+        await StoreModel.updateOne({ _id: store._id }, shopUpdateParams);
       }
       let chargeAuthorizationUrl = null
       if (!isCharged) {
@@ -537,7 +546,8 @@ module.exports = {
     const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if (_.isNull(json)) {
       if (!_.isNull(error)) {
-        if (error.indexOf('Exceeded')) {
+        console.log("TCL: syncCollectionPage error", error)
+        if (error.indexOf('Exceeded') >= 0) {
           if (process.env.IS_OFFLINE === 'false') {
             // retry this event
             await sqsHelper.addToQueue('SyncCollectionPage', event);
@@ -666,7 +676,7 @@ module.exports = {
     const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if (_.isNull(json)) {
       if (!_.isNull(error)) {
-        if (error.indexOf('Exceeded')) {
+        if (error.indexOf('Exceeded') >= 0) {
           if (process.env.IS_OFFLINE === 'false') {
             // retry this event
             await sqsHelper.addToQueue('SyncProductPage', event);
@@ -748,7 +758,7 @@ module.exports = {
     const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if (_.isNull(json)) {
       if (!_.isNull(error)) {
-        if (error.indexOf('Exceeded')) {
+        if (error.indexOf('Exceeded') >= 0) {
           if (process.env.IS_OFFLINE === 'false') {
             // retry this event
             await sqsHelper.addToQueue('SyncVariantPage', event);
@@ -1108,9 +1118,11 @@ module.exports = {
       console.log("TCL: getWebhooks json", json)
       throw new Error(json.error_description || json.error || json.errors);
     }
-    // if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
-    //   await this.createWebhooks(event);
-    // }
+    console.log("TCL: WEBHOOKS[PARTNERS_SHOPIFY].length", WEBHOOKS[PARTNERS_SHOPIFY].length)
+    console.log("TCL: json.webhooks.length", json.webhooks.length)
+    if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
+      await this.createWebhooks(event);
+    }
   },
   createWebhooks: async function (event) {
     console.log("TCL: event", event)
@@ -1186,7 +1198,7 @@ module.exports = {
       const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
       if (_.isNull(json)) {
         if (!_.isNull(error)) {
-          if (error.indexOf('Exceeded')) {
+          if (error.indexOf('Exceeded') >= 0) {
             if (process.env.IS_OFFLINE === 'false') {
               // retry this event
               await sqsHelper.addToQueue('ProductsCreate', event);
@@ -1198,7 +1210,7 @@ module.exports = {
         }
         return;
       }
-      const apiProducts = json.products;
+      const apiProducts = [json.product];
       console.log("TCL: apiProducts", apiProducts)
 
       const syncEvent = {
@@ -1234,7 +1246,7 @@ module.exports = {
       const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
       if (_.isNull(json)) {
         if (!_.isNull(error)) {
-          if (error.indexOf('Exceeded')) {
+          if (error.indexOf('Exceeded') >= 0) {
             if (process.env.IS_OFFLINE === 'false') {
               // retry this event
               await sqsHelper.addToQueue('ProductsCreate', event);
@@ -1246,7 +1258,7 @@ module.exports = {
         }
         return;
       }
-      const apiProducts = json.products;
+      const apiProducts = [json.product];
       const syncEvent = {
         "storeId": storeDetail._id,
         "partnerStore": PARTNERS_SHOPIFY,
@@ -1308,6 +1320,7 @@ module.exports = {
         const imageDelete = await shared.ImageModel.deleteMany({ product: productDetail._id });
         const updateDelete = await shared.UpdateModel.deleteMany({ product: productDetail._id, scheduleState: { $in: [PENDING, APPROVED] }, });
         const productDelete = await shared.ProductModel.deleteOne({ _id: productDetail._id });
+        console.log("TCL: productDelete", productDelete)
       }
       return httpHelper.ok(
         {
@@ -1388,6 +1401,7 @@ module.exports = {
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ url: shopDomain });
       const shop = JSON.parse(event.body);
+      console.log("TCL: shopUpdate shop", shop)
       const shopUpdate = {
         partnerPlan: shop.plan_name,
         title: shop.name,
@@ -1426,24 +1440,36 @@ module.exports = {
       await this.sleep(12000);
     }
     const json = await res.json();
-    console.log("TCL: json", json)
     await this.sleep(1000);
     if ("error_description" in json || "error" in json || "errors" in json) {
+      console.log("TCL: error json", json)
       console.error("TCL: shopifyAPICall error url", url)
       console.error(json.error_description || json.error || json.errors);
+      console.log("TCL: json.errors", json.errors)
+      console.log("TCL: json.error", json.error)
+      console.log("TCL: json.error_description", json.error_description)
+      let errorResponse;
+      if (!_.isUndefined(json.error_description)) {
+        errorResponse = json.error_description;
+      } else if (!_.isUndefined(json.errors)) {
+        errorResponse = json.errors;
+      } else if (!_.isUndefined(json.error)) {
+        errorResponse = json.error;
+      }
       const shopUrl = url.split('/admin')[0].replace('https://', '');;
       console.log("TCL: shopUrl", shopUrl);
-      if (_.has(json, 'errors')) {
-        if (json.errors.indexOf('[API] Invalid API') >= 0) {
-          const StoreModel = shared.StoreModel;
-          const storeDetail = await StoreModel.findOne({ $or: [{ "partnerSpecificUrl": shopUrl }, { "url": shopUrl }] })
-          await this.confirmUninstalled(storeDetail._id);
-          return { json: null, res: res, error: null };
-        } else if (json.errors.indexOf('Not Found')) {
-          return { json: null, res: res, error: null };
-        }
+      console.log("TCL: shopUrl1", shopUrl);
+      if (errorResponse.indexOf('[API] Invalid API') >= 0) {
+        const StoreModel = shared.StoreModel;
+        const storeDetail = await StoreModel.findOne({ $or: [{ "partnerSpecificUrl": shopUrl }, { "url": shopUrl }] })
+        await this.confirmUninstalled(storeDetail._id);
+        return { json: null, res: res, error: null };
+      } else if (errorResponse.indexOf('Not Found') >= 0) {
+        console.log("TCL: errorResponse", errorResponse)
+        return { json: null, res: res, error: null };
+      } else {
+        return { json: null, res: res, error: errorResponse };
       }
-      return { json: null, res: res, error: json };
     }
     return { json: json, res: res, error: null };
   },
