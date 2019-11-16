@@ -1474,6 +1474,9 @@ module.exports = {
       } else if (errorResponse.indexOf('for this topic has already been taken') >= 0) {
         console.log("TCL: errorResponse", errorResponse)
         return { json: null, res: res, error: null };
+      } else if (errorResponse.indexOf('Unavailable Shop') >= 0) {
+        console.log("TCL: errorResponse", errorResponse)
+        return { json: null, res: res, error: null };
       } else {
         return { json: null, res: res, error: errorResponse };
       }
