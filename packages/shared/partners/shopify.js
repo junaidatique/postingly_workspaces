@@ -1112,7 +1112,7 @@ module.exports = {
       return false;
     }
     const webhooksAPIUrl = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
-    const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, null, 'get', event.accessToken);
+    const { json, res, error } = await this.shopifyAPICall(webhooksAPIUrl, null, 'get', event.accessToken);
     console.log("TCL: json", json)
     if (_.isNull(json)) {
       if (!_.isNull(error)) {
@@ -1145,7 +1145,7 @@ module.exports = {
       });
       console.log("TCL: createWebhooks body", body)
 
-      const { json, res } = await this.shopifyAPICall(webhooksAPIUrl, body, 'post', event.accessToken);
+      const { json, res, error } = await this.shopifyAPICall(webhooksAPIUrl, body, 'post', event.accessToken);
       console.log("TCL: createWebhooks json", json)
       if (_.isNull(json)) {
         if (!_.isNull(error)) {
