@@ -3,6 +3,7 @@ const UpdateModel = require('shared').UpdateModel;
 const VariantModel = require('shared').VariantModel;
 const ProductModel = require('shared').ProductModel;
 const formattedRule = require('./functions').formattedRule
+const sqsHelper = require('shared').sqsHelper;
 const _ = require('lodash');
 const moment = require('moment')
 const query = require('shared').query;
@@ -15,16 +16,7 @@ const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED, SCHEDULE_TYPE_PR
 //   schedule = require('functions').scheduleProducts.schedule;
 //   addCaptions = require('functions').cronAddCaptions.execute;
 // }
-let lambda;
-let sqs;
-const AWS = require('aws-sdk');
-if (process.env.IS_OFFLINE === 'false') {
-  lambda = new AWS.Lambda({
-    region: process.env.AWS_REGION //change to your region
-  });
-  AWS.config.update({ region: process.env.AWS_REGION });
-  sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
-}
+
 module.exports = {
   manageRule: async (obj, args, context, info) => {
     let ruleParams = {};
@@ -102,16 +94,7 @@ module.exports = {
       }
     }
     if (process.env.IS_OFFLINE === 'false') {
-      const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}CreateUpdates`;
-      console.log("TCL: QueueUrl", QueueUrl)
-      const params = {
-        MessageBody: JSON.stringify({ ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id }),
-        QueueUrl: QueueUrl
-      };
-      console.log("TCL: params", params);
-      const response = await sqs.sendMessage(params).promise();
-      console.log("TCL: response", response)
-
+      await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id });
     } else {
       // await createUpdates({ ruleId: ruleDetail._id });
       // await schedule({ ruleId: ruleDetail._id });
