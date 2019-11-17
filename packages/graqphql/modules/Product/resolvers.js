@@ -1,5 +1,6 @@
 const ProductModel = require('shared').ProductModel;
 const StoreModel = require('shared').StoreModel;
+const sqsHelper = require('shared').sqsHelper;
 const formattedProduct = require('./functions').formattedProduct
 const formattedStore = require('../Store/functions').formattedStore
 const PartnerShopify = require('shared').PartnerShopify;
@@ -15,16 +16,7 @@ const {
   PRODUCT_SORT_SCHEDULED_ASC,
   PRODUCT_SORT_SCHEDULED_DESC
 } = require('shared/constants');
-let lambda;
-let sqs;
-const AWS = require('aws-sdk');
-if (process.env.IS_OFFLINE === 'false') {
-  lambda = new AWS.Lambda({
-    region: process.env.AWS_REGION //change to your region
-  });
-  AWS.config.update({ region: process.env.AWS_REGION });
-  sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
-}
+
 
 module.exports = {
   listProducts: async (obj, args, context, info) => {
@@ -119,15 +111,7 @@ module.exports = {
           "partnerStore": storeDetail.partner,
           "collectionId": null
         }
-        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}SyncStoreData`;
-        console.log("TCL: QueueUrl", QueueUrl)
-        const params = {
-          MessageBody: JSON.stringify(storePayload),
-          QueueUrl: QueueUrl
-        };
-        console.log("TCL: params", params)
-        const response = await sqs.sendMessage(params).promise();
-        console.log("TCL: response", response)
+        await sqsHelper.addToQueue('SyncStoreData', storePayload);
       } else {
         // console.log("TCL: storeDetail", storeDetail)
         await PartnerShopify.syncProductPage({ storeId: storeDetail._id, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });

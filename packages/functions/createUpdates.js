@@ -1,18 +1,10 @@
 const shared = require('shared');
+const sqsHelper = require('shared').sqsHelper;
 const moment = require('moment-timezone');
 const _ = require('lodash');
 const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
 const dbConnection = require('./db');
-let lambda;
-let sqs;
-const AWS = require('aws-sdk');
-if (process.env.IS_OFFLINE === 'false') {
-  lambda = new AWS.Lambda({
-    region: process.env.AWS_REGION //change to your region
-  });
-  AWS.config.update({ region: process.env.AWS_REGION });
-  sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
-}
+
 module.exports = {
   // event = null
   createUpdatesforNextWeek: async function (event, context) {
@@ -22,17 +14,7 @@ module.exports = {
       const rules = await RuleModel.find({ active: true });
       if (process.env.IS_OFFLINE === 'false') {
         await Promise.all(rules.map(async ruleDetail => {
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}CreateUpdates`;
-          console.log("TCL: QueueUrl", QueueUrl)
-          const params = {
-            MessageBody: JSON.stringify({ ruleId: ruleDetail._id, scheduleWeek: 'next' }),
-            QueueUrl: QueueUrl
-          };
-          console.log("TCL: params", params)
-          const response = await sqs.sendMessage(params).promise();
-          console.log("TCL: response", response)
-
-
+          await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id, scheduleWeek: 'next' });
         }));
       } else {
         console.log("TCL: createUpdatesforNextWeek event", event)
@@ -163,15 +145,8 @@ module.exports = {
       console.log("TCL: event.ruleIdForScheduler", event.ruleIdForScheduler)
       if (!_.isNull(event.ruleIdForScheduler) && !_.isUndefined(event.ruleIdForScheduler)) {
         if (process.env.IS_OFFLINE === 'false') {
-          const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}ScheduleUpdates`;
-          console.log("TCL: QueueUrl", QueueUrl)
-          const params = {
-            MessageBody: JSON.stringify({ ruleId: event.ruleIdForScheduler }),
-            QueueUrl: QueueUrl
-          };
-          console.log("TCL: params", params)
-          const response = await sqs.sendMessage(params).promise();
-          console.log("TCL: response", response)
+          await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleIdForScheduler });
+
         } else {
           console.log("TCL: cronThisWeekRulesForUpdates event", event)
         }

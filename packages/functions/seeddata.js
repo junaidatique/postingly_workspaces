@@ -1,6 +1,7 @@
 const faker = require('faker');
 // const productStubs = require('../graqphql/__tests__/product/stubs');
 const shared = require('shared');
+const sqsHelper = require('shared').sqsHelper;
 const moment = require('moment');
 const _ = require('lodash');
 const dbConnection = require('./db');
@@ -189,15 +190,7 @@ module.exports = {
       }
       console.log("TCL: webhookPayload", webhookPayload)
       if (process.env.IS_OFFLINE === 'false') {
-        const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}GetWebhooks`;
-        console.log("TCL: QueueUrl", QueueUrl)
-        const params = {
-          MessageBody: JSON.stringify(webhookPayload),
-          QueueUrl: QueueUrl
-        };
-        console.log("TCL: params", params)
-        const response = await sqs.sendMessage(params).promise();
-        console.log("TCL: response", response)
+        await sqsHelper.addToQueue('DeleteWebhooks', webhookPayload);
       }
 
     }));
