@@ -1,0 +1,14 @@
+type storeReport {
+  count: Int
+  scheduleDayOfYear: Int
+  date: String
+}
+
+input storeReportInput {
+  service: String
+  serviceProfile: String
+  postType: String
+  postAsOption: String
+  scheduleType: ScheduleType
+  scheduleState: ScheduleState
+}
