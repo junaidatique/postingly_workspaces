@@ -283,7 +283,7 @@ functions:
           batchSize: 1
           enabled: true
   products-update:
-    handler: webhooks.productsCreate
+    handler: webhooks.productsUpdate
     timeout: 720 
     reservedConcurrency: ${env:RESERVED_CONCURRENCY_WEBHOOK_UPDATE_PRODUCT}
     events:
