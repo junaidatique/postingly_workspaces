@@ -1171,9 +1171,10 @@ module.exports = {
       return;
     }
     let deleteWebhookURL = '';
+    console.log("TCL: json.webhooks", json.webhooks.length)
     if (json.webhooks.length > 0) {
       await Promise.all(json.webhooks.map(async item => {
-        if (item.address.indexOf(process.env.REST_API_URL) >= 0) {
+        if (item.address.indexOf('zbqy7ggp79') >= 0) {
           console.log("TCL: item", item)
           deleteWebhookURL = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks/${item.id}.json`;
           console.log("TCL: deleteWebhookURL", deleteWebhookURL)
@@ -1195,7 +1196,7 @@ module.exports = {
       const shopDomain = event.shopDomain;
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
-      const storeDetail = await StoreModel.findOne({ url: shopDomain });
+      const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       console.log("TCL: storeDetail", storeDetail);
       const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
       console.log("TCL: productsCreate url", url)
@@ -1244,7 +1245,7 @@ module.exports = {
     if (!_.isNull(event) && !_.isUndefined(event)) {
       const shopDomain = event.shopDomain;
       const StoreModel = shared.StoreModel;
-      const storeDetail = await StoreModel.findOne({ url: shopDomain });
+      const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
       console.log("TCL: productsCreate url", url)
       const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
@@ -1337,7 +1338,7 @@ module.exports = {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
-      const storeDetail = await StoreModel.findOne({ url: shopDomain });
+      const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       const apiCollections = [JSON.parse(event.body)];
       await this.syncCollections(storeDetail._id, apiCollections);
       return httpHelper.ok(
@@ -1351,7 +1352,7 @@ module.exports = {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
-      const storeDetail = await StoreModel.findOne({ url: shopDomain });
+      const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       const apiCollections = [JSON.parse(event.body)];
       await this.syncCollections(storeDetail._id, apiCollections);
       return httpHelper.ok(
@@ -1388,7 +1389,7 @@ module.exports = {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
-      const storeDetail = await StoreModel.findOne({ url: shopDomain });
+      const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       if (!_.isNull(storeDetail)) {
         await this.confirmUninstalled(storeDetail._id);
       }
@@ -1402,8 +1403,10 @@ module.exports = {
   shopUpdate: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
+      console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
-      const storeDetail = await StoreModel.findOne({ url: shopDomain });
+      const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
+      console.log("TCL: storeDetail", storeDetail)
       const shop = JSON.parse(event.body);
       console.log("TCL: shopUpdate shop", shop)
       const shopUpdate = {

@@ -309,8 +309,7 @@ functions:
   updates-test:
     handler: seeddata.testUpdates
   fetch-test:
-    handler: seeddata.testFetch
-    timeout: 10
+    handler: seeddata.testFetch    
   sync-stores:
     handler: seeddata.syncStores
     events:
