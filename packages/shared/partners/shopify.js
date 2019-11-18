@@ -639,6 +639,9 @@ module.exports = {
     const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if (_.isNull(json)) {
       if (!_.isNull(error)) {
+        if (error.indexOf('Exceeded') >= 0) {
+          return;
+        }
         throw new Error(error);
       }
       return;
@@ -1251,7 +1254,12 @@ module.exports = {
   },
   productsUpdate: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
-      const shopDomain = event.shopDomain;
+      let shopDomain, apiProducts;
+      if (!_.isUndefined(event.shopDomain)) {
+        shopDomain = event.shopDomain;
+      } else {
+        shopDomain = event.headers['X-Shopify-Shop-Domain'];
+      }
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       if (_.isNull(storeDetail)) {
@@ -1261,24 +1269,28 @@ module.exports = {
           }
         );
       }
-      const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
-      console.log("TCL: productsCreate url", url)
-      const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
-      if (_.isNull(json)) {
-        if (!_.isNull(error)) {
-          if (error.indexOf('Exceeded') >= 0) {
-            if (process.env.IS_OFFLINE === 'false') {
-              // retry this event
-              await sqsHelper.addToQueue('ProductsCreate', event);
+      if (!_.isUndefined(event.shopDomain)) {
+        const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
+        console.log("TCL: productsCreate url", url)
+        const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
+        if (_.isNull(json)) {
+          if (!_.isNull(error)) {
+            if (error.indexOf('Exceeded') >= 0) {
+              if (process.env.IS_OFFLINE === 'false') {
+                // retry this event
+                // await sqsHelper.addToQueue('ProductsCreate', event);
+              }
+              return;
+            } else {
+              throw new Error(error);
             }
-            return;
-          } else {
-            throw new Error(error);
           }
+          return;
         }
-        return;
+        apiProducts = [json.product];
+      } else {
+        apiProducts = [JSON.parse(event.body)];
       }
-      const apiProducts = [json.product];
       const syncEvent = {
         "storeId": storeDetail._id,
         "partnerStore": PARTNERS_SHOPIFY,

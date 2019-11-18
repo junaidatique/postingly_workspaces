@@ -77,6 +77,7 @@ functions:
           cors: true
   productsUpdate:
     handler: index.productsUpdate
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_WEBHOOK_UPDATE_PRODUCT}
     events:
       - http:
           path: /partners/{partner_slug}/productsUpdate
