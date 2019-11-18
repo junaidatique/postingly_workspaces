@@ -1198,6 +1198,13 @@ module.exports = {
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
+      if (_.isNull(storeDetail)) {
+        return httpHelper.ok(
+          {
+            message: "Recieved"
+          }
+        );
+      }
       console.log("TCL: storeDetail", storeDetail);
       const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
       console.log("TCL: productsCreate url", url)
@@ -1247,6 +1254,13 @@ module.exports = {
       const shopDomain = event.shopDomain;
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
+      if (_.isNull(storeDetail)) {
+        return httpHelper.ok(
+          {
+            message: "Recieved"
+          }
+        );
+      }
       const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
       console.log("TCL: productsCreate url", url)
       const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
@@ -1340,6 +1354,13 @@ module.exports = {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
+      if (_.isNull(storeDetail)) {
+        return httpHelper.ok(
+          {
+            message: "Recieved"
+          }
+        );
+      }
       const apiCollections = [JSON.parse(event.body)];
       await this.syncCollections(storeDetail._id, apiCollections);
       return httpHelper.ok(
@@ -1354,6 +1375,13 @@ module.exports = {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
+      if (_.isNull(storeDetail)) {
+        return httpHelper.ok(
+          {
+            message: "Recieved"
+          }
+        );
+      }
       const apiCollections = [JSON.parse(event.body)];
       await this.syncCollections(storeDetail._id, apiCollections);
       return httpHelper.ok(
@@ -1407,6 +1435,13 @@ module.exports = {
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
+      if (_.isNull(storeDetail)) {
+        return httpHelper.ok(
+          {
+            message: "Recieved"
+          }
+        );
+      }
       const shop = JSON.parse(event.body);
       console.log("TCL: shopUpdate shop", shop)
       const shopUpdate = {
