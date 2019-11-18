@@ -909,7 +909,8 @@ module.exports = {
             }
           })
         });
-        if (!_.isEmpty(bulkImageInsert)) {
+        console.log("TCL: bulkImageInsert", bulkImageInsert[0])
+        if (!_.isEmpty(bulkImageInsert[0])) {
           const images = await ImageModel.bulkWrite([].concat.apply([], bulkImageInsert));
         }
         console.log("TCL: syncProducts bulkImageInsert.length", bulkImageInsert.length)
@@ -1171,7 +1172,7 @@ module.exports = {
       return;
     }
     let deleteWebhookURL = '';
-    console.log("TCL: json.webhooks", json.webhooks.length)
+    console.log("TCL: json.webhooks.length", json.webhooks.length)
     if (json.webhooks.length > 0) {
       await Promise.all(json.webhooks.map(async item => {
         if (item.address.indexOf('zbqy7ggp79') >= 0) {
@@ -1271,8 +1272,8 @@ module.exports = {
       }
       await this.syncProducts(syncEvent, apiProducts, storeDetail, context);
       await this.syncVariants(syncEvent, apiProducts, storeDetail, context);
-      await this.syncWebhookProductCollections(apiProducts, storeDetail);
-      await this.syncProductCount(syncEvent);
+      // await this.syncWebhookProductCollections(apiProducts, storeDetail);
+      // await this.syncProductCount(syncEvent);
       return httpHelper.ok(
         {
           message: "Recieved"
@@ -1406,7 +1407,6 @@ module.exports = {
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
-      console.log("TCL: storeDetail", storeDetail)
       const shop = JSON.parse(event.body);
       console.log("TCL: shopUpdate shop", shop)
       const shopUpdate = {
