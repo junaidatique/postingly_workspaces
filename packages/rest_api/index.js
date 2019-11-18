@@ -27,9 +27,10 @@ exports.productsCreate = async function (event, context) {
 };
 exports.productsUpdate = async function (event, context) {
   console.log("TCL: productsUpdate event", event)
-  const partner = event.pathParameters.partner_slug;
-  const shopDomain = event.headers['X-Shopify-Shop-Domain'];
-  await sqsHelper.addToQueue('ProductsUpdate', { partnerStore: partner, shopDomain: shopDomain, partnerId: JSON.parse(event.body).id });
+  // const partner = event.pathParameters.partner_slug;
+  // const shopDomain = event.headers['X-Shopify-Shop-Domain'];
+  // await sqsHelper.addToQueue('ProductsUpdate', { partnerStore: partner, shopDomain: shopDomain, partnerId: JSON.parse(event.body).id });
+  await partner.productsUpdate(event, new Date());
   return httpHelper.ok(
     { "message": "success" }
   );
