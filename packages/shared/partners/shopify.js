@@ -1260,8 +1260,10 @@ module.exports = {
       } else {
         shopDomain = event.headers['X-Shopify-Shop-Domain'];
       }
+      console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
+      console.log("TCL: storeDetail", storeDetail)
       if (_.isNull(storeDetail)) {
         return httpHelper.ok(
           {
@@ -1291,11 +1293,13 @@ module.exports = {
       } else {
         apiProducts = [JSON.parse(event.body)];
       }
+      console.log("TCL: apiProducts.length", apiProducts.length)
       const syncEvent = {
         "storeId": storeDetail._id,
         "partnerStore": PARTNERS_SHOPIFY,
         "collectionId": null
       }
+      console.log("TCL: syncEvent", syncEvent)
       await this.syncProducts(syncEvent, apiProducts, storeDetail, context);
       await this.syncVariants(syncEvent, apiProducts, storeDetail, context);
       // await this.syncWebhookProductCollections(apiProducts, storeDetail);
@@ -1406,19 +1410,21 @@ module.exports = {
   collectionsDelete: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
       const collectionDetail = await shared.CollectionModel.findOne({ partnerId: JSON.parse(event.body).id })
-      const rules = await shared.RuleModel.where('collections').in(collectionDetail._id);
-      console.log("TCL: collectionDetail._id", collectionDetail._id)
-      if (rules.length > 0) {
-        console.log("TCL: rules", rules)
-        await Promise.all(rules.map(async rule => {
-          console.log("TCL: rule.collections", rule.collections)
-          collections = rule.collections.filter(item => item === collectionDetail._id);
-          console.log("TCL: collections", collections)
-          rule.collections = collections;
-          await rule.save();
-        }));
+      if (!_.isNull(collectionDetail)) {
+        const rules = await shared.RuleModel.where('collections').in(collectionDetail._id);
+        console.log("TCL: collectionDetail._id", collectionDetail._id)
+        if (rules.length > 0) {
+          console.log("TCL: rules", rules)
+          await Promise.all(rules.map(async rule => {
+            console.log("TCL: rule.collections", rule.collections)
+            collections = rule.collections.filter(item => item === collectionDetail._id);
+            console.log("TCL: collections", collections)
+            rule.collections = collections;
+            await rule.save();
+          }));
+        }
+        const collectionDelete = await shared.CollectionModel.deleteOne({ partnerId: JSON.parse(event.body).id });
       }
-      const collectionDelete = await shared.CollectionModel.deleteOne({ partnerId: JSON.parse(event.body).id });
       return httpHelper.ok(
         {
           message: "Recieved"

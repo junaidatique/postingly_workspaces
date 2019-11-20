@@ -29,10 +29,9 @@ const createCollectionStub = async (storeId, numberOfCollections) => {
         store: storeId,
       };
       collection = await CollectionModel.create(collectionParams);
-      r = await storeDetail.collections.push(collection);
     }
-    await storeDetail.save();
-    return storeDetail.collections;
+    const storeCollections = await CollectionModel.find({ store: storeDetail._id })
+    return storeCollections;
   } catch (error) {
     console.error(error.message);
   }
@@ -92,7 +91,6 @@ const createProductStub = async (storeId, numberOfProducts, collectionIds) => {
         }));
       }
 
-      await storeDetail.products.push(product);
       const bulkCollectionUpdate = collectionDetails.map(collection => {
         let products = collection.products;
         products.push(product._id);
@@ -105,11 +103,7 @@ const createProductStub = async (storeId, numberOfProducts, collectionIds) => {
           }
         }
       });
-      // console.log("TCL: createProductStub -> bulkCollectionUpdate", bulkCollectionUpdate)
       await CollectionModel.bulkWrite(bulkCollectionUpdate);
-      // await collectionDetail.products.push(product);
-      await storeDetail.save();
-      // await collectionDetail.save();
 
       // variant
       for (let j = 1; j <= 5; j++) {

@@ -1,14 +1,14 @@
 const faker = require('faker');
-// const productStubs = require('../graqphql/__tests__/product/stubs');
+const productStubs = require('../graqphql/__tests__/product/stubs');
 const shared = require('shared');
 const sqsHelper = require('shared').sqsHelper;
 const moment = require('moment');
 const _ = require('lodash');
 const dbConnection = require('./db');
-// const createUpdates = require('./createUpdates');
-// const scheduleProductUpdates = require('./scheduleProductUpdates');
-// const shareUpdates = require('./shareUpdates');
-// const changeCaption = require('./changeCaption');
+const createUpdates = require('./createUpdates');
+const scheduleProductUpdates = require('./scheduleProductUpdates');
+const shareUpdates = require('./shareUpdates');
+const changeCaption = require('./changeCaption');
 const fetch = require('node-fetch');
 let lambda;
 let sqs;
@@ -150,22 +150,22 @@ module.exports = {
     const lastUpdate = await UpdateModel.findOne({ store: storeDetail._id }).sort({ scheduleTime: -1 });
     console.log("TCL: lastUpdate", lastUpdate)
     console.log("createUpdates");
-    // if (_.isNull(lastUpdate)) {
-    //   await createUpdates.createUpdates({ ruleId: ruleDetail._id });
-    // } else {
-    //   await createUpdates.createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
-    // }
-    // console.log("scheduleProductUpdates");
-    // await scheduleProductUpdates.schedule({ ruleId: ruleDetail._id });
+    if (_.isNull(lastUpdate)) {
+      await createUpdates.createUpdates({ ruleId: ruleDetail._id });
+    } else {
+      await createUpdates.createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
+    }
+    console.log("scheduleProductUpdates");
+    await scheduleProductUpdates.schedule({ ruleId: ruleDetail._id });
     console.log("changeCaption");
     await changeCaption.update({ service: FACEBOOK_SERVICE, storeId: null });
-    // console.log("updates");
-    // updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
-    // console.log("shareUpdates");
-    // await Promise.all(updates.map(async update => {
-    //   await shareUpdates.share({ updateId: update._id });
-    //   console.log(".");
-    // }));
+    console.log("updates");
+    updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
+    console.log("shareUpdates");
+    await Promise.all(updates.map(async update => {
+      await shareUpdates.share({ updateId: update._id });
+      console.log(".");
+    }));
   },
   testFetch: async function (event, context) {
     console.log("TCL: event", event)

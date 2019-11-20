@@ -4,6 +4,7 @@ const TwitterService = require('shared').TwitterService;
 const sqsHelper = require('shared').sqsHelper;
 const dbConnection = require('./db');
 const httpHelper = require('shared').httpHelper
+const shared = require('shared');
 exports.auth = async function (event, context) {
   await dbConnection.createConnection(context);
   return await partner.getAuthURL(event, new Date());
@@ -17,7 +18,6 @@ exports.activatePayment = async function (event, context) {
   return await partner.activatePayment(event, new Date());
 };
 exports.productsCreate = async function (event, context) {
-  console.log("TCL: productsCreate event", event)
   const partner = event.pathParameters.partner_slug;
   const shopDomain = event.headers['X-Shopify-Shop-Domain'];
   await sqsHelper.addToQueue('ProductsCreate', { partnerStore: partner, shopDomain: shopDomain, partnerId: JSON.parse(event.body).id });
@@ -26,17 +26,18 @@ exports.productsCreate = async function (event, context) {
   );
 };
 exports.productsUpdate = async function (event, context) {
-  console.log("TCL: productsUpdate event", event)
-  // const partner = event.pathParameters.partner_slug;
-  // const shopDomain = event.headers['X-Shopify-Shop-Domain'];
-  // await sqsHelper.addToQueue('ProductsUpdate', { partnerStore: partner, shopDomain: shopDomain, partnerId: JSON.parse(event.body).id });
-  await partner.productsUpdate(event, new Date());
-  return httpHelper.ok(
+  await dbConnection.createConnection(context);
+  console.log("TCL: productsUpdate");
+  const StoreModel = shared.StoreModel;
+  console.log("TCL: StoreModel", StoreModel)
+  await partner.productsUpdate(event, context);
+  const response = httpHelper.ok(
     { "message": "success" }
   );
+  console.log("TCL: response", response)
+  return response;
 };
 exports.productsDelete = async function (event, context) {
-  console.log("TCL: productsDelete event", event)
   const partner = event.pathParameters.partner_slug;
   const shopDomain = event.headers['X-Shopify-Shop-Domain'];
   await sqsHelper.addToQueue('ProductsDelete', { partnerStore: partner, shopDomain: shopDomain, partnerId: JSON.parse(event.body).id });
@@ -46,21 +47,21 @@ exports.productsDelete = async function (event, context) {
 };
 exports.collectionsCreate = async function (event, context) {
   await dbConnection.createConnection(context);
-  await partner.collectionsCreate(event, new Date());
+  await partner.collectionsCreate(event, context);
   return httpHelper.ok(
     { "message": "success" }
   );
 };
 exports.collectionsUpdate = async function (event, context) {
   await dbConnection.createConnection(context);
-  await partner.collectionsUpdate(event, new Date());
+  await partner.collectionsUpdate(event, context);
   return httpHelper.ok(
     { "message": "success" }
   );
 };
 exports.collectionsDelete = async function (event, context) {
   await dbConnection.createConnection(context);
-  await partner.collectionsDelete(event, new Date());
+  await partner.collectionsDelete(event, context);
   return httpHelper.ok(
     { "message": "success" }
   );
