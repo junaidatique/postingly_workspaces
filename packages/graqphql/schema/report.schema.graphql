@@ -5,10 +5,11 @@ type storeReport {
 }
 
 input storeReportInput {
+  storeId: String
   service: String
   serviceProfile: String
   postType: String
   postAsOption: String
-  scheduleType: ScheduleType
-  scheduleState: ScheduleState
+  scheduleType: String
+  scheduleState: String
 }

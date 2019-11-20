@@ -54,7 +54,7 @@ module.exports = {
       if ((!_.isUndefined(args.parent) && !_.isNull(args.parent)) && args.service !== TWITTER_SERVICE) {
         query = query.where('parent').equals(args.parent);
       }
-      console.log("TCL: query", query)
+      // console.log("TCL: query", query)
       const profiles = await query;
       // console.log("TCL: profiles", profiles);
       return profiles.map(profile => {
