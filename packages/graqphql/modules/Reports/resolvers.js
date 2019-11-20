@@ -1,8 +1,8 @@
 const shared = require('shared');
 const _ = require('lodash')
 const moment = require('moment')
-let conn;
-const query = require('shared').query
+const Mongoose = require('mongoose');
+const ObjectId = Mongoose.Types.ObjectId;
 module.exports = {
   getStoreReport: async (obj, args, context, info) => {
     console.log("TCL: args", args)
@@ -18,18 +18,34 @@ module.exports = {
     }
     console.log("TCL: storeReport", storeReport)
     let response;
+    let matchFilter = {};
+    if (!_.isUndefined(args.filter.storeId) && !_.isEmpty(args.filter.storeId)) {
+      matchFilter.store = new ObjectId(args.filter.storeId);
+    }
+    if (!_.isUndefined(args.filter.serviceProfile) && !_.isEmpty(args.filter.serviceProfile)) {
+      matchFilter.serviceProfile = args.filter.serviceProfile;
+    }
+    if (!_.isUndefined(args.filter.postType) && !_.isEmpty(args.filter.postType)) {
+      matchFilter.postType = args.filter.postType;
+    }
+    if (!_.isUndefined(args.filter.postAsOption) && !_.isEmpty(args.filter.postAsOption)) {
+      matchFilter.postAsOption = args.filter.postAsOption;
+    }
+    if (!_.isUndefined(args.filter.scheduleType) && !_.isEmpty(args.filter.scheduleType)) {
+      matchFilter.scheduleType = args.filter.scheduleType;
+    }
+    if (!_.isUndefined(args.filter.scheduleState) && !_.isEmpty(args.filter.scheduleState)) {
+      matchFilter.scheduleState = args.filter.scheduleState;
+    }
     await Promise.all(storeReport.map(async storeReport => {
+      matchFilter.scheduleDayOfYear = storeReport.scheduleDayOfYear;
+      console.log("TCL: matchFilter", matchFilter)
       response = await UpdateModel.aggregate([{
-        "$match": {
-          "scheduleDayOfYear": storeReport.scheduleDayOfYear
-        }
+        "$match": matchFilter
       },
       {
         "$group": {
           "_id": "$store",
-          "scheduleDayOfYear": {
-            "$first": "$scheduleDayOfYear"
-          }
         }
       },
       {
@@ -42,7 +58,7 @@ module.exports = {
       }
       console.log("TCL: response", response)
     }));
-    console.log("TCL: storeReport", storeReport)
+    // console.log("TCL: storeReport", storeReport)
 
     // console.log("TCL: reposne", reposne)
     // console.log("TCL: reposne", reposne[0])

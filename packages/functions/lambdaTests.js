@@ -1,5 +1,5 @@
 const shared = require('shared');
-
+const moment = require('moment')
 
 const createUpdates = require('functions').createUpdates.createUpdates;
 const createUpdatesforNextWeek = require('functions').createUpdates.createUpdatesforNextWeek;
@@ -21,7 +21,9 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
     const storeId = storeDetail._id;
     const PartnerShopify = shared.PartnerShopify;
-    await PartnerShopify.confirmUninstalled(storeId);
+    const response = await UpdateModel.aggregate.match({ "scheduleDayOfYear": moment().dayOfYear() })
+    console.log("TCL: response", response)
+    // await PartnerShopify.confirmUninstalled(storeId);
     // const RuleModel = shared.RuleModel;
 
     // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
