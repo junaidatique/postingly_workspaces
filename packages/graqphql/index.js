@@ -9,10 +9,11 @@ const profileTypeDefs = requireGraphQLFile('./schema/profile.schema');
 const ruleTypeDefs = requireGraphQLFile('./schema/rule.schema');
 const storeTypeDefs = requireGraphQLFile('./schema/store.schema');
 const updateTypeDefs = requireGraphQLFile('./schema/update.schema');
+const reportTypeDefs = requireGraphQLFile('./schema/report.schema');
 
 const server = new ApolloServer({
   cors: true,
-  typeDefs: [typeDefs, commonTypeDefs, productTypeDefs, profileTypeDefs, ruleTypeDefs, storeTypeDefs, updateTypeDefs],
+  typeDefs: [typeDefs, commonTypeDefs, productTypeDefs, profileTypeDefs, ruleTypeDefs, storeTypeDefs, updateTypeDefs, reportTypeDefs],
   resolvers,
   context: async ({ event, context }) => ({
     headers: event.headers,

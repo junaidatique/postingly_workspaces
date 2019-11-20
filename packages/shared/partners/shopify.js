@@ -1411,7 +1411,7 @@ module.exports = {
   collectionsDelete: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
       const collectionDetail = await shared.CollectionModel.findOne({ partnerId: JSON.parse(event.body).id })
-      if (_.isNull(collectionDetail)) {
+      if (!_.isNull(collectionDetail)) {
         const rules = await shared.RuleModel.where('collections').in(collectionDetail._id);
         console.log("TCL: collectionDetail._id", collectionDetail._id)
         if (rules.length > 0) {
@@ -1426,7 +1426,6 @@ module.exports = {
         }
         const collectionDelete = await shared.CollectionModel.deleteOne({ partnerId: JSON.parse(event.body).id });
       }
-
       return httpHelper.ok(
         {
           message: "Recieved"

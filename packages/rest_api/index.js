@@ -47,7 +47,7 @@ exports.productsDelete = async function (event, context) {
 };
 exports.collectionsCreate = async function (event, context) {
   await dbConnection.createConnection(context);
-  await partner.collectionsCreate(event, new Date());
+  await partner.collectionsCreate(event, context);
   return httpHelper.ok(
     { "message": "success" }
   );
@@ -61,7 +61,7 @@ exports.collectionsUpdate = async function (event, context) {
 };
 exports.collectionsDelete = async function (event, context) {
   await dbConnection.createConnection(context);
-  await partner.collectionsDelete(event, new Date());
+  await partner.collectionsDelete(event, context);
   return httpHelper.ok(
     { "message": "success" }
   );
