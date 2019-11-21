@@ -61,7 +61,7 @@ module.exports = {
             rule: ruleDetail._id,
             profile: profile,
             scheduleState: NOT_SCHEDULED,
-            scheduleTime: { $gt: moment.utc() },
+            scheduleTime: { $gt: moment.utc(), $lt: moment().add(7, 'days').utc() },
             scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
           }
         ).sort({ scheduleTime: 1 });
