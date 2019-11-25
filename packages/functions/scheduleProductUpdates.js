@@ -95,7 +95,12 @@ module.exports = {
             if (imageLimit == 1) {
               if (ruleDetail.rotateImages && (ruleDetail.postAsOption === POST_AS_OPTION_FB_PHOTO || ruleDetail.postAsOption === POST_AS_OPTION_TW_PHOTO)) {
                 if (ruleDetail.rotateImageLimit > 0) {
-                  itemImages = itemImages.slice(0, ruleDetail.rotateImageLimit);
+                  if (ruleDetail.rotateImageLimit === 1) {
+                    itemImages = ruleDetail.rotateImageLimit;
+                  } else {
+                    itemImages = itemImages.slice(0, ruleDetail.rotateImageLimit);
+                  }
+
                 }
                 const imageHistories = itemImages.map(image => {
                   return image.shareHistory.map(history => {
