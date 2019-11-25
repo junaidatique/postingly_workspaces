@@ -199,7 +199,7 @@ functions:
     handler: cronThisWeekRulesForUpdates.excute
     events:
       - schedule:
-          rate: cron(0 0 * * ? *)
+          rate: cron(0 */5 * * ? *)
           enabled: true
   # This updates simply takes the rule id and schedule all the not scheduled updates. 
   schedule-updates:

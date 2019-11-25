@@ -22,6 +22,9 @@ module.exports = {
     await dbConnection.createConnection(context);
     const UpdateModel = shared.UpdateModel;
     const update = await UpdateModel.findById(event.updateId);
+    if (_.isNull(update) || _.isUndefined(update)) {
+      return;
+    }
     let response;
     console.log("TCL: process.env.ENABLE_POSTING", process.env.ENABLE_POSTING)
     if (process.env.ENABLE_POSTING === 'true') {

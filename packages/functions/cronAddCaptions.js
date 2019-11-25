@@ -15,7 +15,7 @@ module.exports = {
       const services = await UpdateModel.distinct('service',
         {
           scheduleState: PENDING,
-          scheduleTime: { $gt: moment.utc() },
+          scheduleTime: { $gt: moment.utc(), $lt: moment.add(1, 'days').utc() },
           scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
           rule: { $exists: true },
           autoApproveUpdates: { $ne: false },
@@ -30,7 +30,7 @@ module.exports = {
           if (!_.isEmpty(event) && !_.isUndefined(event) && !_.isNull(event.storeId)) {
             storeId = event.storeId;
           }
-          await sqsHelper.addToQueue('ShareUpdates', { service: service, storeId: storeId });
+          await sqsHelper.addToQueue('ChangeCaption', { service: service, storeId: storeId });
         }));
       } else {
         console.log("TCL: cronAddCaptions event", event)
