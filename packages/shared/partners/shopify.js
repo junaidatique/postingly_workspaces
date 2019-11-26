@@ -791,7 +791,7 @@ module.exports = {
         if (process.env.IS_OFFLINE === 'false') {
           // syncing Variants
           const syncVariantPayloadPageInfo = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
-          await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayload);
+          await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayloadPageInfo);
 
         } else {
           const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
