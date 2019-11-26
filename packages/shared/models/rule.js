@@ -49,6 +49,10 @@ const SELECTED_POST_TIMES = {
 
 
 const CAPTION = {
+  captionCollectionOption: {
+    type: String,
+    enum: COLLECTION_OPTION
+  },
   collections: [
     {
       type: Schema.Types.ObjectId,
@@ -60,7 +64,7 @@ const CAPTION = {
     type: Boolean,
     default: false,
   },
-  captionTexts: [{ type: String }]
+  captionTexts: { type: String }
 }
 
 const ruleSchema = new mongoose.Schema({

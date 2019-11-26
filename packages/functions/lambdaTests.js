@@ -21,23 +21,22 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
     const storeId = storeDetail._id;
     const PartnerShopify = shared.PartnerShopify;
-    const response = await UpdateModel.aggregate.match({ "scheduleDayOfYear": moment().dayOfYear() })
-    console.log("TCL: response", response)
-    // await PartnerShopify.confirmUninstalled(storeId);
-    // const RuleModel = shared.RuleModel;
 
-    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
-    // const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
-    // await createUpdates({ ruleId: ruleDetail._id });
+
+    const RuleModel = shared.RuleModel;
+
+    const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
+    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    await createUpdates({ ruleId: ruleDetail._id });
     // // await createUpdatesforNextWeek();
     // // await cronThisWeekRulesForUpdates();
 
-    // await schedule({ ruleId: ruleDetail._id });
-    // // await cronAddCaptions();
-    // await changeCaption({ service: FACEBOOK_SERVICE, storeId: null });
+    await schedule({ ruleId: ruleDetail._id });
+    // await cronAddCaptions();
+    await changeCaption({ rule: ruleDetail._id, storeId: null });
     // // await cronPostUpdates();
     // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
-    // // console.log("TCL: updates", updates)
+    // console.log("TCL: updates", updates)
     // await shareUpdates({ updateId: updates._id });
 
 

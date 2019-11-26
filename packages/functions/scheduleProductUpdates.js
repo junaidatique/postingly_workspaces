@@ -88,7 +88,7 @@ module.exports = {
             } else {
               itemImages = _.orderBy(item.images, ['position'], ['asc']);
             }
-            console.log("TCL: itemImages.length", itemImages.length)
+            // console.log("TCL: itemImages.length", itemImages.length)
             if (itemImages.length === 0) {
               return;
             }
