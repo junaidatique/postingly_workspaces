@@ -61,7 +61,7 @@ module.exports = {
             rule: ruleDetail._id,
             profile: profile,
             scheduleState: NOT_SCHEDULED,
-            scheduleTime: { $gt: moment.utc() },
+            scheduleTime: { $gt: moment.utc(), $lt: moment().add(7, 'days').utc() },
             scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
           }
         ).sort({ scheduleTime: 1 });
@@ -88,14 +88,19 @@ module.exports = {
             } else {
               itemImages = _.orderBy(item.images, ['position'], ['asc']);
             }
-            console.log("TCL: itemImages.length", itemImages.length)
+            // console.log("TCL: itemImages.length", itemImages.length)
             if (itemImages.length === 0) {
               return;
             }
             if (imageLimit == 1) {
               if (ruleDetail.rotateImages && (ruleDetail.postAsOption === POST_AS_OPTION_FB_PHOTO || ruleDetail.postAsOption === POST_AS_OPTION_TW_PHOTO)) {
                 if (ruleDetail.rotateImageLimit > 0) {
-                  itemImages = itemImages.slice(0, ruleDetail.rotateImageLimit);
+                  if (ruleDetail.rotateImageLimit === 1) {
+                    itemImages = ruleDetail.rotateImageLimit;
+                  } else {
+                    itemImages = itemImages.slice(0, ruleDetail.rotateImageLimit);
+                  }
+
                 }
                 const imageHistories = itemImages.map(image => {
                   return image.shareHistory.map(history => {

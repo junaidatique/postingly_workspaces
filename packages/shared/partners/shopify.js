@@ -791,8 +791,7 @@ module.exports = {
         if (process.env.IS_OFFLINE === 'false') {
           // syncing Variants
           const syncVariantPayloadPageInfo = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
-          await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayload);
-
+          await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayloadPageInfo);
         } else {
           const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
           await this.syncVariantPage(payload);
@@ -1052,6 +1051,9 @@ module.exports = {
         // variants may also have images. so syncing images with varaints. 
         const bulkVariantImages = variantImages.map(variantImage => {
           const image = dbImages.find(dbImage => dbImage.imgUniqKey === `product-${PARTNERS_SHOPIFY}-${variantImage.imagePartnerId}`);
+          if (_.isUndefined(image)) {
+            return;
+          }
           const variant = dbVariants.find(dbVariant => dbVariant.uniqKey === variantImage.variantUniqKey);
           return {
             updateOne: {

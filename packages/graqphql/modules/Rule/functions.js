@@ -22,6 +22,7 @@ const getRuleById = async ruleId => {
 const formatCaptions = captions => {
   return captions.map(caption => {
     return {
+      captionCollectionOption: caption.captionCollectionOption,
       isDefault: caption.isDefault,
       captionTexts: caption.captionTexts,
       collections: collectionFunctions.getCollections.bind(this, caption.collections),
