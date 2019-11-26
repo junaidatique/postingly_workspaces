@@ -2,7 +2,15 @@ const shared = require('shared');
 const moment = require('moment');
 const _ = require('lodash');
 const dbConnection = require('./db');
-const { APPROVED, PENDING, SCHEDULE_TYPE_VARIANT, SCHEDULE_TYPE_PRODUCT, TWITTER_PROFILE, BUFFER_TWITTER_PROFILE } = require('shared/constants');
+const {
+  APPROVED,
+  PENDING,
+  SCHEDULE_TYPE_VARIANT,
+  SCHEDULE_TYPE_PRODUCT,
+  TWITTER_PROFILE,
+  BUFFER_TWITTER_PROFILE,
+  COLLECTION_OPTION_ALL
+} = require('shared/constants');
 
 module.exports = {
   update: async function (eventSQS, context) {
@@ -27,27 +35,31 @@ module.exports = {
       let servicesQuery = UpdateModel.find(
         {
           scheduleState: PENDING,
-          scheduleTime: { $gt: moment.utc(), $lt: moment.add(1, 'days').utc() },
+          scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(1, 'days') },
           scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
           rule: { $exists: true },
           autoApproveUpdates: true,
           autoAddCaptionOfUpdates: true,
           userEdited: false,
-          service: event.service
+          rule: event.rule
         }
       );
       // console.log("TCL: event.storeId", event.storeId)
-      if (!_.isNull(event.storeId) && !_.isUndefined(event.storeId)) {
-        servicesQuery = servicesQuery.where({ store: event.storeId });
-      }
+      // if (!_.isNull(event.storeId) && !_.isUndefined(event.storeId)) {
+      //   servicesQuery = servicesQuery.where({ store: event.storeId });
+      // }
       const updates = await servicesQuery.limit(50);
       // console.log("TCL: updates", updates)
 
       let approvedUpdates = [];
+      const ruleDetail = await RuleModel.findById(event.rule);
+      const ruleCaptions = ruleDetail.captions.map(caption => {
+        return caption;
+      });
+      console.log("TCL: ruleCaptions", ruleCaptions)
       await Promise.all(updates.map(async update => {
         const updatedObject = {};
         if (update.autoAddCaptionOfUpdates) {
-          const ruleDetail = await RuleModel.findById(update.rule);
           let productId, variantDetail;
           if (ruleDetail.postAsVariants) {
             variantDetail = await VariantModel.findById(update[SCHEDULE_TYPE_VARIANT]);
@@ -75,9 +87,6 @@ module.exports = {
           const productDetailURL = await productDetail.url.map(urls => urls);
           const url = await shortLink.getItemShortLink(defaultShortLinkService, productDetail.partnerSpecificUrl, productDetailURL);
           if (!_.isNull(url)) {
-            const ruleCaptions = ruleDetail.captions.map(caption => {
-              return caption;
-            });
             captionsForUpdate = productDetail.collections.map(productCategory => {
               return ruleCaptions.filter(caption => {
                 if (caption.collections.includes(productCategory)) {
@@ -88,13 +97,13 @@ module.exports = {
             captionsForUpdate = captionsForUpdate[0];
             if (_.isEmpty(captionsForUpdate)) {
               captionsForUpdate = ruleCaptions.filter(caption => {
-                if (caption.isDefault) {
+                if (caption.captionCollectionOption === COLLECTION_OPTION_ALL) {
                   return caption;
                 }
               });
             }
             const selectedCaption = captionsForUpdate[Math.floor((Math.random() * captionsForUpdate.length))];
-            const selectedText = selectedCaption.captionTexts[Math.floor((Math.random() * selectedCaption.captionTexts.length))];
+            const selectedText = selectedCaption.captionTexts;
             updatedObject.text = stringHelper.formatCaptionText(selectedText, title, url, price, description);
           }
         }

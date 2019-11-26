@@ -61,9 +61,10 @@ type Rule {
 }
 type Caption {  
   # collectionOption: collectionOptions
+  captionCollectionOption: collectionOptions
   collections: [Collection]
   isDefault: Boolean
-  captionTexts: [String]
+  captionTexts: String
 }
 
 type SelectedPostTimes {
@@ -110,10 +111,10 @@ input RuleInput {
 }
 
 input CreateCaptionInput {  
-  # collectionOption: collectionOptions
+  captionCollectionOption: collectionOptions
   collections: [ID!]
   isDefault: Boolean
-  captionTexts: [String]
+  captionTexts: String
 }
 
 
