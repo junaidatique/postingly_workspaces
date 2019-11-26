@@ -1051,6 +1051,9 @@ module.exports = {
         // variants may also have images. so syncing images with varaints. 
         const bulkVariantImages = variantImages.map(variantImage => {
           const image = dbImages.find(dbImage => dbImage.imgUniqKey === `product-${PARTNERS_SHOPIFY}-${variantImage.imagePartnerId}`);
+          if (_.isUndefined(image)) {
+            return;
+          }
           const variant = dbVariants.find(dbVariant => dbVariant.uniqKey === variantImage.variantUniqKey);
           return {
             updateOne: {
