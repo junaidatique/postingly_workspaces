@@ -41,7 +41,7 @@ module.exports = {
     const ruleDetail = await RuleModel.findById(event.ruleId);
     console.log("TCL: ruleDetail", ruleDetail)
     if (ruleDetail === null) {
-      throw new Error(`rule not found for ${event.ruleId}`);
+      console.log(`rule not found for ${event.ruleId}`)
     }
     const StoreDetail = await StoreModel.findById(ruleDetail.store);
     // console.log("TCL: StoreDetail", StoreDetail)
@@ -52,6 +52,7 @@ module.exports = {
     } else {
       imageLimit = 1;
     }
+    // all updates are pushed into this array for update. 
     let bulkUpdate = [];
     // loop on all the profiles of the rule
     await Promise.all(ruleDetail.profiles.map(async profile => {
@@ -82,13 +83,14 @@ module.exports = {
         // console.log("TCL: postItems", postItems)
         console.log("TCL: postItems.length", postItems.length)
         await Promise.all(postItems.map(async item => {
+          // if no image is found for the variant than pick the image from product. 
           if (item.images.length === 0 && itemType === SCHEDULE_TYPE_VARIANT) {
             productImages = await ImageModel.find({ product: item.product });
             itemImages = _.orderBy(productImages, ['position'], ['asc']);
           } else {
             itemImages = _.orderBy(item.images, ['position'], ['asc']);
           }
-          // console.log("TCL: itemImages.length", itemImages.length)
+          // if no image is found don't schedule and return. 
           if (itemImages.length === 0) {
             return;
           }
@@ -176,10 +178,10 @@ module.exports = {
               return history
             }
           });
-
+          const itemToUpdate = await itemModel.findById(item._id);
           if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory[0])) {
-            item.shareHistory = { profile: update.profile, counter: 1 };
-            await item.save();
+            itemToUpdate.shareHistory = { profile: update.profile, counter: 1 };
+            await itemToUpdate.save();
           } else {
             r = await itemModel.updateOne({ _id: item._id, 'shareHistory.profile': profile },
               {
