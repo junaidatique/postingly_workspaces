@@ -54,6 +54,15 @@ module.exports = {
     }
     // all updates are pushed into this array for update. 
     let bulkUpdate = [];
+    let bulkShareHistory = [];
+    let bulkItemUpdate = [];
+    if (ruleDetail.postAsVariants) {
+      itemModel = VariantModel;
+      itemType = SCHEDULE_TYPE_VARIANT;
+    } else {
+      itemModel = ProductModel;
+      itemType = SCHEDULE_TYPE_PRODUCT;
+    }
     // loop on all the profiles of the rule
     await Promise.all(ruleDetail.profiles.map(async profile => {
       // get all the updaets of this rule that are not scheduled yet. 
@@ -63,21 +72,18 @@ module.exports = {
           profile: profile,
           scheduleState: NOT_SCHEDULED,
           scheduleTime: { $gt: moment.utc(), $lt: moment().add(7, 'days').utc() },
+          // scheduleTime: { $gt: moment.utc() },
           scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
         }
       ).sort({ scheduleTime: 1 });
       // if there are any updates that are not scheduled yet. 
-      console.log("TCL: updates.length", updates.length)
+      console.log(`TCL: updates.length ${profile}`, updates.length)
       if (updates.length > 0) {
         // get variants or products based on the rule settings. 
         if (ruleDetail.postAsVariants) {
           postItems = await schedulerHelper.getVariantsForSchedule(ruleDetail, profile, updates.length);
-          itemModel = VariantModel;
-          itemType = SCHEDULE_TYPE_VARIANT;
         } else {
           postItems = await schedulerHelper.getProductsForSchedule(ruleDetail, profile, updates.length);
-          itemModel = ProductModel;
-          itemType = SCHEDULE_TYPE_PRODUCT;
         }
         counter = 0;
         // console.log("TCL: postItems", postItems)
@@ -173,30 +179,70 @@ module.exports = {
           })
           counter++;
 
-          profileHistory = await item.shareHistory.map(history => {
-            if (history.profile.toString() == profile.toString()) {
-              return history
+          // add current share counter to shared history into product or varaint
+          // first check that if the item is already scanned in this loop
+          // and present in bulkShareHistory
+          shareHistoryForItem = bulkShareHistory.map(history => {
+            if (history.id === item.id) {
+              return history;
             }
-          });
-          const itemToUpdate = await itemModel.findById(item._id);
-          if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory[0])) {
-            itemToUpdate.shareHistory = { profile: update.profile, counter: 1 };
-            await itemToUpdate.save();
-          } else {
-            r = await itemModel.updateOne({ _id: item._id, 'shareHistory.profile': profile },
-              {
-                '$set': {
-                  'shareHistory.$.counter': profileHistory[0].counter + 1
-                }
-              });
+          }).filter(item => !_.isUndefined(item))[0];
+          // if not than initialize with share history
+          if (_.isEmpty(shareHistoryForItem)) {
+            shareHistoryForItem = { id: item.id, shareHistory: item.shareHistory };
+            bulkShareHistory.push(shareHistoryForItem);
           }
+          // profile history for given profile in the item share history
+          profileHistory = shareHistoryForItem.shareHistory.map(history => {
+            if (history.profile.toString() === profile.toString()) {
+              return history
+            } else {
+              return undefined;
+            }
+          }).filter(item => !_.isUndefined(item))[0];;
+          // if no share history is found counter is set to one. 
+          if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory)) {
+            console.log("TCL: profileHistory", profileHistory)
+            console.log("TCL: shareHistoryForItem", shareHistoryForItem)
+            console.log("TCL: shareHistoryForItem.shareHistory", shareHistoryForItem.shareHistory)
+            shareHistoryForItem.shareHistory.push({ profile: update.profile, counter: 1 })
+          } else {
+            // otherwise counter is incremented and history is returned. 
+            shareHistoryForItem.shareHistory = shareHistoryForItem.shareHistory.map(history => {
+              if (history.profile.toString() === profile.toString()) {
+                history.counter = history.counter + 1;
+              }
+              return history;
+            });
+          }
+          // now update the main array to reflect the changes. 
+          bulkShareHistory = bulkShareHistory.map(history => {
+            if (history.id === shareHistoryForItem.id) {
+              history.shareHistory = shareHistoryForItem.shareHistory;
+            }
+            return history;
+          })
         }));
       }
     }));
-    // console.log("TCL: bulkUpdate", bulkUpdate);
     if (!_.isEmpty(bulkUpdate)) {
       const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
     }
+    const productUpdate = bulkShareHistory.map(history => {
+      return {
+        updateOne: {
+          filter: { _id: history.id },
+          update: {
+            shareHistory: history.shareHistory
+          }
+        }
+      }
+    })
+    if (!_.isEmpty(productUpdate)) {
+      const productUpdates = await ProductModel.bulkWrite(productUpdate);
+      console.log("TCL: productUpdates", productUpdates)
+    }
+    // console.log("TCL: bulkShareHistory final", bulkShareHistory)
 
   },
 

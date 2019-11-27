@@ -1,5 +1,6 @@
 const shared = require('shared');
 const moment = require('moment')
+const _ = require('lodash')
 
 const createUpdates = require('functions').createUpdates.createUpdates;
 const createUpdatesforNextWeek = require('functions').createUpdates.createUpdatesforNextWeek;
@@ -9,7 +10,7 @@ const cronAddCaptions = require('functions').cronAddCaptions.execute;
 const changeCaption = require('functions').changeCaption.update;
 const shareUpdates = require('functions').shareUpdates.share;
 
-const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE, APPROVED } = require('shared/constants')
+const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE, APPROVED, POSTED } = require('shared/constants')
 module.exports = {
   execute: async function (event, context) {
     const StoreModel = shared.StoreModel;
@@ -22,22 +23,46 @@ module.exports = {
     const storeId = storeDetail._id;
     const PartnerShopify = shared.PartnerShopify;
 
+    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
 
     const RuleModel = shared.RuleModel;
-
     const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
-    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
-    await createUpdates({ ruleId: ruleDetail._id });
-    // // await createUpdatesforNextWeek();
-    // // await cronThisWeekRulesForUpdates();
 
+    // first iteration.
+    await createUpdates({ ruleId: ruleDetail._id });
     await schedule({ ruleId: ruleDetail._id });
-    // await cronAddCaptions();
     await changeCaption({ rule: ruleDetail._id, storeId: null });
-    // // await cronPostUpdates();
-    // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
-    // console.log("TCL: updates", updates)
-    // await shareUpdates({ updateId: updates._id });
+    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+
+    // second iteration.
+    const lastUpdate = await UpdateModel.findOne({ store: storeId }).sort({ scheduleTime: -1 });
+    await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
+    await schedule({ ruleId: ruleDetail._id });
+    await changeCaption({ rule: ruleDetail._id, storeId: null });
+    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+
+    // third iteration
+    await schedule({ ruleId: ruleDetail._id });
+    await changeCaption({ rule: ruleDetail._id, storeId: null });
+    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+
+    // if (_.isNull(lastUpdate)) {
+    //   await createUpdates({ ruleId: ruleDetail._id });
+    // } else {
+    //   await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
+    // }
+    // // await createUpdates({ ruleId: ruleDetail._id });
+    // // // await createUpdatesforNextWeek();
+    // // // await cronThisWeekRulesForUpdates();
+
+    // await schedule({ ruleId: ruleDetail._id });
+    // // await cronAddCaptions();
+    // await changeCaption({ rule: ruleDetail._id, storeId: null });
+    // // // await cronPostUpdates();
+    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+    // // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
+    // // console.log("TCL: updates", updates)
+    // // await shareUpdates({ updateId: updates._id });
 
 
   }
