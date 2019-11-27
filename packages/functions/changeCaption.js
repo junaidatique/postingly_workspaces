@@ -36,6 +36,7 @@ module.exports = {
       {
         scheduleState: PENDING,
         scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(1, 'days') },
+        // scheduleTime: { $gt: moment.utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
         rule: { $exists: true },
         autoApproveUpdates: true,
@@ -56,7 +57,7 @@ module.exports = {
     const ruleCaptions = ruleDetail.captions.map(caption => {
       return caption;
     });
-    console.log("TCL: ruleCaptions", ruleCaptions)
+    // console.log("TCL: ruleCaptions", ruleCaptions)
     await Promise.all(updates.map(async update => {
       const updatedObject = {};
       if (update.autoAddCaptionOfUpdates) {
