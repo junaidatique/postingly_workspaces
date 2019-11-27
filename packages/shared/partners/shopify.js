@@ -1076,6 +1076,7 @@ module.exports = {
         });
 
         if (!_.isEmpty(bulkVariantImages)) {
+          console.log("TCL: bulkVariantImages", bulkVariantImages)
           const t = await ImageModel.bulkWrite(bulkVariantImages);
         }
         console.log("TCL: syncVariants bulkVariantImages.length", bulkVariantImages.length)
