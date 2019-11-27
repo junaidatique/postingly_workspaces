@@ -41,7 +41,7 @@ module.exports = {
     const ruleDetail = await RuleModel.findById(event.ruleId);
     console.log("TCL: ruleDetail", ruleDetail)
     if (ruleDetail === null) {
-      throw new Error(`rule not found for ${event.ruleId}`);
+      console.log(`rule not found for ${event.ruleId}`)
     }
     const StoreDetail = await StoreModel.findById(ruleDetail.store);
     // console.log("TCL: StoreDetail", StoreDetail)
