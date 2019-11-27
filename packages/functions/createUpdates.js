@@ -7,6 +7,29 @@ const dbConnection = require('./db');
 
 module.exports = {
   // event = null
+  createUpdatesforThisWeek: async function (event, context) {
+    await dbConnection.createConnection(context);
+    const RuleModel = shared.RuleModel;
+    const UpdateModel = shared.UpdateModel;
+    const activeRules = await RuleModel.find({ active: true });
+    const scheduleWeekRules = await UpdateModel.distinct('rule',
+      {
+        scheduleWeek: moment().week(),
+        scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+        rule: { $exists: true },
+      }
+    );
+    console.log("TCL: scheduleWeekRules", scheduleWeekRules)
+    const rules = activeRules.filter(x => !scheduleWeekRules.includes(x._id));
+    console.log("TCL: rules", rules)
+    if (process.env.IS_OFFLINE === 'false') {
+      await Promise.all(rules.map(async ruleDetail => {
+        await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id });
+      }));
+    } else {
+      console.log("TCL: createUpdatesforThisWeek event", event)
+    }
+  },
   createUpdatesforNextWeek: async function (event, context) {
     await dbConnection.createConnection(context);
     const RuleModel = shared.RuleModel;
