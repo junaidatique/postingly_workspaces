@@ -163,6 +163,12 @@ functions:
       - schedule:
           rate: cron(0 0 ? * WED *)
           enabled: true
+  cron-create-updates-for-this-week:
+    handler: createUpdates.createUpdatesforThisWeek
+    events:
+      - schedule:
+          rate: cron(0 0 * * ? *)
+          enabled: true
   # this lambda executes everyday at UTC midnight and pass distinct rule 
   #  based on the updates that are not scheduled. 
   cron-this-week-rules:
