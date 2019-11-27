@@ -205,7 +205,8 @@ module.exports = {
             console.log("TCL: profileHistory", profileHistory)
             console.log("TCL: shareHistoryForItem", shareHistoryForItem)
             console.log("TCL: shareHistoryForItem.shareHistory", shareHistoryForItem.shareHistory)
-            shareHistoryForItem.shareHistory.push({ profile: update.profile, counter: 1 })
+            // shareHistoryForItem.shareHistory.push({ profile: update.profile, counter: 1 })
+            shareHistoryForItem.shareHistory[shareHistoryForItem.shareHistory.length] = { profile: update.profile, counter: 1 };
           } else {
             // otherwise counter is incremented and history is returned. 
             shareHistoryForItem.shareHistory = shareHistoryForItem.shareHistory.map(history => {
