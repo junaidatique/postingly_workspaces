@@ -1073,7 +1073,7 @@ module.exports = {
               upsert: true
             }
           }
-        });
+        }).filter(item => !_.isUndefined(item));
 
         if (!_.isEmpty(bulkVariantImages)) {
           console.log("TCL: bulkVariantImages", bulkVariantImages)
