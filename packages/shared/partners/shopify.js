@@ -2,7 +2,7 @@ const shared = require('shared');
 const fetch = require('node-fetch');
 const _ = require('lodash');
 const moment = require('moment');
-
+const Intercom = require('intercom-client');
 const {
   PARTNERS_SHOPIFY, FACEBOOK_DEFAULT_TEXT,
   LINK_SHORTNER_SERVICES_POOOST,
@@ -148,6 +148,7 @@ module.exports = {
         const shopParams = {
           uniqKey: storeKey,
           userId: cognitoUser,
+          email: shop.email,
           partner: PARTNERS_SHOPIFY,
           partnerId: shop.id,
           partnerPlan: shop.plan_name,
@@ -412,6 +413,19 @@ module.exports = {
       } else {
         // this.getWebhooks(webhookPayload);
       }
+
+      // create intercom user
+      const intercomClient = new Intercom.Client({ token: process.env.INTERCOM_API_TOKEN });
+      user = await intercomClient.users.create({
+        user_id: store.uniqKey, email: shop.email,
+        custom_attributes: {
+          storeTitle: store.title,
+          partner: store.partner
+        }
+      });
+      console.log("TCL: user", user.body)
+      store.intercomId = user.body.id;
+      await store.save();
     } catch (err) {
       console.log("TCL: err", err.message)
       console.log("activatePayment: Store can't be saved");
@@ -1570,6 +1584,17 @@ module.exports = {
         storeDetail.uninstalledDate = new Date().toISOString();
         storeDetail.isCharged = false;
         await storeDetail.save();
+
+        intercomDeleteBody = JSON.stringify({ intercom_user_id: storeDetail.intercomId });
+        const res = await fetch("https://api.intercom.io/user_delete_requests", {
+          body: intercomDeleteBody,
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.INTERCOM_API_TOKEN}`,
+          },
+          method: "POST"
+        })
       }
     } catch (error) {
       console.error("TCL: error", error)
