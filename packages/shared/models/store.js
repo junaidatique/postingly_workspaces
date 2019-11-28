@@ -25,6 +25,9 @@ const storeSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  email: {
+    type: String,
+  },
   title: {
     type: String,
     required: true,
@@ -140,7 +143,9 @@ const storeSchema = new mongoose.Schema({
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
-
+  intercomId: {
+    type: String
+  }
 });
 
 storeSchema.set('timestamps', true);
