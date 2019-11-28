@@ -328,7 +328,7 @@ module.exports = {
   getShop: async function (shopDomain, accessToken) {
     console.log("getShop shop", shopDomain);
     const { json, res, error } = await this.shopifyAPICall(`https://${shopDomain}/admin/shop.json`, null, 'get', accessToken);
-    console.log("getShop json", json.shop);
+    // console.log("getShop json", json.shop);
     if (_.isNull(json)) {
       if (!_.isNull(error)) {
         throw new Error(error);
