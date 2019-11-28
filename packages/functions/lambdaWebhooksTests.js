@@ -17,24 +17,24 @@ module.exports = {
     // const storeDetail = await StoreModel.findOne()
     // const storeDetail = await StoreModel.findById('5dc439c89a44ab02a5ace9bf');
     // console.log("TCL: storeDetail", storeDetail)
-    const stores = await StoreModel.find({ email: { $exists: false } });
+    const stores = await StoreModel.find({ isUninstalled: false }).sort({ createdAt: -1 }).skip(15);
     console.log("TCL: stores", stores.length)
     await Promise.all(stores.map(async store => {
-      console.log("TCL: store", store._id);
-      shop = await PartnerShopify.getShop(store.partnerSpecificUrl, store.partnerToken);
-      if (!_.isUndefined(shop)) {
-        store.email = shop.email;
-        user = await intercomClient.users.create({
-          user_id: store.uniqKey, email: shop.email,
-          custom_attributes: {
-            storeTitle: store.title,
-            partner: store.partner
-          }
-        });
-        console.log("TCL: user", user.body)
-        store.intercomId = user.body.id;
-        await store.save();
-      }
+      // console.log("TCL: store", store._id);
+      // shop = await PartnerShopify.getShop(store.partnerSpecificUrl, store.partnerToken);
+      // if (!_.isUndefined(shop)) {
+      //   store.email = shop.email;
+      //   user = await intercomClient.users.create({
+      //     user_id: store.uniqKey, email: shop.email,
+      //     custom_attributes: {
+      //       storeTitle: store.title,
+      //       partner: store.partner
+      //     }
+      //   });
+      //   console.log("TCL: user", user.body)
+      //   store.intercomId = user.body.id;
+      //   await store.save();
+      // }
 
     }))
     // ---------------------------------------------------------

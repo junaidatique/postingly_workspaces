@@ -841,21 +841,21 @@ module.exports = {
     let productImages = [];
     const ProductModel = shared.ProductModel;
     const ImageModel = shared.ImageModel;
-
+    const currency = StoreDetail.moneyWithCurrencyFormat.substr(StoreDetail.moneyWithCurrencyFormat.length - 3);
     // sync products
     const bulkProductInsert = apiProducts.map(product => {
       const quantity = product.variants.map(variant => variant.inventory_quantity).reduce((prev, curr) => prev + curr, 0);
       const minimumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p < v && p > 0) ? p : v));
       const maximumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p > v) ? p : v));
       const onSale = product.variants.map(variant => (variant.compare_at_price != variant.price) ? true : false).includes(true);
-      const partnerSpecificUrl = `https://${storeDetail.url}/${product.handle}`;
+      const partnerSpecificUrl = `https://${storeDetail.url}/products/${product.handle}`;
       return {
         updateOne: {
           filter: { uniqKey: `${PARTNERS_SHOPIFY}-${product.id}` },
           update: {
             title: product.title,
             description: stringHelper.stripTags(product.body_html),
-            suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, partnerSpecificUrl, minimumPrice, stringHelper.stripTags(product.body_html)),
+            suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, partnerSpecificUrl, minimumPrice, stringHelper.stripTags(product.body_html), currency),
             partnerSpecificUrl: partnerSpecificUrl,
             partner: PARTNERS_SHOPIFY,
             partnerId: product.id,
@@ -974,7 +974,7 @@ module.exports = {
     const ProductModel = shared.ProductModel;
     const ImageModel = shared.ImageModel;
     const VariantModel = shared.VariantModel;
-
+    const currency = StoreDetail.moneyWithCurrencyFormat.substr(StoreDetail.moneyWithCurrencyFormat.length - 3);
     const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description');
 
     const dbVariantsUpdate = await VariantModel.updateMany({ product: { $in: dbProducts.map(product => product._id) } }, { active: false });
@@ -1007,7 +1007,7 @@ module.exports = {
               position: variant.position,
               quantity: variant.inventory_quantity,
               store: event.storeId,
-              suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, variant.title, productForVariant.partnerSpecificUrl, variant.price, stringHelper.stripTags(productForVariant.description)),
+              suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, variant.title, productForVariant.partnerSpecificUrl, variant.price, stringHelper.stripTags(productForVariant.description), currency),
               product: productForVariant._id,
               postableByImage: productForVariant.postableByImage,
               postableByQuantity: (variant.inventory_quantity > 0) ? true : false,

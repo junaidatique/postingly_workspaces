@@ -57,6 +57,8 @@ module.exports = {
     const ruleCaptions = ruleDetail.captions.map(caption => {
       return caption;
     });
+    const StoreDetail = await StoreModel.findById(ruleDetail.store);
+    const currency = StoreDetail.moneyWithCurrencyFormat.substr(StoreDetail.moneyWithCurrencyFormat.length - 3);
     // console.log("TCL: ruleCaptions", ruleCaptions)
     await Promise.all(updates.map(async update => {
       const updatedObject = {};
@@ -69,7 +71,7 @@ module.exports = {
           productId = update.product;
         }
         const productDetail = await ProductModel.findById(productId);
-        const StoreDetail = await StoreModel.findById(update.store);
+
         let title, price;
         if (ruleDetail.postAsVariants) {
           title = variantDetail.title;
@@ -105,7 +107,7 @@ module.exports = {
           }
           const selectedCaption = captionsForUpdate[Math.floor((Math.random() * captionsForUpdate.length))];
           const selectedText = selectedCaption.captionTexts;
-          updatedObject.text = stringHelper.formatCaptionText(selectedText, title, url, price, description);
+          updatedObject.text = stringHelper.formatCaptionText(selectedText, title, url, price, description, currency);
         }
       }
       if (update.autoApproveUpdates) {

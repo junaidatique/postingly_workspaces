@@ -27,12 +27,13 @@ module.exports = {
     formatedText = formatedText.replace('#cb-yzsehx-detail-wrap *{max-width: 100% !important;box-sizing: border-box;}', '');
     return formatedText;
   },
-  formatCaptionText: function (captionText, title, url, price, description) {
+  formatCaptionText: function (captionText, title, url, price, description, currency) {
     let formattedCaption = captionText;
-    formattedCaption = formattedCaption.replace('[product-title]', title);
+    formattedCaption = formattedCaption.replace(/[product-title]/g, title);
     formattedCaption = formattedCaption.replace('[product-price]', price);
     formattedCaption = formattedCaption.replace('[product-url]', url);
     formattedCaption = formattedCaption.replace('[product-description]', description);
+    formattedCaption = formattedCaption.replace('[product-currency]', currency);
     return formattedCaption;
   },
   getShopifyPageInfo: function (link) {
