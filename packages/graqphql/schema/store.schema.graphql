@@ -2,6 +2,7 @@
 type Store {
   id: ID!
   userId: String!
+  email: String
   title: String!
   url: String
   partner: Partner
