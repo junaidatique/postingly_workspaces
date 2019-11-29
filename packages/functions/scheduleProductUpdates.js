@@ -122,7 +122,7 @@ module.exports = {
                     };
                   }
                 })
-              })
+              });
               count = 0;
               itemImages = imageHistories.map(imageHistory => {
                 if (_.isEmpty(imageHistory)) {

@@ -3,7 +3,6 @@ const Intercom = require('intercom-client');
 const fetch = require('node-fetch');
 const _ = require('lodash');
 const dbConnection = require('./db');
-const sqsHelper = require('shared').sqsHelper;
 // const webhooks = require('functions').webhooks;
 
 const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, APPROVED } = require('shared/constants')
@@ -18,17 +17,9 @@ module.exports = {
     // const storeDetail = await StoreModel.findOne()
     // const storeDetail = await StoreModel.findById('5dc439c89a44ab02a5ace9bf');
     // console.log("TCL: storeDetail", storeDetail)
-    const stores = await StoreModel.find({ isUninstalled: false }).sort({ createdAt: -1 }).skip(15).limit(165);
+    const stores = await StoreModel.find({ isUninstalled: false }).sort({ createdAt: -1 }).skip(15);
     console.log("TCL: stores", stores.length)
     await Promise.all(stores.map(async store => {
-      storePayload = {
-        "storeId": store._id,
-        "partnerStore": PARTNERS_SHOPIFY,
-        "collectionId": null
-      }
-      if (process.env.IS_OFFLINE === 'false') {
-        await sqsHelper.addToQueue('SyncStoreData', storePayload);
-      }
       // console.log("TCL: store", store._id);
       // shop = await PartnerShopify.getShop(store.partnerSpecificUrl, store.partnerToken);
       // if (!_.isUndefined(shop)) {

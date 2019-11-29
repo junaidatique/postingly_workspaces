@@ -1540,20 +1540,21 @@ module.exports = {
       }
       const shopUrl = url.split('/admin')[0].replace('https://', '');;
       console.log("TCL: shopUrl", shopUrl);
-      console.log("TCL: shopUrl1", shopUrl);
+      console.log("TCL: errorResponse", errorResponse)
       if (errorResponse.indexOf('[API] Invalid API') >= 0) {
         const StoreModel = shared.StoreModel;
         const storeDetail = await StoreModel.findOne({ $or: [{ "partnerSpecificUrl": shopUrl }, { "url": shopUrl }] })
         await this.confirmUninstalled(storeDetail._id);
         return { json: null, res: res, error: null };
       } else if (errorResponse.indexOf('Not Found') >= 0) {
-        console.log("TCL: errorResponse", errorResponse)
+
         return { json: null, res: res, error: null };
       } else if (errorResponse.indexOf('for this topic has already been taken') >= 0) {
-        console.log("TCL: errorResponse", errorResponse)
+      } else if (errorResponse.indexOf('page_info') >= 0 && errorResponse.indexOf('Invalid value') >= 0) {
+        return { json: null, res: res, error: null };
+      } else if (errorResponse.indexOf('for this topic has already been taken') >= 0) {
         return { json: null, res: res, error: null };
       } else if (errorResponse.indexOf('Unavailable Shop') >= 0) {
-        console.log("TCL: errorResponse", errorResponse)
         return { json: null, res: res, error: null };
       } else {
         return { json: null, res: res, error: errorResponse };
