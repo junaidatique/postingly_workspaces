@@ -13,3 +13,22 @@ input storeReportInput {
   scheduleType: String
   scheduleState: String
 }
+type dailyUpdateReportResposne {
+  date: String
+  notScheduledCount: Int
+  pendingCount: Int
+  approvedCount: Int
+  postedCount: Int
+  failedCount: Int
+  pausedCount: Int
+}
+
+input dailyUpdateReportInput {
+  storeId: String
+  service: String
+  serviceProfile: String
+  postType: String
+  postAsOption: String
+  scheduleType: String
+}
+ 

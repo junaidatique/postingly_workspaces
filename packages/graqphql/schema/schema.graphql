@@ -8,6 +8,7 @@ type Query {
   listCollections(filter: ModelCollectionFilterInput!, limit: Int, skip: Int): [Collection]
   listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): ListUpdateResponse
   allStorePosting(filter: storeReportInput): [storeReport]
+  dailyUpdateReport(filter: dailyUpdateReportInput): [dailyUpdateReportResposne]
 }
 
 
