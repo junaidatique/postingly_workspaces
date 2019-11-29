@@ -58,7 +58,8 @@ module.exports = {
       return caption;
     });
     const StoreDetail = await StoreModel.findById(ruleDetail.store);
-    const currency = StoreDetail.moneyWithCurrencyFormat.substr(StoreDetail.moneyWithCurrencyFormat.length - 3);
+    const currencyFormat = stringHelper.stripTags(StoreDetail.moneyWithCurrencyFormat);
+    const currency = currencyFormat.substr(currencyFormat.length - 3);
     // console.log("TCL: ruleCaptions", ruleCaptions)
     await Promise.all(updates.map(async update => {
       const updatedObject = {};

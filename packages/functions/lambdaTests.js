@@ -32,19 +32,19 @@ module.exports = {
     await createUpdates({ ruleId: ruleDetail._id });
     await schedule({ ruleId: ruleDetail._id });
     await changeCaption({ rule: ruleDetail._id, storeId: null });
-    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
 
-    // second iteration.
-    const lastUpdate = await UpdateModel.findOne({ store: storeId }).sort({ scheduleTime: -1 });
-    await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
-    await schedule({ ruleId: ruleDetail._id });
-    await changeCaption({ rule: ruleDetail._id, storeId: null });
-    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+    // // second iteration.
+    // const lastUpdate = await UpdateModel.findOne({ store: storeId }).sort({ scheduleTime: -1 });
+    // await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
+    // await schedule({ ruleId: ruleDetail._id });
+    // await changeCaption({ rule: ruleDetail._id, storeId: null });
+    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
 
-    // third iteration
-    await schedule({ ruleId: ruleDetail._id });
-    await changeCaption({ rule: ruleDetail._id, storeId: null });
-    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+    // // third iteration
+    // await schedule({ ruleId: ruleDetail._id });
+    // await changeCaption({ rule: ruleDetail._id, storeId: null });
+    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
 
     // if (_.isNull(lastUpdate)) {
     //   await createUpdates({ ruleId: ruleDetail._id });

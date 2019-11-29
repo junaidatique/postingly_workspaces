@@ -272,9 +272,9 @@ module.exports = {
     const body = JSON.stringify({
       recurring_application_charge: {
         name: `${process.env.APP_TITLE}`,
-        price: 10,
+        price: SHOPIFY_CAPPED_AMOUNT,
         return_url: `${process.env.FRONTEND_URL}${process.env.SHOPIFY_PAYMENT_REUTRN}?shop=${shop}`,
-        test: (process.env.STAGE === 'prod') ? false : true,
+        test: (process.env.STAGE === 'production') ? false : true,
         trial_days: process.env.SHOPIFY_TRAIL_DAYS,
       }
     });
@@ -841,7 +841,8 @@ module.exports = {
     let productImages = [];
     const ProductModel = shared.ProductModel;
     const ImageModel = shared.ImageModel;
-    const currency = StoreDetail.moneyWithCurrencyFormat.substr(StoreDetail.moneyWithCurrencyFormat.length - 3);
+    const currencyFormat = stringHelper.stripTags(storeDetail.moneyWithCurrencyFormat);
+    const currency = currencyFormat.substr(currencyFormat.length - 3);
     // sync products
     const bulkProductInsert = apiProducts.map(product => {
       const quantity = product.variants.map(variant => variant.inventory_quantity).reduce((prev, curr) => prev + curr, 0);
@@ -974,7 +975,10 @@ module.exports = {
     const ProductModel = shared.ProductModel;
     const ImageModel = shared.ImageModel;
     const VariantModel = shared.VariantModel;
-    const currency = StoreDetail.moneyWithCurrencyFormat.substr(StoreDetail.moneyWithCurrencyFormat.length - 3);
+
+    const currencyFormat = stringHelper.stripTags(storeDetail.moneyWithCurrencyFormat);
+    const currency = currencyFormat.substr(currencyFormat.length - 3);
+
     const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description');
 
     const dbVariantsUpdate = await VariantModel.updateMany({ product: { $in: dbProducts.map(product => product._id) } }, { active: false });
