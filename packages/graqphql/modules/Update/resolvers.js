@@ -6,9 +6,10 @@ const _ = require('lodash')
 const moment = require('moment');
 const { APPROVED } = require('shared/constants');
 const str = require('shared').stringHelper;
+const Mongoose = require('mongoose');
+const ObjectId = Mongoose.Types.ObjectId;
 module.exports = {
   listUpdates: async (obj, args, context, info) => {
-    console.log("TCL: listUpdates args", args.filter.product)
     console.log("TCL: listUpdates args", args)
     try {
 
@@ -56,6 +57,7 @@ module.exports = {
       updateDetail.scheduleTime = args.input.scheduleTime;
       updateDetail.images = args.input.images;
       updateDetail.scheduleState = args.input.scheduleState;
+      updateDetail.userEdited = true;
       await updateDetail.save();
       return formattedUpdate(updateDetail);
     } catch (error) {
@@ -89,6 +91,71 @@ module.exports = {
         }
       });
       const updateUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+    } catch (error) {
+      throw error;
+    }
+  },
+  updateReport: async (obj, args, context, info) => {
+    console.log("TCL: args", args)
+    try {
+      let searchQuery = {}
+      if (!_.isUndefined(args.filter)) {
+        if (!_.isUndefined(args.filter.storeId) && !_.isEmpty(args.filter.storeId)) {
+          searchQuery.store = new ObjectId(args.filter.storeId);
+        }
+        if (!_.isUndefined(args.filter.storeIdsExcluded) && !_.isEmpty(args.filter.storeIdsExcluded)) {
+          searchQuery.store = { $nin: args.filter.storeIdsExcluded.split(',') }
+        }
+        if (!_.isUndefined(args.filter.service) && !_.isEmpty(args.filter.service)) {
+          searchQuery.service = args.filter.service;
+        }
+        if (!_.isUndefined(args.filter.rule) && !_.isEmpty(args.filter.rule)) {
+          searchQuery.rule = new ObjectId(args.filter.rule);
+        }
+        if (!_.isUndefined(args.filter.serviceProfile) && !_.isEmpty(args.filter.serviceProfile)) {
+          searchQuery.serviceProfile = args.filter.serviceProfile;
+        }
+        if (!_.isUndefined(args.filter.postType) && !_.isEmpty(args.filter.postType)) {
+          searchQuery.postType = args.filter.postType;
+        }
+        if (!_.isUndefined(args.filter.postAsOption) && !_.isEmpty(args.filter.postAsOption)) {
+          searchQuery.postAsOption = args.filter.postAsOption;
+        }
+        if (!_.isUndefined(args.filter.scheduleType) && !_.isEmpty(args.filter.scheduleType)) {
+          searchQuery.scheduleType = args.filter.scheduleType;
+        }
+        if (!_.isUndefined(args.filter.scheduleDate) && !_.isEmpty(args.filter.scheduleDate)) {
+          const searchDate = new Date(args.filter.scheduleDate);
+          let nextDate = new Date(args.filter.scheduleDate);
+          nextDate.setDate(nextDate.getDate() + 1);
+          searchQuery.scheduleTime = { $gte: searchDate, $lt: nextDate };
+        }
+        if (!_.isUndefined(args.filter.scheduleState) && !_.isEmpty(args.filter.scheduleState)) {
+          searchQuery.scheduleState = args.filter.scheduleState;
+        }
+      }
+
+      // searchQuery = {
+      //   store: args.filter.storeId,
+      //   service: args.filter.service,
+      //   scheduleState: args.filter.scheduleState,
+      //   scheduleTime: { "$gte": moment().utc() },
+      // }
+
+      searchOptions = {
+        sort: { scheduleTime: 1 },
+        offset: args.skip,
+        limit: args.limit
+      }
+      console.log("TCL: searchQuery", searchQuery)
+      const updates = await UpdateModel.paginate(searchQuery, searchOptions);
+      const updatesList = updates.docs.map(update => {
+        return formattedUpdate(update)
+      });
+      return {
+        updates: updatesList,
+        totalRecords: updates.total
+      }
     } catch (error) {
       throw error;
     }
@@ -137,7 +204,7 @@ module.exports = {
   dailyUpdateReportAggregate: async function (dayCounter, matchFilter) {
     date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
     matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
-    console.log("TCL: matchFilter", matchFilter)
+    // console.log("TCL: matchFilter", matchFilter)
     res = await UpdateModel.aggregate([{
       "$match": matchFilter
     },
@@ -149,7 +216,6 @@ module.exports = {
         }
       }
     }]);
-    console.log("TCL: res", res)
     let resposne = {
       date: date,
       notScheduledCount: module.exports.clculateCountFordailyUpdateReport(res, 'not_scheduled'),
@@ -159,7 +225,6 @@ module.exports = {
       failedCount: module.exports.clculateCountFordailyUpdateReport(res, 'failed'),
       pausedCount: module.exports.clculateCountFordailyUpdateReport(res, 'paused'),
     };
-    console.log("TCL: resposne", resposne)
     return resposne;
   },
   clculateCountFordailyUpdateReport: (response, key) => {

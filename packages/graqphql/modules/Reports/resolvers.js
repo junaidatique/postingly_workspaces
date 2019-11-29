@@ -75,7 +75,7 @@ module.exports = {
     return storeReport;
   },
   allStorePostingAggregate: async function (matchFilter) {
-    console.log("TCL: matchFilter", matchFilter)
+    // console.log("TCL: matchFilter", matchFilter)
     const UpdateModel = shared.UpdateModel;
     res = await UpdateModel.aggregate([{
       "$match": matchFilter

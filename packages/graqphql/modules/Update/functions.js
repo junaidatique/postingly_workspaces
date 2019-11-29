@@ -13,6 +13,8 @@ const formattedUpdate = async (update) => {
     product: productFunctions.getProductById.bind(this, update._doc.product),
     variant: productFunctions.getVariantById.bind(this, update._doc.variant),
     scheduleTime: (update.scheduleTime !== undefined) ? moment(update.scheduleTime).toISOString() : null,
+    createdAt: (update.createdAt !== undefined) ? moment(update.createdAt).toISOString() : null,
+    updatedAt: (update.updatedAt !== undefined) ? moment(update.updatedAt).toISOString() : null,
   }
 }
 exports.formattedUpdate = formattedUpdate

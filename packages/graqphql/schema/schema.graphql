@@ -9,6 +9,7 @@ type Query {
   listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): ListUpdateResponse
   allStorePosting(filter: storeReportInput): [storeReport]
   dailyUpdateReport(filter: dailyUpdateReportInput): [dailyUpdateReportResposne]
+  updateReport(filter: updateReportInput, limit: Int, skip: Int): ListUpdateResponse
 }
 
 
