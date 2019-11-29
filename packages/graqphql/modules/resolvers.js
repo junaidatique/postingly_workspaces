@@ -16,7 +16,7 @@ module.exports = {
     listProducts: productResolvers.listProducts,
     listCollections: collectionResolvers.listCollections,
     listUpdates: updateResolvers.listUpdates,
-    getStoreReport: reportResolvers.getStoreReport,
+    allStorePosting: reportResolvers.allStorePosting,
   },
   Mutation: {
     createStore: storeResolvers.createStore,

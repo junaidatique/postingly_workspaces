@@ -4,19 +4,12 @@ const moment = require('moment')
 const Mongoose = require('mongoose');
 const ObjectId = Mongoose.Types.ObjectId;
 module.exports = {
-  getStoreReport: async (obj, args, context, info) => {
+  allStorePosting: async (obj, args, context, info) => {
     console.log("TCL: args", args)
     const UpdateModel = shared.UpdateModel;
     const today = moment().dayOfYear();
     const fiveDaysAgo = moment().subtract(5, 'days').dayOfYear();
     const storeReport = [];
-    for (i = -4; i <= 4; i++) {
-      storeReport.push({
-        scheduleDayOfYear: moment().add(i, 'days').dayOfYear(),
-        date: moment().add(i, 'days').format("D/M/YYY")
-      })
-    }
-    console.log("TCL: storeReport", storeReport)
     let response;
     let matchFilter = {};
     if (!_.isUndefined(args.filter.storeId) && !_.isEmpty(args.filter.storeId)) {
@@ -37,38 +30,66 @@ module.exports = {
     if (!_.isUndefined(args.filter.scheduleState) && !_.isEmpty(args.filter.scheduleState)) {
       matchFilter.scheduleState = args.filter.scheduleState;
     }
-    await Promise.all(storeReport.map(async storeReport => {
-      matchFilter.scheduleDayOfYear = storeReport.scheduleDayOfYear;
-      console.log("TCL: matchFilter", matchFilter)
-      response = await UpdateModel.aggregate([{
-        "$match": matchFilter
-      },
-      {
-        "$group": {
-          "_id": "$store",
-        }
-      },
-      {
-        "$count": "count"
-      }])
-      if (_.isEmpty(response)) {
-        storeReport.count = 0;
-      } else {
-        storeReport.count = response[0].count;
-      }
-      console.log("TCL: response", response)
-    }));
-    // console.log("TCL: storeReport", storeReport)
+    dayCounter = -2;
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    response = await module.exports.allStorePostingAggregate(matchFilter);
+    storeReport.push({
+      scheduleDayOfYear: matchFilter.scheduleDayOfYear,
+      date: moment().utc().add(dayCounter, 'days').format("D/M/YYYY"),
+      count: _.isEmpty(response) ? 0 : response[0].count
+    })
 
-    // console.log("TCL: reposne", reposne)
-    // console.log("TCL: reposne", reposne[0])
-    // console.log("TCL: reposne", reposne[0].count)
-    // return [{
-    //   count: reposne[0].count,
-    //   scheduleDayOfYear: moment().dayOfYear()
-    // }]
+    dayCounter = -1;
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    response = await module.exports.allStorePostingAggregate(matchFilter);
+    storeReport.push({
+      scheduleDayOfYear: matchFilter.scheduleDayOfYear,
+      date: moment().utc().add(dayCounter, 'days').format("D/M/YYYY"),
+      count: _.isEmpty(response) ? 0 : response[0].count
+    })
+
+    dayCounter = 0;
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    response = await module.exports.allStorePostingAggregate(matchFilter);
+    storeReport.push({
+      scheduleDayOfYear: matchFilter.scheduleDayOfYear,
+      date: moment().utc().add(dayCounter, 'days').format("D/M/YYYY"),
+      count: _.isEmpty(response) ? 0 : response[0].count
+    })
+    dayCounter = 1;
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    response = await module.exports.allStorePostingAggregate(matchFilter);
+    storeReport.push({
+      scheduleDayOfYear: matchFilter.scheduleDayOfYear,
+      date: moment().utc().add(dayCounter, 'days').format("D/M/YYYY"),
+      count: _.isEmpty(response) ? 0 : response[0].count
+    })
+    dayCounter = 2;
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    response = await module.exports.allStorePostingAggregate(matchFilter);
+    storeReport.push({
+      scheduleDayOfYear: matchFilter.scheduleDayOfYear,
+      date: moment().utc().add(dayCounter, 'days').format("D/M/YYYY"),
+      count: _.isEmpty(response) ? 0 : response[0].count
+    })
+
     return storeReport;
+  },
+  allStorePostingAggregate: async function (matchFilter) {
+    console.log("TCL: matchFilter", matchFilter)
+    const UpdateModel = shared.UpdateModel;
+    res = await UpdateModel.aggregate([{
+      "$match": matchFilter
+    },
+    {
+      "$group": {
+        "_id": "$store",
+      }
+    },
+    {
+      "$count": "count"
+    }]);
+    return res;
   }
-
 
 }
