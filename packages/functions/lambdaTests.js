@@ -10,7 +10,7 @@ const cronAddCaptions = require('functions').cronAddCaptions.execute;
 const changeCaption = require('functions').changeCaption.update;
 const shareUpdates = require('functions').shareUpdates.share;
 
-const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE, APPROVED, POSTED } = require('shared/constants')
+const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE, APPROVED, POSTED, FAILED } = require('shared/constants')
 module.exports = {
   execute: async function (event, context) {
     const StoreModel = shared.StoreModel;
@@ -32,7 +32,7 @@ module.exports = {
     await createUpdates({ ruleId: ruleDetail._id });
     await schedule({ ruleId: ruleDetail._id });
     await changeCaption({ rule: ruleDetail._id, storeId: null });
-    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
 
     // // second iteration.
     // const lastUpdate = await UpdateModel.findOne({ store: storeId }).sort({ scheduleTime: -1 });

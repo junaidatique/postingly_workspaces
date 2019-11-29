@@ -1,3 +1,4 @@
+const RuleModel = require('shared').RuleModel;
 const storeFunctions = require('../Store/functions');
 const profileFunctions = require('../Profile/functions');
 const collectionFunctions = require('../Collection/functions');

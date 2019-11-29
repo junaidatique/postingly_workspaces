@@ -31,4 +31,16 @@ input dailyUpdateReportInput {
   postAsOption: String
   scheduleType: String
 }
+input updateReportInput {
+  storeId: String
+  storeIdsExcluded: String
+  service: String
+  rule: String
+  serviceProfile: String
+  postType: String
+  postAsOption: String
+  scheduleType: String
+  scheduleDate: String
+  scheduleState: String  
+}
  

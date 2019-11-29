@@ -18,6 +18,14 @@ type Update {
   suggestedText: String
   postAsOption: String
   postType: String
+  failedMessage: String
+  postingTime: String
+  autoApproveUpdates: Boolean
+  autoAddCaptionOfUpdates: Boolean
+  captionsUpdated: Boolean
+  userEdited: Boolean
+  createdAt: String
+  updatedAt: String
 }
 type UpdateImages {  
   url: String
@@ -36,6 +44,7 @@ enum ScheduleType {
 }
 
 enum ScheduleState {
+  not_scheduled
   pending
   approved
   posted
