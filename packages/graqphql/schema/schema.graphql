@@ -7,7 +7,7 @@ type Query {
   listProducts(filter: ModelProductFilterInput!, limit: Int, skip: Int, sort: ModelProductSortInput): ListProductResponse
   listCollections(filter: ModelCollectionFilterInput!, limit: Int, skip: Int): [Collection]
   listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): ListUpdateResponse
-  getStoreReport(filter: storeReportInput): [storeReport]
+  allStorePosting(filter: storeReportInput): [storeReport]
 }
 
 
