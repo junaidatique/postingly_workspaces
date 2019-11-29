@@ -107,6 +107,7 @@ module.exports = {
                   itemImages = itemImages.slice(0, ruleDetail.rotateImageLimit);
                 }
               }
+              console.log("TCL: itemImages", itemImages)
               const imageHistories = itemImages.map(image => {
                 return image.shareHistory.map(history => {
                   if (history.profile.toString() == profile.toString()) {
@@ -121,7 +122,7 @@ module.exports = {
                     };
                   }
                 })
-              })
+              });
               count = 0;
               itemImages = imageHistories.map(imageHistory => {
                 if (_.isEmpty(imageHistory)) {
