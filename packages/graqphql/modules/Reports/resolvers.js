@@ -6,9 +6,6 @@ const ObjectId = Mongoose.Types.ObjectId;
 module.exports = {
   allStorePosting: async (obj, args, context, info) => {
     console.log("TCL: args", args)
-    const UpdateModel = shared.UpdateModel;
-    const today = moment().dayOfYear();
-    const fiveDaysAgo = moment().subtract(5, 'days').dayOfYear();
     const storeReport = [];
     let response;
     let matchFilter = {};
@@ -56,6 +53,7 @@ module.exports = {
       date: moment().utc().add(dayCounter, 'days').format("D/M/YYYY"),
       count: _.isEmpty(response) ? 0 : response[0].count
     })
+
     dayCounter = 1;
     matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
     response = await module.exports.allStorePostingAggregate(matchFilter);
@@ -64,6 +62,7 @@ module.exports = {
       date: moment().utc().add(dayCounter, 'days').format("D/M/YYYY"),
       count: _.isEmpty(response) ? 0 : response[0].count
     })
+
     dayCounter = 2;
     matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
     response = await module.exports.allStorePostingAggregate(matchFilter);

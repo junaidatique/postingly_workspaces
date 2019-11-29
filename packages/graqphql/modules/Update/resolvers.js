@@ -93,4 +93,83 @@ module.exports = {
       throw error;
     }
   },
+  dailyUpdateReport: async (obj, args, context, info) => {
+    let matchFilter = {};
+    let updateReport = [];
+    let date;
+    if (!_.isUndefined(args.filter.storeId) && !_.isEmpty(args.filter.storeId)) {
+      matchFilter.store = new ObjectId(args.filter.storeId);
+    }
+    if (!_.isUndefined(args.filter.serviceProfile) && !_.isEmpty(args.filter.serviceProfile)) {
+      matchFilter.serviceProfile = args.filter.serviceProfile;
+    }
+    if (!_.isUndefined(args.filter.postType) && !_.isEmpty(args.filter.postType)) {
+      matchFilter.postType = args.filter.postType;
+    }
+    if (!_.isUndefined(args.filter.postAsOption) && !_.isEmpty(args.filter.postAsOption)) {
+      matchFilter.postAsOption = args.filter.postAsOption;
+    }
+    if (!_.isUndefined(args.filter.scheduleType) && !_.isEmpty(args.filter.scheduleType)) {
+      matchFilter.scheduleType = args.filter.scheduleType;
+    }
+    dayCounter = -2;
+    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
+    updateReport.push(response)
+
+    dayCounter = -1;
+    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
+    updateReport.push(response)
+
+    dayCounter = 0;
+    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
+    updateReport.push(response)
+
+    dayCounter = 1;
+    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
+    updateReport.push(response)
+
+    dayCounter = 2;
+    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
+    updateReport.push(response)
+
+    return updateReport;
+  },
+  dailyUpdateReportAggregate: async function (dayCounter, matchFilter) {
+    date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    console.log("TCL: matchFilter", matchFilter)
+    res = await UpdateModel.aggregate([{
+      "$match": matchFilter
+    },
+    {
+      "$group": {
+        "_id": "$scheduleState",
+        "count": {
+          "$sum": 1.0
+        }
+      }
+    }]);
+    console.log("TCL: res", res)
+    let resposne = {
+      date: date,
+      notScheduledCount: module.exports.clculateCountFordailyUpdateReport(res, 'not_scheduled'),
+      pendingCount: module.exports.clculateCountFordailyUpdateReport(res, 'pending'),
+      approvedCount: module.exports.clculateCountFordailyUpdateReport(res, 'approved'),
+      postedCount: module.exports.clculateCountFordailyUpdateReport(res, 'posted'),
+      failedCount: module.exports.clculateCountFordailyUpdateReport(res, 'failed'),
+      pausedCount: module.exports.clculateCountFordailyUpdateReport(res, 'paused'),
+    };
+    console.log("TCL: resposne", resposne)
+    return resposne;
+  },
+  clculateCountFordailyUpdateReport: (response, key) => {
+    const result = res.map(counter => {
+      if (counter._id === key) {
+        return counter.count;
+      } else {
+        return undefined;
+      }
+    }).filter(item => !_.isUndefined(item));
+    return _.isEmpty(result) ? 0 : result[0];
+  }
 }
