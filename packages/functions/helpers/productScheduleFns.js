@@ -67,6 +67,7 @@ module.exports = {
     return query;
   },
   getVariantsForSchedule: async function (ruleDetail, profileId, limit) {
+    const VariantModel = shared.VariantModel;
     const notSharedOnThisProfile = this.getVariantsQuery(ruleDetail);
     const variantsCount = await notSharedOnThisProfile.countDocuments({ "shareHistory.profile": { $ne: profileId } });
     if (variantsCount > 0) {

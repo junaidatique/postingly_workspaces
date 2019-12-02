@@ -20,9 +20,9 @@ module.exports = {
         postType: RULE_TYPE_OLD
       }
     );
-    console.log("TCL: rules", rules)
     if (process.env.IS_OFFLINE === 'false') {
       await Promise.all(rules.map(async rule => {
+        console.log("TCL: rule", rule)
         await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule });
       }));
     } else {

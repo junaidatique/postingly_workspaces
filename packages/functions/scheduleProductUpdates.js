@@ -18,7 +18,6 @@ module.exports = {
   // event = { ruleId: ID }
   schedule: async function (eventSQS, context) {
     let event;
-    console.log("TCL: schedule eventSQS", eventSQS)
     if (_.isUndefined(eventSQS.Records)) {
       event = eventSQS;
     } else {
@@ -44,7 +43,7 @@ module.exports = {
       console.log(`rule not found for ${event.ruleId}`)
     }
     const StoreDetail = await StoreModel.findById(ruleDetail.store);
-    // console.log("TCL: StoreDetail", StoreDetail)
+    console.log("TCL: StoreDetail", StoreDetail.title)
     const defaultShortLinkService = StoreDetail.shortLinkService;
     // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
     if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
@@ -89,6 +88,7 @@ module.exports = {
         // console.log("TCL: postItems", postItems)
         console.log("TCL: postItems.length", postItems.length)
         await Promise.all(postItems.map(async item => {
+          console.log("TCL: item ID", item._id)
           // if no image is found for the variant than pick the image from product. 
           if (item.images.length === 0 && itemType === SCHEDULE_TYPE_VARIANT) {
             productImages = await ImageModel.find({ product: item.product });
@@ -100,20 +100,29 @@ module.exports = {
           if (itemImages.length === 0) {
             return;
           }
+          // if image is one than record the rotaion.
           if (imageLimit == 1) {
+            // if rotation is enabled and post as single image. 
             if (ruleDetail.rotateImages && (ruleDetail.postAsOption === POST_AS_OPTION_FB_PHOTO || ruleDetail.postAsOption === POST_AS_OPTION_TW_PHOTO)) {
               if (ruleDetail.rotateImageLimit > 0) {
+                // if rotateimageLimit is 1 it means rotate all images
+                // otherwise rotate given number of images
                 if (ruleDetail.rotateImageLimit !== 1) {
                   itemImages = itemImages.slice(0, ruleDetail.rotateImageLimit);
                 }
               }
+              // images list
               console.log("TCL: itemImages", itemImages)
-              const imageHistories = itemImages.map(image => {
-                return image.shareHistory.map(history => {
+              // get image histories. 
+              // if no history is found than create an empty object. 
+              itemImages = itemImages.map(image => {
+                // check if the image has history for this profile. 
+                const imageHistoryResponse = image.shareHistory.map(history => {
+                  console.log("TCL: history", history)
                   if (history.profile.toString() == profile.toString()) {
                     return {
                       'imageId': image._id,
-                      'url': image.partnerSpecificUrl,
+                      'partnerSpecificUrl': image.partnerSpecificUrl,
                       'thumbnailUrl': image.thumbnailUrl,
                       'partnerId': image.partnerId,
                       'position': image.position,
@@ -121,27 +130,30 @@ module.exports = {
                       'counter': history.counter,
                     };
                   }
-                })
-              });
-              count = 0;
-              itemImages = imageHistories.map(imageHistory => {
-                if (_.isEmpty(imageHistory)) {
+                }).filter(item => !_.isUndefined(item));
+                // if no history is found. 
+                if (_.isEmpty(imageHistoryResponse)) {
                   return {
-                    'imageId': itemImages[count]._id,
-                    'partnerSpecificUrl': itemImages[count].partnerSpecificUrl,
-                    'thumbnailUrl': itemImages[count].thumbnailUrl,
-                    'partnerId': itemImages[count].partnerId,
-                    'position': itemImages[count++].position,
+                    'imageId': image._id,
+                    'partnerSpecificUrl': image.partnerSpecificUrl,
+                    'thumbnailUrl': image.thumbnailUrl,
+                    'partnerId': image.partnerId,
+                    'position': image.position,
                     'historyId': null,
-                    'counter': 0
+                    'counter': 0,
                   };
                 } else {
-                  count++;
-                  return imageHistory[0];
+                  return imageHistoryResponse[0];
                 }
               });
+
+              count = 0;
+              // if image has history for this profile than
+              console.log("TCL: itemImages2", itemImages)
               itemImages = _.orderBy(itemImages, ['counter', 'position'], ['asc', 'asc']);
+              console.log("TCL: itemImages3", itemImages)
               const postingImage = itemImages[0];
+              console.log("TCL: postingImage", postingImage)
               imagesForPosting = [{ url: postingImage.partnerSpecificUrl, thumbnailUrl: postingImage.thumbnailUrl, imageId: postingImage.imageId, partnerId: postingImage.partnerId }];
               const dbImage = await ImageModel.findById(postingImage.imageId);
               if (_.isNull(postingImage.historyId)) {
@@ -156,7 +168,7 @@ module.exports = {
               imagesForPosting = [{ url: itemImages[0].partnerSpecificUrl, thumbnailUrl: itemImages[0].thumbnailUrl, imageId: itemImages[0]._id, partnerId: itemImages[0].partnerId }];
             }
           } else {
-            imagesForPosting = itemImages.slice(0, 4).map(image => {
+            imagesForPosting = itemImages.slice(0, imageLimit).map(image => {
               return { url: image.partnerSpecificUrl, thumbnailUrl: image.thumbnailUrl, imageId: image._id, partnerId: image.partnerId }
             });
           }

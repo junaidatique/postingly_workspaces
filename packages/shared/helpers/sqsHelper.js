@@ -7,7 +7,6 @@ if (process.env.IS_OFFLINE === 'false') {
 module.exports = {
   addToQueue: async function (queueName, payload) {
     const QueueUrl = `https://sqs.${process.env.AWS_REGION}.amazonaws.com/${process.env.AWS_USER_ID}/${process.env.STAGE}${queueName}`;
-    console.log(`TCL: ${queueName} QueueUrl`, QueueUrl)
     const params = {
       MessageBody: JSON.stringify(payload),
       QueueUrl: QueueUrl

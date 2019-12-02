@@ -272,9 +272,9 @@ module.exports = {
     const body = JSON.stringify({
       recurring_application_charge: {
         name: `${process.env.APP_TITLE}`,
-        price: SHOPIFY_CAPPED_AMOUNT,
+        price: process.env.SHOPIFY_CAPPED_AMOUNT,
         return_url: `${process.env.FRONTEND_URL}${process.env.SHOPIFY_PAYMENT_REUTRN}?shop=${shop}`,
-        test: (process.env.STAGE === 'production') ? false : true,
+        test: (process.env.STAGE === 'production' && shop !== 'march2019teststore1.myshopify.com') ? false : true,
         trial_days: process.env.SHOPIFY_TRAIL_DAYS,
       }
     });
