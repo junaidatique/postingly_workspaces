@@ -23,7 +23,7 @@ module.exports = {
     } else {
       event = JSON.parse(eventSQS.Records[0].body);
     }
-    // console.log("TCL: schedule event", event)
+    console.log("TCL: schedule event", event)
     await dbConnection.createConnection(context);
 
     // load models
@@ -38,12 +38,12 @@ module.exports = {
     let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting, updateData;
     // get rule and store
     const ruleDetail = await RuleModel.findById(event.ruleId);
-    // console.log("TCL: ruleDetail", ruleDetail)
+    console.log("TCL: ruleDetail", ruleDetail)
     if (ruleDetail === null) {
       console.log(`rule not found for ${event.ruleId}`)
     }
     const StoreDetail = await StoreModel.findById(ruleDetail.store);
-    // console.log("TCL: StoreDetail", StoreDetail.title)
+    console.log("TCL: StoreDetail", StoreDetail.title)
     // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
     if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
       imageLimit = 4;
@@ -69,7 +69,7 @@ module.exports = {
         // scheduleTime: { $gt: moment.utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
-    ).sort({ scheduleTime: 1 });
+    ).sort({ scheduleTime: 1 }).limit(20);
     // loop on all the profiles of the rule
     await Promise.all(updates.map(async update => {
       // get all the updaets of this rule that are not scheduled yet. 
@@ -81,6 +81,10 @@ module.exports = {
         tempItem = await schedulerHelper.getProductsForSchedule(update, profile);
       }
       item = tempItem[0];
+      if (_.isUndefined(item)) {
+        console.log("TCL: tempItem", tempItem)
+        return;
+      }
       counter = 0;
       console.log("TCL: item ID", item._id)
       // if no image is found for the variant than pick the image from product. 
@@ -91,6 +95,7 @@ module.exports = {
         itemImages = _.orderBy(item.images, ['position'], ['asc']);
       }
       // if no image is found don't schedule and return. 
+      console.log("TCL: itemImages.length", itemImages.length)
       if (itemImages.length === 0) {
         return;
       }
