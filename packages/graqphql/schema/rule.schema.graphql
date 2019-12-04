@@ -46,21 +46,20 @@ type Rule {
   postingTimeOption: RulePostingTimeOptions # one of the option from the publish timing option (post between timings or custom timing sections)
   postTimings: [RulePostTimings]
   postAsOption: ProfilePostingOptions
-  collectionOption: collectionOptions
-  collections: [Collection]
+  # collectionOption: collectionOptions
+  # collections: [Collection]
+  disallowedCollections: [Collection]
   allowZeroQuantity: Boolean
   postAsVariants: Boolean
   postingProductOrder: PostingSortOrder
   repeatFrequency: Int
   rotateImages: Boolean
   rotateImageLimit: Int
-  # selectedPostTimes: SelectedPostTimes
   captions: [Caption]
   active: Boolean
   createdAt: String
 }
 type Caption {  
-  # collectionOption: collectionOptions
   captionCollectionOption: collectionOptions
   collections: [Collection]
   isDefault: Boolean
@@ -79,12 +78,11 @@ type Times {
   minute: Int
 }
 type RulePostTimings {
-  postingInterval: Int
-  startPostingHour: Int
-  endPostingHour: Int
   postingHour: Int
   postingMinute: Int
   postingDays: [String]
+  postingCollectionOption: collectionOptions
+  collections: [Collection]
 }
 # types
 
@@ -97,8 +95,9 @@ input RuleInput {
   postingTimeOption: RulePostingTimeOptions
   postTimings: [RulePostTimingsInput]
   postAsOption: ProfilePostingOptions
-  collectionOption: collectionOptions
-  collections: [ID!]
+  # collectionOption: collectionOptions
+  # collections: [ID!]
+  disallowedCollections: [ID!]
   allowZeroQuantity: Boolean
   postAsVariants: Boolean
   postingProductOrder: PostingSortOrder
@@ -119,12 +118,11 @@ input CreateCaptionInput {
 
 
 input RulePostTimingsInput {
-  postingInterval: Int #number of seconds.
-  startPostingHour: Int
-  endPostingHour: Int
   postingHour: Int
   postingMinute: Int
   postingDays: [String]
+  postingCollectionOption: collectionOptions
+  collections: [ID!]
 }
 
 input SelectedPostTimesInput {

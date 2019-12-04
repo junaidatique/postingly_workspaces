@@ -8,8 +8,9 @@ const formattedRule = async (rule) => {
     id: rule._id,
     store: storeFunctions.getStoreByID.bind(this, rule._doc.store),
     profiles: profileFunctions.getProfiles.bind(this, rule._doc.profiles),
-    collections: collectionFunctions.getCollections.bind(this, rule._doc.collections),
+    disallowedCollections: collectionFunctions.getCollections.bind(this, rule._doc.disallowedCollections),
     captions: formatCaptions.bind(this, rule._doc.captions),
+    postTimings: formatPostTimings.bind(this, rule._doc.postTimings),
     createdAt: (rule.createdAt !== undefined) ? rule.createdAt.toISOString() : null,
   }
 }
@@ -27,6 +28,17 @@ const formatCaptions = captions => {
       isDefault: caption.isDefault,
       captionTexts: caption.captionTexts,
       collections: collectionFunctions.getCollections.bind(this, caption.collections),
+    }
+  })
+}
+const formatPostTimings = postTimes => {
+  return postTimes.map(postTime => {
+    return {
+      postingCollectionOption: postTime.postingCollectionOption,
+      postingHour: postTime.postingHour,
+      postingMinute: postTime.postingMinute,
+      collections: collectionFunctions.getCollections.bind(this, postTime.collections),
+      postingDays: postTime.postingDays
     }
   })
 }

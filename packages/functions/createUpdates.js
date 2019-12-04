@@ -76,32 +76,25 @@ module.exports = {
     }
     console.log("TCL: startOfWeek", startOfWeek.toISOString())
     console.log("TCL: endOfWeek", endOfWeek.toISOString())
-    if (ruleDetail.postingTimeOption === POST_IMMEDIATELY) {
-      for (let loopTime = startOfWeek; loopTime.isBefore(endOfWeek); loopTime = loopTime.add(ruleDetail.postTimings[0].postingInterval, 'minute')) {
-        if (loopTime.isAfter(moment.utc()) && ruleDetail.postTimings[0].postingDays.includes(moment.weekdays(loopTime.weekday()))) {
-          updateTimes.push(loopTime.toISOString());
+
+    ruleDetail.postTimings.forEach((postTime) => {
+      for (let loopTime = startOfWeek.clone(); loopTime.isBefore(endOfWeek); loopTime = loopTime.add(1, 'day')) {
+        hour = loopTime.set({ 'hour': postTime.postingHour, 'minute': postTime.postingMinute });
+        if (hour.isAfter(moment.utc()) && postTime.postingDays.includes(moment.weekdays(loopTime.weekday()))) {
+          updateTimes.push(
+            {
+              time: hour.toISOString(),
+              postingCollectionOption: postTime.postingCollectionOption,
+              allowedCollections: postTime.collections,
+              disallowedCollections: ruleDetail.disallowedCollections,
+              allowZeroQuantity: ruleDetail.allowZeroQuantity,
+              postingProductOrder: ruleDetail.postingProductOrder
+            }
+          );
         }
       }
-    } else if (ruleDetail.postingTimeOption === POST_BETWEEN_WITH_INTERVAL) {
-      for (let day = startOfWeek; day <= endOfWeek; day = day.add(1, 'day')) {
-        const startHour = day.clone().set('hour', ruleDetail.postTimings[0].startPostingHour).set('minute', 0);
-        const endHour = day.clone().set('hour', ruleDetail.postTimings[0].endPostingHour).set('minute', 0);
-        for (let loopTime = startHour; loopTime <= endHour; loopTime = loopTime.add(ruleDetail.postTimings[0].postingInterval, 'minute')) {
-          if (loopTime.isAfter(moment.utc()) && ruleDetail.postTimings[0].postingDays.includes(moment.weekdays(loopTime.weekday()))) {
-            updateTimes.push(loopTime.toISOString());
-          }
-        }
-      }
-    } else if (ruleDetail.postingTimeOption === CUSTOM_TIMINGS) {
-      ruleDetail.postTimings.forEach((postTime) => {
-        for (let loopTime = startOfWeek.clone(); loopTime.isBefore(endOfWeek); loopTime = loopTime.add(1, 'day')) {
-          hour = loopTime.set({ 'hour': postTime.postingHour, 'minute': postTime.postingMinute });
-          if (hour.isAfter(moment.utc()) && postTime.postingDays.includes(moment.weekdays(loopTime.weekday()))) {
-            updateTimes.push(hour.toISOString());
-          }
-        }
-      });
-    }
+    });
+
     // const r = await UpdateModel.deleteMany(
     //   {
     //     store: storeDetail._id,
@@ -119,7 +112,7 @@ module.exports = {
         return ruleDetail.profiles.map(profile => {
           return {
             updateOne: {
-              filter: { uniqKey: `${ruleDetail.id}-${profile._id}-${updateTime}` },
+              filter: { uniqKey: `${ruleDetail.id}-${profile._id}-${updateTime.time}` },
               update: {
                 store: storeDetail._id,
                 rule: ruleDetail._id,
@@ -127,15 +120,20 @@ module.exports = {
                 service: ruleDetail.service,
                 serviceProfile: profile.serviceProfile,
                 postAsOption: ruleDetail.postAsOption,
-                scheduleTime: updateTime,
-                scheduleWeek: moment(updateTime).week(),
-                scheduleDayOfYear: moment(updateTime).dayOfYear(),
+                scheduleTime: updateTime.time,
+                scheduleWeek: moment(updateTime.time).week(),
+                scheduleDayOfYear: moment(updateTime.time).dayOfYear(),
                 postType: ruleDetail.type,
                 scheduleType: (ruleDetail.postAsVariants) ? SCHEDULE_TYPE_VARIANT : SCHEDULE_TYPE_PRODUCT,
                 autoApproveUpdates: storeDetail.autoApproveUpdates,
                 autoAddCaptionOfUpdates: storeDetail.autoAddCaptionOfUpdates,
                 captionsUpdated: false,
-                userEdited: false
+                userEdited: false,
+                postingCollectionOption: updateTime.postingCollectionOption,
+                allowedCollections: updateTime.allowedCollections,
+                disallowedCollections: updateTime.disallowedCollections,
+                allowZeroQuantity: updateTime.allowZeroQuantity,
+                postingProductOrder: updateTime.postingProductOrder
               },
               upsert: true
             }

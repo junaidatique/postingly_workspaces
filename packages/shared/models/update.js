@@ -1,7 +1,17 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 var mongoosePaginate = require('mongoose-paginate');
-const { SERVICES, SCHEDULE_STATE, POST_AS_OPTION, RULE_TYPE, SCHEDULE_TYPE, NOT_SCHEDULED, SERVICE_PROFILES } = require('shared/constants');
+const {
+  SERVICES,
+  SCHEDULE_STATE,
+  POST_AS_OPTION,
+  RULE_TYPE,
+  SCHEDULE_TYPE,
+  NOT_SCHEDULED,
+  SERVICE_PROFILES,
+  COLLECTION_OPTION,
+  POSTING_SORTORDER
+} = require('shared/constants');
 
 const IMAGE = {
   imageId: {
@@ -166,7 +176,34 @@ const updateSchema = new mongoose.Schema({
     default: false,
     index: true,
   },
-  response: updateResponse
+  response: updateResponse,
+  postingCollectionOption: {
+    type: String,
+    enum: COLLECTION_OPTION
+  },
+  allowedCollections: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Collection',
+      index: true,
+    }
+  ],
+  disallowedCollections: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Collection',
+      index: true,
+    }
+  ],
+  allowZeroQuantity: {
+    type: Boolean,
+    index: true,
+  },
+  postingProductOrder: {
+    type: String,
+    enum: POSTING_SORTORDER,
+    index: true,
+  },
 });
 
 

@@ -1,24 +1,34 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const { SERVICES, POSTING_TIME_OPTIONS, POST_AS_OPTION, COLLECTION_OPTION, POSTING_SORTORDER, TEST, RULE_TYPE, QUEUE_OPTIONS } = require('shared/constants');
+const { SERVICES,
+  POSTING_TIME_OPTIONS,
+  POST_AS_OPTION,
+  COLLECTION_OPTION,
+  POSTING_SORTORDER,
+  RULE_TYPE,
+  QUEUE_OPTIONS
+} = require('shared/constants');
 
 const POST_TIMING = {
-  postingInterval: {
-    type: Number
-  },
-  startPostingHour: {
-    type: Number
-  },
-  endPostingHour: {
-    type: Number
-  },
+
   postingHour: {
     type: Number
   },
   postingMinute: {
     type: Number
   },
-  postingDays: [String]
+  postingDays: [String],
+  postingCollectionOption: {
+    type: String,
+    enum: COLLECTION_OPTION
+  },
+  collections: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Collection',
+      index: true,
+    }
+  ],
 };
 
 const SELECTED_POST_TIMES = {
@@ -103,11 +113,18 @@ const ruleSchema = new mongoose.Schema({
     enum: POST_AS_OPTION,
     index: true, // post as link, phtot etc.
   },
-  collectionOption: {
-    type: String,
-    enum: COLLECTION_OPTION
-  },
-  collections: [
+  // collectionOption: {
+  //   type: String,
+  //   enum: COLLECTION_OPTION
+  // },
+  // collections: [
+  //   {
+  //     type: Schema.Types.ObjectId,
+  //     ref: 'Collection',
+  //     index: true,
+  //   }
+  // ],
+  disallowedCollections: [
     {
       type: Schema.Types.ObjectId,
       ref: 'Collection',
