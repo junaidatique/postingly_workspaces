@@ -7,7 +7,7 @@ const formattedRule = async (rule) => {
     ...rule._doc,
     id: rule._id,
     store: storeFunctions.getStoreByID.bind(this, rule._doc.store),
-    profiles: profileFunctions.getProfiles.bind(this, rule._doc.profiles),
+    profile: profileFunctions.getProfileById.bind(this, rule._doc.profile),
     disallowedCollections: collectionFunctions.getCollections.bind(this, rule._doc.disallowedCollections),
     captions: formatCaptions.bind(this, rule._doc.captions),
     postTimings: formatPostTimings.bind(this, rule._doc.postTimings),

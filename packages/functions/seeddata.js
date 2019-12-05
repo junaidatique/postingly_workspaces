@@ -168,32 +168,13 @@ module.exports = {
     }));
   },
   testFetch: async function (event, context) {
-    console.log("TCL: event", event)
+
     await dbConnection.createConnection(context);
-    const ProfileModel = require('shared').ProfileModel;
-    const StoreModel = require('shared').StoreModel;
-    const stores = await StoreModel.find({ _id: { $exists: true } });
-    console.log("TCL: stores", stores.length);
-    let webhookPayload;
-    await Promise.all(stores.map(async store => {
-      // console.log("TCL: store", store._id)
-      // const numberOfConnectedProfiles = await ProfileModel.countDocuments({ 'store': store._id, isConnected: true, isSharePossible: true });
-      // console.log("TCL: numberOfConnectedProfiles", numberOfConnectedProfiles)
-      // store.numberOfConnectedProfiles = numberOfConnectedProfiles;
-      // await store.save();
+    const RuleModel = require('shared').RuleModel;
 
-      webhookPayload = {
-        partnerStore: PARTNERS_SHOPIFY,
-        shopURL: store.partnerSpecificUrl,
-        accessToken: store.partnerToken,
-        storeId: store._id
-      }
-      console.log("TCL: webhookPayload", webhookPayload)
-      if (process.env.IS_OFFLINE === 'false') {
-        await sqsHelper.addToQueue('DeleteWebhooks', webhookPayload);
-      }
+    // await Promise.all(stores.map(async store => {
 
-    }));
+    // }));
   },
   handleMyQueue: async function (event, context) {
     console.log("TCL: context", context)

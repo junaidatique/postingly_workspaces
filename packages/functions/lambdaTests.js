@@ -31,8 +31,8 @@ module.exports = {
     // first iteration.
     await createUpdates({ ruleId: ruleDetail._id });
     await schedule({ ruleId: ruleDetail._id });
-    // await changeCaption({ rule: ruleDetail._id, storeId: null });
-    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
+    await changeCaption({ rule: ruleDetail._id, storeId: null });
+    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
 
     // // second iteration.
     // const lastUpdate = await UpdateModel.findOne({ store: storeId }).sort({ scheduleTime: -1 });

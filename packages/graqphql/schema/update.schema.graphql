@@ -54,8 +54,8 @@ enum ScheduleState {
 
 input ModelUpdateFilterInput {
   storeId: ID!
-  service: Service!
-  profile: [ID]
+  service: Service
+  profile: ID
   product: ID
   variant: ID
   type: ModelStringFilterInput

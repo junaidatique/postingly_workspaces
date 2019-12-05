@@ -15,7 +15,7 @@ module.exports = {
 
       searchQuery = {
         store: args.filter.storeId,
-        service: args.filter.service,
+        profile: args.filter.profile,
         scheduleState: args.filter.scheduleState,
         scheduleTime: { "$gte": moment().utc() },
       }
@@ -106,6 +106,9 @@ module.exports = {
         if (!_.isUndefined(args.filter.storeIdsExcluded) && !_.isEmpty(args.filter.storeIdsExcluded)) {
           searchQuery.store = { $nin: args.filter.storeIdsExcluded.split(',') }
         }
+        if (!_.isUndefined(args.filter.profile) && !_.isEmpty(args.filter.profile)) {
+          searchQuery.profile = args.filter.profile;
+        }
         if (!_.isUndefined(args.filter.service) && !_.isEmpty(args.filter.service)) {
           searchQuery.service = args.filter.service;
         }
@@ -134,13 +137,6 @@ module.exports = {
           searchQuery.scheduleState = args.filter.scheduleState;
         }
       }
-
-      // searchQuery = {
-      //   store: args.filter.storeId,
-      //   service: args.filter.service,
-      //   scheduleState: args.filter.scheduleState,
-      //   scheduleTime: { "$gte": moment().utc() },
-      // }
 
       searchOptions = {
         sort: { scheduleTime: 1 },

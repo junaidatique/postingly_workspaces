@@ -57,7 +57,7 @@ module.exports = {
         items.map(item => {
           const updateItemShareHistory = [];
           item.shareHistory.map(itemScheduleHistory => {
-            if (ruleDetail.profiles.includes(itemScheduleHistory.profile)) {
+            if (ruleDetail.profile === itemScheduleHistory.profile) {
               if ((itemScheduleHistory.counter - 1) > 0) {
                 updateItemShareHistory.push({
                   _id: itemScheduleHistory._id,
@@ -105,7 +105,7 @@ module.exports = {
   },
   listRules: async (obj, args, context, info) => {
     try {
-      const searchQuery = RuleModel.find({ store: args.filter.storeId, service: args.filter.service, type: args.filter.type });
+      const searchQuery = RuleModel.find({ store: args.filter.storeId, profile: args.filter.profile, type: args.filter.type });
       const rules = await searchQuery;
       return rules.map(rule => {
         return formattedRule(rule);

@@ -42,7 +42,7 @@ type Rule {
   store: Store!
   service: Service!
   type: RuleTypes!,
-  profiles: [Profile]
+  profile: Profile
   postingTimeOption: RulePostingTimeOptions # one of the option from the publish timing option (post between timings or custom timing sections)
   postTimings: [RulePostTimings]
   postAsOption: ProfilePostingOptions
@@ -91,7 +91,7 @@ input RuleInput {
   store: ID!
   service: Service!
   type: RuleTypes!,
-  profiles: [ID!]
+  profile: ID!
   postingTimeOption: RulePostingTimeOptions
   postTimings: [RulePostTimingsInput]
   postAsOption: ProfilePostingOptions
@@ -140,7 +140,8 @@ input TimesInput {
 
 input ModelRuleFilterInput {
   storeId: ID!
-  service: Service!
+  profile: ID
+  service: Service
   type: RuleTypes!
 }
 

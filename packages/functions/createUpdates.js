@@ -58,7 +58,7 @@ module.exports = {
     const RuleModel = shared.RuleModel;
     const StoreModel = shared.StoreModel;
     const UpdateModel = shared.UpdateModel;
-    const ruleDetail = await RuleModel.findById(event.ruleId).populate('profiles');
+    const ruleDetail = await RuleModel.findById(event.ruleId).populate('profile');
     if (ruleDetail === null) {
       throw new Error(`rule not found for ${event.ruleId}`);
     }
@@ -105,39 +105,38 @@ module.exports = {
     console.log("TCL: updateTimes.length", updateTimes.length)
     console.log("TCL: -------------------------")
     if (updateTimes.length > 0) {
+      const profile = ruleDetail.profile;
       const bulkUpdatesWrite = updateTimes.map(updateTime => {
         // console.log("TCL: updateTime", updateTime);
-        return ruleDetail.profiles.map(profile => {
-          return {
-            updateOne: {
-              filter: { uniqKey: `${ruleDetail.id}-${profile._id}-${updateTime.time}` },
-              update: {
-                store: storeDetail._id,
-                rule: ruleDetail._id,
-                profile: profile._id,
-                service: ruleDetail.service,
-                serviceProfile: profile.serviceProfile,
-                postAsOption: ruleDetail.postAsOption,
-                scheduleTime: updateTime.time,
-                scheduleWeek: moment(updateTime.time).week(),
-                scheduleDayOfYear: moment(updateTime.time).dayOfYear(),
-                postType: ruleDetail.type,
-                scheduleType: (ruleDetail.postAsVariants) ? SCHEDULE_TYPE_VARIANT : SCHEDULE_TYPE_PRODUCT,
-                autoApproveUpdates: storeDetail.autoApproveUpdates,
-                autoAddCaptionOfUpdates: storeDetail.autoAddCaptionOfUpdates,
-                captionsUpdated: false,
-                userEdited: false,
-                postingCollectionOption: updateTime.postingCollectionOption,
-                allowedCollections: updateTime.allowedCollections,
-                postTimingId: updateTime.postTimingId,
-                disallowedCollections: ruleDetail.disallowedCollections,
-                allowZeroQuantity: ruleDetail.allowZeroQuantity,
-                postingProductOrder: ruleDetail.postingProductOrder,
-              },
-              upsert: true
-            }
+        return {
+          updateOne: {
+            filter: { uniqKey: `${ruleDetail.id}-${profile._id}-${updateTime.time}` },
+            update: {
+              store: storeDetail._id,
+              rule: ruleDetail._id,
+              profile: profile._id,
+              service: ruleDetail.service,
+              serviceProfile: profile.serviceProfile,
+              postAsOption: ruleDetail.postAsOption,
+              scheduleTime: updateTime.time,
+              scheduleWeek: moment(updateTime.time).week(),
+              scheduleDayOfYear: moment(updateTime.time).dayOfYear(),
+              postType: ruleDetail.type,
+              scheduleType: (ruleDetail.postAsVariants) ? SCHEDULE_TYPE_VARIANT : SCHEDULE_TYPE_PRODUCT,
+              autoApproveUpdates: storeDetail.autoApproveUpdates,
+              autoAddCaptionOfUpdates: storeDetail.autoAddCaptionOfUpdates,
+              captionsUpdated: false,
+              userEdited: false,
+              postingCollectionOption: updateTime.postingCollectionOption,
+              allowedCollections: updateTime.allowedCollections,
+              postTimingId: updateTime.postTimingId,
+              disallowedCollections: ruleDetail.disallowedCollections,
+              allowZeroQuantity: ruleDetail.allowZeroQuantity,
+              postingProductOrder: ruleDetail.postingProductOrder,
+            },
+            upsert: true
           }
-        });
+        }
       });
 
       const updates = await UpdateModel.bulkWrite([].concat.apply([], bulkUpdatesWrite));
