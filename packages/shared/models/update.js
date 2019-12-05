@@ -204,6 +204,10 @@ const updateSchema = new mongoose.Schema({
     enum: POSTING_SORTORDER,
     index: true,
   },
+  postTimingId: {
+    type: String,
+    index: true,
+  },
 });
 
 

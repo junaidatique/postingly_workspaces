@@ -38,7 +38,7 @@ module.exports = {
     let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting, updateData;
     // get rule and store
     const ruleDetail = await RuleModel.findById(event.ruleId);
-    console.log("TCL: ruleDetail", ruleDetail)
+    // console.log("TCL: ruleDetail", ruleDetail)
     if (ruleDetail === null) {
       console.log(`rule not found for ${event.ruleId}`)
     }
@@ -53,13 +53,8 @@ module.exports = {
     // all updates are pushed into this array for update. 
     let bulkUpdate = [];
     let bulkShareHistory = [];
-    if (ruleDetail.postAsVariants) {
-      itemModel = VariantModel;
-      itemType = SCHEDULE_TYPE_VARIANT;
-    } else {
-      itemModel = ProductModel;
-      itemType = SCHEDULE_TYPE_PRODUCT;
-    }
+    let existingScheduleItems = [];
+
 
     const updates = await UpdateModel.find(
       {
@@ -70,21 +65,50 @@ module.exports = {
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
     ).sort({ scheduleTime: 1 }).limit(20);
+
+    const scheduledUpdates = await UpdateModel.find(
+      {
+        rule: ruleDetail._id,
+        scheduleState: { $ne: NOT_SCHEDULED },
+        scheduleTime: { $gt: moment().add(-1, 'days').utc(), $lt: moment().add(7, 'days').utc() },
+        // scheduleTime: { $gt: moment.utc() },
+        scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+      }
+    ).sort({ scheduleTime: 1 }).limit(20);
+
+    if (ruleDetail.postAsVariants) {
+      itemModel = VariantModel;
+      itemType = SCHEDULE_TYPE_VARIANT;
+      existingScheduleItems = scheduledUpdates.map(update => update.variant);
+    } else {
+      itemModel = ProductModel;
+      itemType = SCHEDULE_TYPE_PRODUCT;
+      existingScheduleItems = scheduledUpdates.map(update => update.product);
+    }
+    console.log("TCL: scheduledUpdates", scheduledUpdates)
+    console.log("TCL: existingScheduleItems", existingScheduleItems)
+    // sreturn;
+
+
+
+
     // loop on all the profiles of the rule
-    await Promise.all(updates.map(async update => {
+    await Promise.all(updates.map(async (update, updateIndex) => {
+      console.log("TCL: updateIndex", updateIndex)
       // get all the updaets of this rule that are not scheduled yet. 
       profile = update.profile;
       // get variants or products based on the rule settings. 
       if (ruleDetail.postAsVariants) {
-        tempItem = await schedulerHelper.getVariantsForSchedule(update, profile);
+        tempObject = await schedulerHelper.getVariantsForSchedule(update, profile, existingScheduleItems, updateIndex);
       } else {
-        tempItem = await schedulerHelper.getProductsForSchedule(update, profile);
+        tempObject = await schedulerHelper.getProductsForSchedule(update, profile, existingScheduleItems, updateIndex);
       }
-      item = tempItem[0];
-      if (_.isUndefined(item)) {
-        console.log("TCL: tempItem", tempItem)
+      if (_.isUndefined(tempObject.item)) {
+        console.log("TCL: tempObject", tempObject)
         return;
       }
+      item = tempObject.item;
+
       counter = 0;
       console.log("TCL: item ID", item._id)
       // if no image is found for the variant than pick the image from product. 
@@ -211,10 +235,6 @@ module.exports = {
       }).filter(item => !_.isUndefined(item))[0];;
       // if no share history is found counter is set to one. 
       if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory)) {
-        // console.log("TCL: profileHistory", profileHistory)
-        // console.log("TCL: shareHistoryForItem", shareHistoryForItem)
-        // console.log("TCL: shareHistoryForItem.shareHistory", shareHistoryForItem.shareHistory)
-        // shareHistoryForItem.shareHistory.push({ profile: update.profile, counter: 1 })
         shareHistoryForItem.shareHistory[shareHistoryForItem.shareHistory.length] = { profile: update.profile, counter: 1 };
       } else {
         // otherwise counter is incremented and history is returned. 

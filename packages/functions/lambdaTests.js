@@ -17,7 +17,7 @@ module.exports = {
     console.log("TCL: StoreModel", StoreModel)
     const ProductModel = shared.ProductModel;
     const storeDetail = await StoreModel.findOne()
-    console.log("TCL: storeDetail", storeDetail)
+    // console.log("TCL: storeDetail", storeDetail)
 
     const UpdateModel = shared.UpdateModel;
     const storeId = storeDetail._id;

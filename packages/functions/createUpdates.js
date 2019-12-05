@@ -86,9 +86,7 @@ module.exports = {
               time: hour.toISOString(),
               postingCollectionOption: postTime.postingCollectionOption,
               allowedCollections: postTime.collections,
-              disallowedCollections: ruleDetail.disallowedCollections,
-              allowZeroQuantity: ruleDetail.allowZeroQuantity,
-              postingProductOrder: ruleDetail.postingProductOrder
+              postTimingId: postTime._id,
             }
           );
         }
@@ -131,9 +129,10 @@ module.exports = {
                 userEdited: false,
                 postingCollectionOption: updateTime.postingCollectionOption,
                 allowedCollections: updateTime.allowedCollections,
-                disallowedCollections: updateTime.disallowedCollections,
-                allowZeroQuantity: updateTime.allowZeroQuantity,
-                postingProductOrder: updateTime.postingProductOrder
+                postTimingId: updateTime.postTimingId,
+                disallowedCollections: ruleDetail.disallowedCollections,
+                allowZeroQuantity: ruleDetail.allowZeroQuantity,
+                postingProductOrder: ruleDetail.postingProductOrder,
               },
               upsert: true
             }
