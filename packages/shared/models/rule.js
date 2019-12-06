@@ -93,6 +93,11 @@ const ruleSchema = new mongoose.Schema({
     enum: RULE_TYPE,
     index: true,
   },
+  profiles: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Profile',
+    index: true,
+  }],
   profile: {
     type: Schema.Types.ObjectId,
     ref: 'Profile',

@@ -1431,20 +1431,22 @@ module.exports = {
   },
   collectionsDelete: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
+      console.log("TCL: JSON.parse(event.body)", JSON.parse(event.body))
       const collectionDetail = await shared.CollectionModel.findOne({ partnerId: JSON.parse(event.body).id })
+      console.log("TCL: collectionDetail", collectionDetail)
       if (!_.isNull(collectionDetail)) {
-        const rules = await shared.RuleModel.where('collections').in(collectionDetail._id);
-        console.log("TCL: collectionDetail._id", collectionDetail._id)
-        if (rules.length > 0) {
-          console.log("TCL: rules", rules)
-          await Promise.all(rules.map(async rule => {
-            console.log("TCL: rule.collections", rule.collections)
-            collections = rule.collections.filter(item => item === collectionDetail._id);
-            console.log("TCL: collections", collections)
-            rule.collections = collections;
-            await rule.save();
-          }));
-        }
+        // const rules = await shared.RuleModel.where('collections').in(collectionDetail._id);
+        // console.log("TCL: collectionDetail._id", collectionDetail._id)
+        // if (rules.length > 0) {
+        //   console.log("TCL: rules", rules)
+        //   await Promise.all(rules.map(async rule => {
+        //     console.log("TCL: rule.collections", rule.collections)
+        //     collections = rule.collections.filter(item => item === collectionDetail._id);
+        //     console.log("TCL: collections", collections)
+        //     rule.collections = collections;
+        //     await rule.save();
+        //   }));
+        // }
         const collectionDelete = await shared.CollectionModel.deleteOne({ partnerId: JSON.parse(event.body).id });
       }
       return httpHelper.ok(

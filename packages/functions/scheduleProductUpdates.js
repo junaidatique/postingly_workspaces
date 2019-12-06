@@ -203,6 +203,7 @@ module.exports = {
       // update = updates[counter];
       updateData[itemType] = item._id;
       updateData.scheduleState = PENDING;
+      console.log("TCL: updateData", updateData)
       bulkUpdate.push({
         updateOne: {
           filter: { uniqKey: update.uniqKey },
@@ -253,7 +254,8 @@ module.exports = {
         return history;
       })
     }));
-    // console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.filter))
+    console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.filter))
+    console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.update))
     if (!_.isEmpty(bulkUpdate)) {
       const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
     }

@@ -3,7 +3,7 @@ const _ = require('lodash');
 const moment = require('moment')
 const {
   FACEBOOK_SERVICE, POST_AS_OPTION_FB_ALBUM, POST_AS_OPTION_FB_LINK, POST_AS_OPTION_FB_PHOTO,
-  TWITTER_SERVICE, TWITTER_PROFILE, BUFFER_SERVICE, POSTED
+  TWITTER_SERVICE, TWITTER_PROFILE, BUFFER_SERVICE, POSTED, COLLECTION_OPTION_ALL, FAILED
 } = require('shared/constants');
 const FacebookService = require('shared').FacebookService;
 const TwitterService = require('shared').TwitterService;
@@ -23,6 +23,13 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
     const update = await UpdateModel.findById(event.updateId);
     if (_.isNull(update) || _.isUndefined(update)) {
+      return;
+    }
+
+    if (_.isNull(update.postingCollectionOption)) {
+      update.scheduleState = FAILED;
+      update.failedMessage = "Duplicate Post";
+      await update.save();
       return;
     }
     let response;
@@ -53,7 +60,10 @@ module.exports = {
         response: {}
       }
     }
-
+    if (_.isNull(update.postingCollectionOption)) {
+      update.postingCollectionOption = COLLECTION_OPTION_ALL;
+    }
+    update.postingCollectionOption = COLLECTION_OPTION_ALL;
     update.scheduleState = response.scheduleState;
     update.failedMessage = response.failedMessage;
     update.response = response.response;

@@ -171,10 +171,33 @@ module.exports = {
 
     await dbConnection.createConnection(context);
     const RuleModel = require('shared').RuleModel;
+    const store = await RuleModel.distinct('store',
+      {
+        profiles: { $exists: true, $not: { $size: 0 } },
+        store: { $nin: ['5dc42115f5629e79652729c2', '5dc4cfc8f5de180714e125c0'] }
+      }
+    );
+    console.log("TCL: store", store[0])
+    const rules = await RuleModel.find({ store: store[0] }); //.populate('profiles');
+    console.log("TCL: rules", rules)
+    await Promise.all(rules.map(async rule => {
+      console.log("TCL: rule", rule._id)
+      if (_.isEmpty(rule.profiles)) {
+        return;
+      }
+      const newRule = JSON.parse(JSON.stringify(rule));
+      const profiles = rule.profiles;
+      console.log("TCL: profiles", profiles)
+      delete newRule.profiles;
+      delete newRule._id;
+      await Promise.all(profiles.map(async profile => {
+        newRule.profile = profile;
+        newRule.active = true;
+        await RuleModel.create(newRule);
+      }));
+      await RuleModel.deleteOne({ _id: rule._id });
 
-    // await Promise.all(stores.map(async store => {
-
-    // }));
+    }));
   },
   handleMyQueue: async function (event, context) {
     console.log("TCL: context", context)
