@@ -105,8 +105,14 @@ module.exports = {
     return ruleResult;
   },
   listRules: async (obj, args, context, info) => {
+    console.log("TCL: args", args)
     try {
-      const searchQuery = RuleModel.find({ store: args.filter.storeId, profile: args.filter.profile, type: args.filter.type });
+      let searchQuery = RuleModel.find({ store: args.filter.storeId, type: args.filter.type });
+      if (!_.isUndefined(args.filter.profile)) {
+        searchQuery = searchQuery.find({ profile: args.filter.profile });
+      }
+      // console.log("TCL: searchQuery", searchQuery)
+
       const rules = await searchQuery;
       return rules.map(rule => {
         return formattedRule(rule);

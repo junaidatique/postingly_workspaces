@@ -89,7 +89,6 @@ module.exports = {
         offset: args.skip,
         limit: args.limit
       }
-      console.log("TCL: searchQuery", searchQuery)
       const products = await ProductModel.paginate(searchQuery, searchOptions);
       const productList = products.docs.map(product => {
         return formattedProduct(product);

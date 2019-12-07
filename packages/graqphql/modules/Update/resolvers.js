@@ -27,7 +27,6 @@ module.exports = {
         offset: args.skip,
         limit: args.limit
       }
-      console.log("TCL: searchQuery", searchQuery)
       const updates = await UpdateModel.paginate(searchQuery, searchOptions);
       const updatesList = updates.docs.map(update => {
         return formattedUpdate(update)
@@ -143,7 +142,6 @@ module.exports = {
         offset: args.skip,
         limit: args.limit
       }
-      console.log("TCL: searchQuery", searchQuery)
       const updates = await UpdateModel.paginate(searchQuery, searchOptions);
       const updatesList = updates.docs.map(update => {
         return formattedUpdate(update)

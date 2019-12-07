@@ -8,10 +8,9 @@ module.exports = {
     console.log("TCL: args", args)
     try {
       let searchQuery = query.createSearchQuery(CollectionModel, args);
-      console.log("TCL: searchQuery", searchQuery)
       searchQuery = searchQuery.find({ store: args.filter.storeId })
       const collections = await searchQuery;
-      console.log("TCL: collections", collections)
+      // console.log("TCL: collections", collections)
       return collections.map(collection => {
         return formattedCollection(collection);
       })
