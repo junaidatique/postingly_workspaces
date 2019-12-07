@@ -28,9 +28,11 @@ module.exports = {
     }
 
 
-    if (_.isNull(update.postingCollectionOption)) {
+    if (_.isNull(update.postingCollectionOption) || update.postingCollectionOption === null) {
+      update.postingCollectionOption = COLLECTION_OPTION_ALL;
       update.scheduleState = FAILED;
       update.failedMessage = "Duplicate Post";
+      console.log("TCL: update 1 postingCollectionOption", update._id);
       await update.save();
       return;
     }
