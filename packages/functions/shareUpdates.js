@@ -22,9 +22,11 @@ module.exports = {
     await dbConnection.createConnection(context);
     const UpdateModel = shared.UpdateModel;
     const update = await UpdateModel.findById(event.updateId);
+    console.log("TCL: update", update)
     if (_.isNull(update) || _.isUndefined(update)) {
       return;
     }
+
 
     if (_.isNull(update.postingCollectionOption)) {
       update.scheduleState = FAILED;

@@ -168,36 +168,40 @@ module.exports = {
     }));
   },
   testFetch: async function (event, context) {
+    // profiles: { $exists: true, $not: { $size: 0 } },
 
     await dbConnection.createConnection(context);
     const RuleModel = require('shared').RuleModel;
-    const store = await RuleModel.distinct('store',
-      {
-        profiles: { $exists: true, $not: { $size: 0 } },
-        store: { $nin: ['5dc42115f5629e79652729c2', '5dc4cfc8f5de180714e125c0'] }
-      }
-    );
-    console.log("TCL: store", store[0])
-    const rules = await RuleModel.find({ store: store[0] }); //.populate('profiles');
-    console.log("TCL: rules", rules)
+    const StoreModel = require('shared').StoreModel;
+    const rules = await RuleModel.find({ active: true });
+    const storeRules = [];
     await Promise.all(rules.map(async rule => {
-      console.log("TCL: rule", rule._id)
-      if (_.isEmpty(rule.profiles)) {
-        return;
+      console.log("TCL: rule store", rule.store)
+      storeRuleItem = storeRules.map(storeRule => {
+        if (storeRule.storeId.toString() === rule.store.toString()) {
+          storeRule.rules.push(rule._id);
+          return storeRule;
+        }
+      }).filter(item => !_.isUndefined(item));
+      if (_.isEmpty(storeRuleItem)) {
+        storeRules.push({ storeId: rule.store, rules: [rule._id] })
       }
-      const newRule = JSON.parse(JSON.stringify(rule));
-      const profiles = rule.profiles;
-      console.log("TCL: profiles", profiles)
-      delete newRule.profiles;
-      delete newRule._id;
-      await Promise.all(profiles.map(async profile => {
-        newRule.profile = profile;
-        newRule.active = true;
-        await RuleModel.create(newRule);
-      }));
-      await RuleModel.deleteOne({ _id: rule._id });
+
 
     }));
+    const storeUpdateQuery = storeRules.map(storeRule => {
+      return {
+        updateOne: {
+          filter: { _id: storeRule.storeId },
+          update: {
+            rules: storeRule.rules.filter((v, i, a) => a.indexOf(v) === i)
+          }
+        }
+      }
+    })
+    console.log("TCL: storeUpdateQuery", storeUpdateQuery);
+    await StoreModel.bulkWrite(storeUpdateQuery);
+    // console.log("TCL: storeRules", storeRules)
   },
   handleMyQueue: async function (event, context) {
     console.log("TCL: context", context)

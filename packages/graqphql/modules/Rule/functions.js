@@ -21,6 +21,14 @@ const getRuleById = async ruleId => {
   }
   return formattedRule(ruleDetail)
 }
+const getRules = async ruleIds => {
+  rules = await RuleModel.find({ _id: { $in: ruleIds } });
+  return rules.map(rule => {
+    return formattedRule(rule)
+  }).filter(function (item) {
+    return !_.isUndefined(item);
+  });
+}
 const formatCaptions = captions => {
   return captions.map(caption => {
     return {
@@ -44,3 +52,4 @@ const formatPostTimings = postTimes => {
 }
 exports.formattedRule = formattedRule
 exports.getRuleById = getRuleById
+exports.getRules = getRules

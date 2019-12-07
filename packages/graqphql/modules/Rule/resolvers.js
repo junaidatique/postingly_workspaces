@@ -1,3 +1,4 @@
+const StoreModel = require('shared').StoreModel;
 const RuleModel = require('shared').RuleModel;
 const UpdateModel = require('shared').UpdateModel;
 const VariantModel = require('shared').VariantModel;
@@ -11,11 +12,7 @@ let createUpdates;
 let schedule;
 let addCaptions;
 const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
-// if (process.env.IS_OFFLINE || process.env.STAGE == TEST) {
-//   createUpdates = require('functions').createUpdates.createUpdates;
-//   schedule = require('functions').scheduleProducts.schedule;
-//   addCaptions = require('functions').cronAddCaptions.execute;
-// }
+
 
 module.exports = {
   manageRule: async (obj, args, context, info) => {
@@ -29,11 +26,15 @@ module.exports = {
     // create or update rule based on the param 'id'
     if (!_.has(args.input, 'id')) {
       ruleDetail = await RuleModel.create(ruleParams);
+      const storeDetail = await StoreModel.findById(ruleDetail.store);
+      storeDetail.rules.push(ruleDetail._id);
+      await storeDetail.save();
     } else {
       ruleId = args.input.id
       await RuleModel.updateOne({ _id: args.input.id }, ruleParams, { upsert: true });
       ruleDetail = await RuleModel.findOne({ _id: args.input.id });
     }
+
     // if the rule is for edit, than delete all the pending and approved posts and reschedule posts with new settings. 
     if (_.has(args.input, 'id')) {
       const sampleUpdate = await UpdateModel.findOne({ rule: args.input.id, scheduleState: { $in: [PENDING, APPROVED] } });
@@ -119,6 +120,9 @@ module.exports = {
       const ruleDetail = await RuleModel.findById(args.ruleId);
       const ruleDeleted = await RuleModel.findByIdAndDelete(args.ruleId);
       const updatesDeleted = await UpdateModel.deleteMany({ rule: args.ruleId, scheduleState: { $nin: [POSTED, FAILED] } })
+      const storeDetail = await StoreModel.findById(ruleDetail.store);
+      storeDetail.rules.pop(ruleDetail._id);
+      await storeDetail.save();
       return formattedRule(ruleDetail);
     } catch (error) {
       throw error;
