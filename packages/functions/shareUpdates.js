@@ -67,11 +67,15 @@ module.exports = {
     if (_.isNull(update.postingCollectionOption)) {
       update.postingCollectionOption = COLLECTION_OPTION_ALL;
     }
-    update.postingCollectionOption = COLLECTION_OPTION_ALL;
-    update.scheduleState = response.scheduleState;
-    update.failedMessage = response.failedMessage;
-    update.response = response.response;
-    update.postingTime = moment().toISOString();
+    if (!_.isUndefined(response)) {
+      update.scheduleState = response.scheduleState;
+      update.failedMessage = response.failedMessage;
+      update.response = response.response;
+      update.postingTime = moment().toISOString();
+    } else {
+      update.scheduleState = FAILED;
+      update.failedMessage = "undefined.";
+    }
     await update.save();
   },
 
