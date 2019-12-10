@@ -12,7 +12,8 @@ module.exports = {
       let searchQuery = {}
       if (!_.isUndefined(args.filter)) {
         if (!_.isEmpty(args.filter.userId)) {
-          searchQuery.userId = new RegExp(args.filter.userId, "i");
+          // searchQuery.userId = new RegExp(, "i");
+          searchQuery.userId = args.filter.userId;
         }
         if (!_.isEmpty(args.filter.partner)) {
           searchQuery.partner = args.filter.partner;
@@ -28,6 +29,7 @@ module.exports = {
         }
         searchQuery.isUninstalled = (_.isUndefined(args.filter.isUninstalled)) ? false : args.filter.isUninstalled;
       }
+      console.log("TCL: searchQuery", searchQuery)
       const searchOptions = {
         sort: { createdAt: -1 },
         populate: 'profiles',
