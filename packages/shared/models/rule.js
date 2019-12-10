@@ -109,24 +109,12 @@ const ruleSchema = new mongoose.Schema({
     enum: POSTING_TIME_OPTIONS, // POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS
     index: true
   },
-  // selectedPostTimes: [SELECTED_POST_TIMES],
   postTimings: [POST_TIMING], // actual timings. 
   postAsOption: {
     type: String,
     enum: POST_AS_OPTION,
     index: true, // post as link, phtot etc.
   },
-  // collectionOption: {
-  //   type: String,
-  //   enum: COLLECTION_OPTION
-  // },
-  // collections: [
-  //   {
-  //     type: Schema.Types.ObjectId,
-  //     ref: 'Collection',
-  //     index: true,
-  //   }
-  // ],
   disallowedCollections: [
     {
       type: Schema.Types.ObjectId,

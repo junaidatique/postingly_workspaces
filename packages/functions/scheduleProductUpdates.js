@@ -60,21 +60,21 @@ module.exports = {
       {
         rule: ruleDetail._id,
         scheduleState: NOT_SCHEDULED,
-        scheduleTime: { $gt: moment.utc(), $lt: moment().add(7, 'days').utc() },
+        scheduleTime: { $gt: moment.utc(), $lt: moment().add(1, 'days').utc() },
         // scheduleTime: { $gt: moment.utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
-    ).sort({ scheduleTime: 1 }).limit(20);
+    ).sort({ scheduleTime: 1 }).limit(8);
 
     const scheduledUpdates = await UpdateModel.find(
       {
-        rule: ruleDetail._id,
+        profile: ruleDetail.profile,
         scheduleState: { $ne: NOT_SCHEDULED },
         scheduleTime: { $gt: moment().add(-1, 'days').utc(), $lt: moment().add(7, 'days').utc() },
         // scheduleTime: { $gt: moment.utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
-    ).sort({ scheduleTime: 1 }).limit(20);
+    ).sort({ scheduleTime: 1 });
 
     if (ruleDetail.postAsVariants) {
       itemModel = VariantModel;

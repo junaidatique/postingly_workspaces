@@ -16,7 +16,8 @@ module.exports = {
     const StoreModel = shared.StoreModel;
     console.log("TCL: StoreModel", StoreModel)
     const ProductModel = shared.ProductModel;
-    const storeDetail = await StoreModel.findOne()
+    // const storeDetail = await StoreModel.findOne()
+    const storeDetail = await StoreModel.findOne({ _id: '5def99b37222ca8804c43092' })
     // console.log("TCL: storeDetail", storeDetail)
 
     const UpdateModel = shared.UpdateModel;
@@ -26,13 +27,13 @@ module.exports = {
     await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
 
     const RuleModel = shared.RuleModel;
-    const ruleDetail = await RuleModel.findOne({ store: storeId }).populate('profiles');
+    const ruleDetail = await RuleModel.findOne({ store: storeId, type: 'old' }).populate('profiles');
 
     // first iteration.
     await createUpdates({ ruleId: ruleDetail._id });
     await schedule({ ruleId: ruleDetail._id });
     await changeCaption({ rule: ruleDetail._id, storeId: null });
-    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
+    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
 
     // // second iteration.
     // const lastUpdate = await UpdateModel.findOne({ store: storeId }).sort({ scheduleTime: -1 });

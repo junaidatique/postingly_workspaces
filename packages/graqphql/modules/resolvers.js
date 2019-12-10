@@ -32,6 +32,7 @@ module.exports = {
     editUpdate: updateResolvers.editUpdate,
     createUpdate: updateResolvers.createUpdate,
     syncProducts: productResolvers.syncProducts,
-    syncProfiles: profileResolvers.syncProfiles
+    syncProfiles: profileResolvers.syncProfiles,
+    syncRules: ruleResolvers.syncRules,
   },
 }

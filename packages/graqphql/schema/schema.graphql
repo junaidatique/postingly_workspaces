@@ -26,5 +26,6 @@ type Mutation {
   createUpdate(input: createUpdateInput!): Update
   syncProducts(storeId: ID!): Store
   syncProfiles(storeId: ID!): Store
+  syncRules(storeId: ID!): Store
 }
 

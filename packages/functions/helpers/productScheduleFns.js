@@ -31,6 +31,7 @@ module.exports = {
   getNotSharedProducts: async function (update, profileId, existingScheduleItems, updateIndex) {
     console.log("TCL: getNotSharedProducts")
     const notSharedOnThisProfileQuery = this.getProductsQuery(update, existingScheduleItems);
+    console.log("TCL: notSharedOnThisProfileQuery", notSharedOnThisProfileQuery)
     const notSharedProductsForCount = await notSharedOnThisProfileQuery.countDocuments({ "shareHistory.profile": { $ne: profileId } });
     console.log("TCL: getProductsForSchedule notSharedProductsForCount", notSharedProductsForCount)
     if (notSharedProductsForCount > 0) {
