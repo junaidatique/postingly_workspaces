@@ -1,5 +1,6 @@
 service: postingly-graphql
 plugins:
+  - serverless-prune-plugin
   - serverless-plugin-monorepo
   - serverless-dotenv-plugin
   - serverless-offline

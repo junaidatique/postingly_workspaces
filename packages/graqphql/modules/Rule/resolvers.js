@@ -220,7 +220,7 @@ module.exports = {
     const rulesInsert = [];
     // console.log("TCL: rules", rules)
     await Promise.all(rules.map(async (rule, ruleIndex) => {
-      const profile = await ProfileModel.findOne({ serviceUserId: rule.profile })
+      const profile = await ProfileModel.findOne({ serviceUserId: rule.profile, service: rule.service })
       const disallowedCollections = await CollectionModel.find({ partnerId: { $in: rule.disallowedCollections } })
       let postTimings = await module.exports.getPostTimings(rule.postTimings);
       postTimings = _.sortBy(postTimings, 'postingMinute');

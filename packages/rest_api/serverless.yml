@@ -1,6 +1,7 @@
 service: postingly-rest-api
 
 plugins:
+  - serverless-prune-plugin
   - serverless-plugin-monorepo
   - serverless-dotenv-plugin
   - serverless-offline

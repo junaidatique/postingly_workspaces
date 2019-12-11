@@ -135,6 +135,9 @@ module.exports = {
         if (!_.isUndefined(args.filter.scheduleState) && !_.isEmpty(args.filter.scheduleState)) {
           searchQuery.scheduleState = args.filter.scheduleState;
         }
+        if (!_.isUndefined(args.filter.failedMessage) && !_.isEmpty(args.filter.scheduleState)) {
+          searchQuery.failedMessage = new RegExp(args.filter.failedMessage, "i");
+        }
       }
 
       searchOptions = {

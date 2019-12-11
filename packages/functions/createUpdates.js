@@ -14,7 +14,7 @@ module.exports = {
     const activeRules = await RuleModel.find({ active: true });
     const scheduleWeekRules = await UpdateModel.distinct('rule',
       {
-        scheduleWeek: moment().week(),
+        scheduleTime: { $gt: moment.utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
         rule: { $exists: true },
       }

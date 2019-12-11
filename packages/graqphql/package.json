@@ -32,6 +32,7 @@
   "devDependencies": {
     "jest": "^24.8.0",
     "serverless-plugin-monorepo": "^0.7.0",
+    "serverless-prune-plugin": "^1.4.1",
     "superagent": "^5.0.5",
     "supertest": "^4.0.2"
   },

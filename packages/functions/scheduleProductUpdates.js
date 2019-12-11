@@ -60,7 +60,7 @@ module.exports = {
       {
         rule: ruleDetail._id,
         scheduleState: NOT_SCHEDULED,
-        scheduleTime: { $gt: moment.utc(), $lt: moment().add(1, 'days').utc() },
+        scheduleTime: { $gt: moment.utc(), $lt: moment().add(3, 'days').utc() },
         // scheduleTime: { $gt: moment.utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
@@ -112,7 +112,7 @@ module.exports = {
       counter = 0;
       console.log("TCL: item ID", item._id)
       // if no image is found for the variant than pick the image from product. 
-      if (item.images.length === 0 && itemType === SCHEDULE_TYPE_VARIANT) {
+      if (itemType === SCHEDULE_TYPE_VARIANT && item.images.length === 0) {
         productImages = await ImageModel.find({ product: item.product });
         itemImages = _.orderBy(productImages, ['position'], ['asc']);
       } else {

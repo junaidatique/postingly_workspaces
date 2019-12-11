@@ -42,5 +42,6 @@ input updateReportInput {
   scheduleType: String
   scheduleDate: String
   scheduleState: String  
+  failedMessage: String
 }
  
