@@ -359,11 +359,12 @@ module.exports = {
       updateItem = await VariantModel.findById(update.variant);
       itemLink = updateItem.product.partnerSpecificUrl;
     }
+    const image = `https://posting.ly/image?url=${update.images[0].url}`
 
     const requestBody = {
       message: update.text,
       link: itemLink,
-      picture: update.images[0].url,
+      picture: image,
       published: 1,
       description: update.text,
       access_token: profile.accessToken
