@@ -221,6 +221,9 @@ module.exports = {
     // console.log("TCL: rules", rules)
     await Promise.all(rules.map(async (rule, ruleIndex) => {
       console.log("TCL: rule", rule)
+      if (_.isUndefined(rule.profile)) {
+        return;
+      }
       const profile = await ProfileModel.findOne({ serviceUserId: rule.profile, service: rule.service })
       console.log("TCL: profile", profile)
       const disallowedCollections = await CollectionModel.find({ partnerId: { $in: rule.disallowedCollections } })
