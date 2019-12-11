@@ -53,6 +53,7 @@ module.exports = {
       await storeDetail.save();
     } else {
       ruleId = args.input.id
+      ruleParams['active'] = true;
       await RuleModel.updateOne({ _id: args.input.id }, ruleParams, { upsert: true });
       ruleDetail = await RuleModel.findOne({ _id: args.input.id });
     }
