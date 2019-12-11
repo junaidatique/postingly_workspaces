@@ -103,7 +103,7 @@ input ModelProductFilterInput {
 }
 input ModelCollectionFilterInput {
   storeId: ID!
-  title: ModelStringFilterInput
+  title: String
 }
 enum ModelProductSortInput {
   title_ASC
