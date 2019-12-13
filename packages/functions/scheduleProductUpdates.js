@@ -74,7 +74,7 @@ module.exports = {
         // scheduleTime: { $gt: moment.utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
-    ).sort({ scheduleTime: 1 });
+    ).sort({ scheduleTime: 1 }).select('_id product variant');
 
     if (ruleDetail.postAsVariants) {
       itemModel = VariantModel;
