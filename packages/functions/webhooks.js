@@ -45,6 +45,20 @@ module.exports = {
       await shopifyAPI.deleteWebhooks(event);
     }
   },
+  deleteSingleWebhook: async function (eventSQS, context) {
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: deleteWebhooks event", event);
+    await dbConnection.createConnection(context);
+    if (event.partnerStore == PARTNERS_SHOPIFY) {
+      const shopifyAPI = shared.PartnerShopify;
+      await shopifyAPI.deleteSingleWebhook(event);
+    }
+  },
   productsCreate: async function (eventSQS, context) {
     console.log("TCL: productsCreate eventSQS", eventSQS)
     const event = JSON.parse(eventSQS.Records[0].body);

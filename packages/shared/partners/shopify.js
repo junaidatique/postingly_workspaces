@@ -1199,20 +1199,23 @@ module.exports = {
     console.log("TCL: json.webhooks.length", json.webhooks.length)
     if (json.webhooks.length > 0) {
       await Promise.all(json.webhooks.map(async item => {
-        if (item.address.indexOf('zbqy7ggp79') >= 0) {
+        if (item.address.indexOf('REST_API_URL') >= 0) {
           console.log("TCL: item", item)
-          deleteWebhookURL = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks/${item.id}.json`;
-          console.log("TCL: deleteWebhookURL", deleteWebhookURL)
-          const { json, res, error } = await this.shopifyAPICall(deleteWebhookURL, null, 'delete', event.accessToken);
-          console.log("TCL: deleteWebhooks deleteWebhookURL json", json)
-          if (_.isNull(json)) {
-            if (!_.isNull(error)) {
-              throw new Error(error);
-            }
-            return;
-          }
+          await this.deleteSingleWebhook({ shopUrl: event.shopUrl, itemId: item.id });
+
         }
       }));
+    }
+  },
+  deleteSingleWebhook: async function (event) {
+    deleteWebhookURL = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks/${event.itemId}.json`;
+    const { json, res, error } = await this.shopifyAPICall(deleteWebhookURL, null, 'delete', event.accessToken);
+    console.log("TCL: deleteWebhooks deleteWebhookURL json", json)
+    if (_.isNull(json)) {
+      if (!_.isNull(error)) {
+        throw new Error(error);
+      }
+      return;
     }
   },
   productsCreate: async function (event, context) {

@@ -262,25 +262,12 @@ functions:
           enabled: true
   get-webhooks:
     handler: webhooks.getWebhooks
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}GetWebhooks
-          batchSize: 1
-          enabled: true
   create-webhooks:
-    handler: webhooks.createWebhooks
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}CreateWebhooks
-          batchSize: 1
-          enabled: true
+    handler: webhooks.createWebhooks    
   delete-webhooks:
-    handler: webhooks.deleteWebhooks
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}DeleteWebhooks
-          batchSize: 1
-          enabled: true
+    handler: webhooks.deleteWebhooks    
+  delete-single-webhooks:
+    handler: webhooks.deleteSingleWebhook    
   products-create:
     handler: webhooks.productsCreate
     timeout: 720 
