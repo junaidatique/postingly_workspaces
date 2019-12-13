@@ -14,7 +14,7 @@ const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE, APP
 module.exports = {
   execute: async function (event, context) {
     const StoreModel = shared.StoreModel;
-    console.log("TCL: StoreModel", StoreModel)
+    // console.log("TCL: StoreModel", StoreModel)
     const ProductModel = shared.ProductModel;
     // const storeDetail = await StoreModel.findOne()
     const storeDetail = await StoreModel.findOne({ _id: '5def99b37222ca8804c43092' })

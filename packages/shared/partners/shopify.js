@@ -1283,7 +1283,7 @@ module.exports = {
       }
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
-      console.log("TCL: StoreModel", StoreModel)
+      // console.log("TCL: StoreModel", StoreModel)
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       console.log("TCL: storeDetail", storeDetail)
       if (_.isNull(storeDetail)) {

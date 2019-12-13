@@ -29,7 +29,7 @@ exports.productsUpdate = async function (event, context) {
   await dbConnection.createConnection(context);
   console.log("TCL: productsUpdate");
   const StoreModel = shared.StoreModel;
-  console.log("TCL: StoreModel", StoreModel)
+  // console.log("TCL: StoreModel", StoreModel)
   await partner.productsUpdate(event, context);
   const response = httpHelper.ok(
     { "message": "success" }
