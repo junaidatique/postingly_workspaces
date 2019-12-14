@@ -21,5 +21,6 @@
     "supertest": "^4.0.2",
     "webpack": "^4.30.0",
     "webpack-node-externals": "^1.7.2"
-  }
+  },
+  "dependencies": {}
 }

@@ -15,6 +15,7 @@ module.exports = {
             dbName: process.env.STAGE,
             useUnifiedTopology: true
           });
+          console.log("TCL: conn", conn)
 
         } catch (error) {
           console.log("TCL: error", error)

@@ -262,6 +262,7 @@ functions:
           enabled: true
   get-webhooks:
     handler: webhooks.getWebhooks
+    timeout: 20 
   create-webhooks:
     handler: webhooks.createWebhooks    
   delete-webhooks:
