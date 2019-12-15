@@ -104,7 +104,7 @@ module.exports = {
       if (ruleDetail.postAsVariants) {
         tempObject = await schedulerHelper.getVariantsForSchedule(update, profile, existingScheduleItems, updateIndex);
       } else {
-        tempObject = await schedulerHelper.getProductsForSchedule(update, profile, existingScheduleItems, updateIndex);
+        tempObject = await schedulerHelper.getProductsForSchedule(update, profile, existingScheduleItems, updateIndex, context);
       }
       console.log(`after ${updateIndex} product =>`, (context.getRemainingTimeInMillis() / 1000));
       if (_.isUndefined(tempObject.item)) {
