@@ -26,7 +26,7 @@ module.exports = {
     console.log("TCL: schedule event", event)
     console.log('schedule event start', (context.getRemainingTimeInMillis() / 1000));
     await dbConnection.createConnection(context);
-
+    console.log('schedule after db connection =>', (context.getRemainingTimeInMillis() / 1000));
     // load models
     const RuleModel = shared.RuleModel;
     const UpdateModel = shared.UpdateModel;
@@ -67,7 +67,7 @@ module.exports = {
         // scheduleTime: { $gt: moment.utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
-    ).sort({ scheduleTime: 1 }).limit(8);
+    ).sort({ scheduleTime: 1 }).limit(4);
     console.log('schedule updates =>', (context.getRemainingTimeInMillis() / 1000));
     const scheduledUpdates = await UpdateModel.find(
       {
