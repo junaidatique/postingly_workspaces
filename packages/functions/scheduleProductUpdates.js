@@ -24,6 +24,7 @@ module.exports = {
       event = JSON.parse(eventSQS.Records[0].body);
     }
     console.log("TCL: schedule event", event)
+    console.log('schedule event start', (context.getRemainingTimeInMillis() / 1000));
     await dbConnection.createConnection(context);
 
     // load models
@@ -38,12 +39,14 @@ module.exports = {
     let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting, updateData;
     // get rule and store
     const ruleDetail = await RuleModel.findById(event.ruleId);
+    console.log('schedule ruledetail =>', (context.getRemainingTimeInMillis() / 1000));
     // console.log("TCL: ruleDetail", ruleDetail)
     if (ruleDetail === null) {
       console.log(`rule not found for ${event.ruleId}`)
     }
     const StoreDetail = await StoreModel.findById(ruleDetail.store);
     console.log("TCL: StoreDetail", StoreDetail.title)
+    console.log('schedule storedetail =>', (context.getRemainingTimeInMillis() / 1000));
     // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
     if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
       imageLimit = 4;
@@ -65,7 +68,7 @@ module.exports = {
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
     ).sort({ scheduleTime: 1 }).limit(8);
-
+    console.log('schedule updates =>', (context.getRemainingTimeInMillis() / 1000));
     const scheduledUpdates = await UpdateModel.find(
       {
         profile: ruleDetail.profile,
@@ -75,7 +78,7 @@ module.exports = {
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
     ).sort({ scheduleTime: 1 }).select('_id product variant');
-
+    console.log('schedule scheduledUpdates =>', (context.getRemainingTimeInMillis() / 1000));
     if (ruleDetail.postAsVariants) {
       itemModel = VariantModel;
       itemType = SCHEDULE_TYPE_VARIANT;
@@ -103,6 +106,7 @@ module.exports = {
       } else {
         tempObject = await schedulerHelper.getProductsForSchedule(update, profile, existingScheduleItems, updateIndex);
       }
+      console.log(`after ${updateIndex} product =>`, (context.getRemainingTimeInMillis() / 1000));
       if (_.isUndefined(tempObject.item)) {
         console.log("TCL: tempObject", tempObject)
         return;
