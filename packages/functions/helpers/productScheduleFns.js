@@ -10,10 +10,11 @@ const {
   POSTING_SORTORDER_NEWEST
 } = require('shared/constants');
 module.exports = {
-  getProductsForSchedule: async function (update, profileId, existingScheduleItems, updateIndex) {
+  getProductsForSchedule: async function (update, profileId, existingScheduleItems, updateIndex, context) {
     let products;
     let item;
     products = await this.getNotSharedProducts(update, profileId, existingScheduleItems, updateIndex);
+    console.log(`getProductsForSchedule ${updateIndex} =>`, (context.getRemainingTimeInMillis() / 1000));
     if (products.length === 0) {
       products = await this.getLessSharedProducts(update, profileId, existingScheduleItems, updateIndex);
       if (products.length === 0) {
