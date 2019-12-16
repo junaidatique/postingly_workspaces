@@ -13,7 +13,11 @@ module.exports = {
             ssl: true,
             sslCA: returnCerts(),
             dbName: process.env.STAGE,
-            useUnifiedTopology: true
+            useUnifiedTopology: true,
+            keepAlive: true,
+            poolSize: 30,
+            autoReconnect: true,
+            connectTimeoutMS: 360000
           });
           console.log("TCL: conn", conn)
 

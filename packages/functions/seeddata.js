@@ -168,40 +168,19 @@ module.exports = {
     }));
   },
   testFetch: async function (event, context) {
-    // profiles: { $exists: true, $not: { $size: 0 } },
+    console.log('testFetch event start', (context.getRemainingTimeInMillis() / 1000));
 
     await dbConnection.createConnection(context);
+    console.log('testFetch createConnection', (context.getRemainingTimeInMillis() / 1000));
     const RuleModel = require('shared').RuleModel;
+    console.log('testFetch RuleModel', (context.getRemainingTimeInMillis() / 1000));
     const StoreModel = require('shared').StoreModel;
+    console.log('testFetch StoreModel', (context.getRemainingTimeInMillis() / 1000));
+    const storeDetail = await StoreModel.findOne()
+    console.log('testFetch storeDetail', (context.getRemainingTimeInMillis() / 1000));
     const rules = await RuleModel.find({ active: true });
-    const storeRules = [];
-    await Promise.all(rules.map(async rule => {
-      console.log("TCL: rule store", rule.store)
-      storeRuleItem = storeRules.map(storeRule => {
-        if (storeRule.storeId.toString() === rule.store.toString()) {
-          storeRule.rules.push(rule._id);
-          return storeRule;
-        }
-      }).filter(item => !_.isUndefined(item));
-      if (_.isEmpty(storeRuleItem)) {
-        storeRules.push({ storeId: rule.store, rules: [rule._id] })
-      }
+    console.log('testFetch rules', (context.getRemainingTimeInMillis() / 1000));
 
-
-    }));
-    const storeUpdateQuery = storeRules.map(storeRule => {
-      return {
-        updateOne: {
-          filter: { _id: storeRule.storeId },
-          update: {
-            rules: storeRule.rules.filter((v, i, a) => a.indexOf(v) === i)
-          }
-        }
-      }
-    })
-    console.log("TCL: storeUpdateQuery", storeUpdateQuery);
-    await StoreModel.bulkWrite(storeUpdateQuery);
-    // console.log("TCL: storeRules", storeRules)
   },
   handleMyQueue: async function (event, context) {
     console.log("TCL: context", context)
