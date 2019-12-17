@@ -377,7 +377,13 @@ functions:
   # Testing The Lambdas
   test-lambda:
     handler: lambdaTests.execute
+    warmup:
+      enabled: false
   test-webhooks-lambda:
     handler: lambdaWebhooksTests.execute
+    warmup:
+      enabled: false
   test-sync-lambda:
     handler: lambdaSyncTests.execute
+    warmup:
+      enabled: false
