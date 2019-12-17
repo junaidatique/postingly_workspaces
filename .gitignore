@@ -88,3 +88,5 @@ typings/
 .DS_Store
 /.DS_Store
 packages/.DS_Store
+packages/functions/_warmup/index.js
+_warmup/
