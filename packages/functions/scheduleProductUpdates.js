@@ -51,6 +51,10 @@ module.exports = {
       return;
     }
     const StoreDetail = await StoreModel.findById(ruleDetail.store);
+    let productLimit = 8;
+    if (ruleDetail.store == '5dc45f599a44abb12eace9ec') {
+      productLimit = 2;
+    }
     console.log("TCL: StoreDetail", StoreDetail.title)
     console.log('schedule storedetail =>', (context.getRemainingTimeInMillis() / 1000));
     // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
@@ -73,7 +77,7 @@ module.exports = {
         // scheduleTime: { $gt: moment.utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
-    ).sort({ scheduleTime: 1 }).limit(4);
+    ).sort({ scheduleTime: 1 }).limit(productLimit);
     console.log('schedule updates =>', (context.getRemainingTimeInMillis() / 1000));
     const scheduledUpdates = await UpdateModel.find(
       {
