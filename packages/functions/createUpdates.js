@@ -45,13 +45,17 @@ module.exports = {
   // event = { ruleId: ruleDetail._id, scheduleWeek: "next" | datetime | undefined  }
   createUpdates: async function (eventSQS, context) {
     let event;
-    console.log("TCL: createUpdates eventSQS", eventSQS)
     if (_.isUndefined(eventSQS.Records)) {
       event = eventSQS;
     } else {
       event = JSON.parse(eventSQS.Records[0].body);
     }
-    console.log("TCL: createUpdates event", event)
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     let updateTimes = [];
     let startOfWeek, endOfWeek;
