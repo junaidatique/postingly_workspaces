@@ -6,18 +6,38 @@ const dbConnection = require('./db');
 const httpHelper = require('shared').httpHelper
 const shared = require('shared');
 exports.auth = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   await dbConnection.createConnection(context);
   return await partner.getAuthURL(event, new Date());
 };
 exports.callback = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   await dbConnection.createConnection(context);
   return await partner.verifyCallback(event, new Date());
 };
 exports.activatePayment = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   await dbConnection.createConnection(context);
   return await partner.activatePayment(event, new Date());
 };
 exports.productsCreate = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   const partner = event.pathParameters.partner_slug;
   const shopDomain = event.headers['X-Shopify-Shop-Domain'];
   await sqsHelper.addToQueue('ProductsCreate', { partnerStore: partner, shopDomain: shopDomain, partnerId: JSON.parse(event.body).id });
@@ -26,6 +46,11 @@ exports.productsCreate = async function (event, context) {
   );
 };
 exports.productsUpdate = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   await dbConnection.createConnection(context);
   console.log("TCL: productsUpdate");
   const StoreModel = shared.StoreModel;
@@ -38,6 +63,11 @@ exports.productsUpdate = async function (event, context) {
   return response;
 };
 exports.productsDelete = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   const partner = event.pathParameters.partner_slug;
   const shopDomain = event.headers['X-Shopify-Shop-Domain'];
   await sqsHelper.addToQueue('ProductsDelete', { partnerStore: partner, shopDomain: shopDomain, partnerId: JSON.parse(event.body).id });
@@ -46,6 +76,11 @@ exports.productsDelete = async function (event, context) {
   );
 };
 exports.collectionsCreate = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   await dbConnection.createConnection(context);
   await partner.collectionsCreate(event, context);
   return httpHelper.ok(
@@ -53,6 +88,11 @@ exports.collectionsCreate = async function (event, context) {
   );
 };
 exports.collectionsUpdate = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   await dbConnection.createConnection(context);
   await partner.collectionsUpdate(event, context);
   return httpHelper.ok(
@@ -60,6 +100,11 @@ exports.collectionsUpdate = async function (event, context) {
   );
 };
 exports.collectionsDelete = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   await dbConnection.createConnection(context);
   await partner.collectionsDelete(event, context);
   return httpHelper.ok(
@@ -67,6 +112,11 @@ exports.collectionsDelete = async function (event, context) {
   );
 };
 exports.appUninstalled = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   await dbConnection.createConnection(context);
   await partner.appUninstalled(event, new Date());
   return httpHelper.ok(
@@ -74,6 +124,11 @@ exports.appUninstalled = async function (event, context) {
   );
 };
 exports.shopUpdate = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   await dbConnection.createConnection(context);
   await partner.shopUpdate(event, new Date());
   return httpHelper.ok(
@@ -81,6 +136,11 @@ exports.shopUpdate = async function (event, context) {
   );
 };
 exports.twitterRequestToken = async function (event, context, callback) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
   const respones = await TwitterService.getRequestToken(callback);
   return respones;
 }
