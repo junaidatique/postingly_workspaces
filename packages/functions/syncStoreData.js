@@ -1,5 +1,6 @@
 const shared = require('shared');
 const { PARTNERS_SHOPIFY } = require('shared/constants');
+const _ = require('lodash');
 const dbConnection = require('./db');
 module.exports = {
   syncStoreData: async function (eventSQS, context) {
