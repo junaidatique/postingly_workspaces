@@ -1,11 +1,31 @@
 service: postingly-rest-api
 
 plugins:
+  - serverless-plugin-warmup
   - serverless-prune-plugin
   - serverless-plugin-monorepo
   - serverless-dotenv-plugin
   - serverless-offline
 
+custom:
+  warmup:
+    enabled: true
+    folderName: '_warmup'
+    cleanFolder: false
+    memorySize: 256
+    name: 'make-them-pop-rest'
+    vpc:
+      securityGroupIds:
+        - sg-0e0b1c8b49a3919d8
+      subnetIds:
+        - subnet-0be2e1119f5a9942b
+        - subnet-08f8f22623b8c212b
+      
+    events:
+      - schedule: 'cron(*/3 * * * ? *)'
+    timeout: 20
+    prewarm: true
+    concurrency: 1
 
 provider:
   name: aws

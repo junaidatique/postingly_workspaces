@@ -12,11 +12,16 @@ const dbConnection = require('./db');
 module.exports = {
   share: async function (eventSQS, context) {
     let event;
-    console.log("TCL: shareUpdates eventSQS", eventSQS)
     if (_.isUndefined(eventSQS.Records)) {
       event = eventSQS;
     } else {
       event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
     }
     console.log("TCL: shareUpdates event", event)
     await dbConnection.createConnection(context);
@@ -26,7 +31,6 @@ module.exports = {
     if (_.isNull(update) || _.isUndefined(update)) {
       return;
     }
-
 
     if (_.isNull(update.postingCollectionOption) || update.postingCollectionOption === null) {
       update.postingCollectionOption = COLLECTION_OPTION_ALL;

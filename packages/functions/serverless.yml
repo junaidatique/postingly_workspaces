@@ -1,6 +1,7 @@
 service: postingly-functions
 
 plugins:
+  - serverless-plugin-warmup
   - serverless-prune-plugin
   - serverless-plugin-monorepo
   - serverless-dotenv-plugin
@@ -164,6 +165,27 @@ provider:
         - sqs:*
       Resource:
         - arn:aws:sqs:us-east-1:*:* 
+        
+custom:
+  warmup:
+    enabled: true
+    folderName: '_warmup'
+    cleanFolder: false
+    memorySize: 256
+    name: 'make-them-pop'
+    vpc:
+      securityGroupIds:
+        - sg-0e0b1c8b49a3919d8
+      subnetIds:
+        - subnet-0be2e1119f5a9942b
+        - subnet-08f8f22623b8c212b
+      
+    events:
+      - schedule: 'cron(*/3 * * * ? *)'
+    timeout: 20
+    prewarm: true
+    concurrency: 1
+
 functions:
   # create update lambda. this function recieves rule id from either 
   # manage rule resolver or from cron-create-updates-for-next-week lambda function. 
@@ -180,12 +202,16 @@ functions:
   # wednesday midnight
   cron-create-updates-for-next-week:
     handler: createUpdates.createUpdatesforNextWeek
+    warmup:
+      enabled: false
     events:
       - schedule:
           rate: cron(0 0 ? * WED *)
           enabled: true
   cron-create-updates-for-this-week:
     handler: createUpdates.createUpdatesforThisWeek
+    warmup:
+      enabled: false
     events:
       - schedule:
           rate: cron(0 */6 * * ? *)
@@ -194,6 +220,8 @@ functions:
   #  based on the updates that are not scheduled. 
   cron-this-week-rules:
     handler: cronThisWeekRulesForUpdates.excute
+    warmup:
+      enabled: false
     events:
       - schedule:
           rate: cron(*/30 * * * ? *)
@@ -210,6 +238,8 @@ functions:
   # This lambda takes the cron and add captions to the scheduled updates. plus also approve them. 
   cron-add-captions:
     handler: cronAddCaptions.execute
+    warmup:
+      enabled: false
     events:
       - schedule:
           rate: cron(*/5 * * * ? *)
@@ -226,6 +256,8 @@ functions:
   # this lambda runs every 5 minutes and call share-updates lambda to post updates. 
   cron-post-updates:
     handler: cronPostUpdates.share
+    warmup:
+      enabled: false
     events:
       - schedule:
           rate: cron(*/5 * * * ? *)
@@ -282,13 +314,24 @@ functions:
           enabled: true
   get-webhooks:
     handler: webhooks.getWebhooks
+    warmup:
+      enabled: false
     timeout: 20 
   create-webhooks:
-    handler: webhooks.createWebhooks    
+    handler: webhooks.createWebhooks
+    warmup:
+      enabled: false
+    timeout: 20
   delete-webhooks:
     handler: webhooks.deleteWebhooks    
+    warmup:
+      enabled: false
+    timeout: 20
   delete-single-webhooks:
     handler: webhooks.deleteSingleWebhook    
+    warmup:
+      enabled: false
+    timeout: 20
   products-create:
     handler: webhooks.productsCreate
     timeout: 720 
@@ -297,8 +340,7 @@ functions:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ProductsCreate
           batchSize: 1
-          enabled: true
-  
+          enabled: true  
   products-delete:
     handler: webhooks.productsDelete
     timeout: 720 
@@ -310,16 +352,33 @@ functions:
           enabled: true
   data-seed:
     handler: seeddata.createStore
+    warmup:
+      enabled: false
+    timeout: 20
   data-test:
     handler: seeddata.testData
+    warmup:
+      enabled: false
+    timeout: 20
   rule-test:
     handler: seeddata.testRules
+    warmup:
+      enabled: false
+    timeout: 20
   updates-test:
     handler: seeddata.testUpdates
+    warmup:
+      enabled: false
+    timeout: 20
   fetch-test:
-    handler: seeddata.testFetch    
+    handler: seeddata.testFetch
+    warmup:
+      enabled: false
+    timeout: 20    
   sync-stores:
     handler: seeddata.syncStores
+    warmup:
+      enabled: false
     events:
       - schedule:
           rate: cron(*/5 * * * ? *)
@@ -338,7 +397,13 @@ functions:
   # Testing The Lambdas
   test-lambda:
     handler: lambdaTests.execute
+    warmup:
+      enabled: false
   test-webhooks-lambda:
     handler: lambdaWebhooksTests.execute
+    warmup:
+      enabled: false
   test-sync-lambda:
     handler: lambdaSyncTests.execute
+    warmup:
+      enabled: false

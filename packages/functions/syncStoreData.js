@@ -1,17 +1,40 @@
 const shared = require('shared');
 const { PARTNERS_SHOPIFY } = require('shared/constants');
+const _ = require('lodash');
 const dbConnection = require('./db');
 module.exports = {
   syncStoreData: async function (eventSQS, context) {
-    const event = JSON.parse(eventSQS.Records[0].body);
-    console.log("TCL: syncStoreData event", event)
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
       const shopifyAPI = shared.PartnerShopify;
       await shopifyAPI.syncStoreData(event);
     }
   },
-  syncCollections: async function (event, context) {
+  syncCollections: async function (eventSQS, context) {
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
       const shopifyAPI = shared.PartnerShopify;
@@ -19,14 +42,37 @@ module.exports = {
     }
   },
   syncCollectionPage: async function (eventSQS, context) {
-    const event = JSON.parse(eventSQS.Records[0].body);
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
       const shopifyAPI = shared.PartnerShopify;
       await shopifyAPI.syncCollectionPage(event);
     }
   },
-  syncProducts: async function (event, context) {
+  syncProducts: async function (eventSQS, context) {
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
       const shopifyAPI = shared.PartnerShopify;
@@ -34,7 +80,18 @@ module.exports = {
     }
   },
   syncProductPage: async function (eventSQS, context) {
-    const event = JSON.parse(eventSQS.Records[0].body);
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
       const shopifyAPI = shared.PartnerShopify;
@@ -42,7 +99,18 @@ module.exports = {
     }
   },
   syncVariantPage: async function (eventSQS, context) {
-    const event = JSON.parse(eventSQS.Records[0].body);
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     console.log("TCL: syncVariantPage event", event)
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
