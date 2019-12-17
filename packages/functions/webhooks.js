@@ -60,8 +60,18 @@ module.exports = {
     }
   },
   productsCreate: async function (eventSQS, context) {
-    console.log("TCL: productsCreate eventSQS", eventSQS)
-    const event = JSON.parse(eventSQS.Records[0].body);
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     console.log("TCL: productsCreate event", event)
     await dbConnection.createConnection(context);
     if (event.partnerStore === PARTNERS_SHOPIFY) {
@@ -69,16 +79,20 @@ module.exports = {
       await shopifyAPI.productsCreate(event);
     }
   },
-  productsUpdate: async function (eventSQS, context) {
-    const event = JSON.parse(eventSQS.Records[0].body);
-    await dbConnection.createConnection(context);
-    if (event.partnerStore === PARTNERS_SHOPIFY) {
-      const shopifyAPI = shared.PartnerShopify;
-      await shopifyAPI.productsUpdate(event);
-    }
-  },
+
   productsDelete: async function (eventSQS, context) {
-    const event = JSON.parse(eventSQS.Records[0].body);
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     console.log("TCL: productsDelete event", event)
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {

@@ -15,13 +15,18 @@ const {
 module.exports = {
   update: async function (eventSQS, context) {
     let event;
-    console.log("TCL: changeCaption update eventSQS", eventSQS)
     if (_.isUndefined(eventSQS.Records)) {
       event = eventSQS;
     } else {
       event = JSON.parse(eventSQS.Records[0].body);
     }
-    console.log("TCL: changeCaption update event", event)
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
+
     await dbConnection.createConnection(context);
 
     const UpdateModel = shared.UpdateModel;
