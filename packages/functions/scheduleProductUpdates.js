@@ -24,6 +24,11 @@ module.exports = {
       event = JSON.parse(eventSQS.Records[0].body);
     }
     console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     console.log('schedule event start', (context.getRemainingTimeInMillis() / 1000));
     await dbConnection.createConnection(context);
     console.log('schedule after db connection =>', (context.getRemainingTimeInMillis() / 1000));
@@ -42,7 +47,8 @@ module.exports = {
     console.log('schedule ruledetail =>', (context.getRemainingTimeInMillis() / 1000));
     // console.log("TCL: ruleDetail", ruleDetail)
     if (ruleDetail === null) {
-      console.log(`rule not found for ${event.ruleId}`)
+      console.log(`rule not found for ${event.ruleId}`);
+      return;
     }
     const StoreDetail = await StoreModel.findById(ruleDetail.store);
     console.log("TCL: StoreDetail", StoreDetail.title)

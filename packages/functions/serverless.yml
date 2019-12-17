@@ -1,6 +1,7 @@
 service: postingly-functions
 
 plugins:
+  - serverless-plugin-warmup
   - serverless-prune-plugin
   - serverless-plugin-monorepo
   - serverless-dotenv-plugin
@@ -144,6 +145,27 @@ provider:
         - sqs:*
       Resource:
         - arn:aws:sqs:us-east-1:*:* 
+        
+custom:
+  warmup:
+    enabled: true
+    folderName: '_warmup'
+    cleanFolder: false
+    memorySize: 256
+    name: 'make-them-pop'
+    vpc:
+      securityGroupIds:
+        - sg-0e0b1c8b49a3919d8
+      subnetIds:
+        - subnet-0be2e1119f5a9942b
+        - subnet-08f8f22623b8c212b
+      
+    events:
+      - schedule: 'cron(*/2 * * * ? *)'
+    timeout: 20
+    prewarm: true
+    concurrency: 5
+
 functions:
   # create update lambda. this function recieves rule id from either 
   # manage rule resolver or from cron-create-updates-for-next-week lambda function. 
@@ -182,6 +204,7 @@ functions:
   schedule-updates:
     handler: scheduleProductUpdates.schedule
     reservedConcurrency: ${env:RESERVED_CONCURRENCY_SCHEDULE_PRODUCT_UPDATES}
+    warmup: true
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ScheduleUpdates

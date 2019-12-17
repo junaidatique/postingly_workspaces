@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "serverless-plugin-monorepo": "^0.7.0",
+    "serverless-plugin-warmup": "^4.7.1-rc.1",
     "serverless-prune-plugin": "^1.4.1"
   }
 }
