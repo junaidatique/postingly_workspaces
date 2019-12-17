@@ -511,12 +511,12 @@ module.exports = {
       collectionId: null,
       pageInfo: null
     }
-    const syncVariantPayload = {
-      storeId: event.storeId,
-      partnerStore: PARTNERS_SHOPIFY,
-      collectionId: null,
-      pageInfo: null
-    }
+    // const syncVariantPayload = {
+    //   storeId: event.storeId,
+    //   partnerStore: PARTNERS_SHOPIFY,
+    //   collectionId: null,
+    //   pageInfo: null
+    // }
     // console.log("TCL: syncCustomCollectionPayload", syncCustomCollectionPayload)
     // console.log("TCL: syncSmartCollectionPayload", syncSmartCollectionPayload)
     // console.log("TCL: syncProductPayload", syncProductPayload)
@@ -528,7 +528,7 @@ module.exports = {
       // syncing products
       await sqsHelper.addToQueue('SyncProductPage', syncProductPayload);
       // syncing Variants
-      await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayload);
+      // await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayload);
     } else {
       await this.syncCollectionPage(syncCustomCollectionPayload);
       await this.syncCollectionPage(syncSmartCollectionPayload);
@@ -841,8 +841,14 @@ module.exports = {
     let productImages = [];
     const ProductModel = shared.ProductModel;
     const ImageModel = shared.ImageModel;
+
     const currencyFormat = stringHelper.stripTags(storeDetail.moneyWithCurrencyFormat);
     const currency = currencyFormat.substr(currencyFormat.length - 3);
+
+    const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description');
+
+
+
     // sync products
     const bulkProductInsert = apiProducts.map(product => {
       const quantity = product.variants.map(variant => variant.inventory_quantity).reduce((prev, curr) => prev + curr, 0);
@@ -893,7 +899,7 @@ module.exports = {
     if (!_.isUndefined(context)) {
       console.log('syncProducts event after bulkProductInsert', (context.getRemainingTimeInMillis() / 1000));
     }
-    const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description');
+
     if (!_.isNull(event.collectionId)) {
       await this.addCollectiontoItems(ProductModel, dbProducts, event.collectionId);
     } else {

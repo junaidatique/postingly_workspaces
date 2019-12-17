@@ -15,20 +15,20 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
 
 
-    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
-    await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
-    await ImageModel.collection.deleteMany({ _id: { $exists: true } });
-    await ProductModel.collection.deleteMany({ _id: { $exists: true } });
-    await VariantModel.collection.deleteMany({ _id: { $exists: true } });
+    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    // await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
+    // await ImageModel.collection.deleteMany({ _id: { $exists: true } });
+    // await ProductModel.collection.deleteMany({ _id: { $exists: true } });
+    // await VariantModel.collection.deleteMany({ _id: { $exists: true } });
 
 
     // await PartnerShopify.productsCreate({ partnerStore: storeDetail.partner, shopDomain: storeDetail.partnerSpecificUrl, partnerId: '4360078557299' });
-    await PartnerShopify.syncStoreData({
-      "storeId": storeId,
-      "partnerStore": "shopify",
-      "collectionId": null
-    })
+    // await PartnerShopify.syncStoreData({
+    //   "storeId": storeId,
+    //   "partnerStore": "shopify",
+    //   "collectionId": null
+    // })
     // await syncCollectionPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: 'custom_collections', pageInfo: null, productId: null });
-    // await syncProductPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
+    await syncProductPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
   }
 }

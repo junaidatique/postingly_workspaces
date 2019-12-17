@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
 const { PARTNERS } = require('shared/constants');
 
 const SHARE_HISTORY = {
@@ -11,31 +10,43 @@ const SHARE_HISTORY = {
   counter: Number
 }
 
+const IMAGES_SCHEMA = {
+  partnerId: {
+    type: String,
+    required: true,
+  },
+  partnerSpecificUrl: {
+    type: String
+  },
+  thumbnailUrl: {
+    type: String
+  },
+  partnerCreatedAt: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  partnerUpdatedAt: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  imgUniqKey: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  position: {
+    type: Number,
+  },
+  active: {
+    type: Boolean,
+    default: true,
+    index: true
+  },
+  shareHistory: [SHARE_HISTORY]
+}
+
 const variantSchema = new Schema({
-  store: {
-    type: Schema.Types.ObjectId,
-    ref: 'Store',
-    index: true,
-  },
-  collections: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Collection',
-      index: true,
-    }
-  ],
-  product: {
-    type: Schema.Types.ObjectId,
-    ref: 'Product',
-    index: true,
-  },
-  images: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Image',
-      index: true,
-    }
-  ],
+  images: [IMAGES_SCHEMA],
   title: {
     type: String,
     required: true,
@@ -120,9 +131,4 @@ const variantSchema = new Schema({
 
 variantSchema.set('timestamps', true);
 
-
-if (process.env.IS_OFFLINE) {
-  delete mongoose.connection.models.Variant;
-}
-
-module.exports = mongoose.model('Variant', variantSchema);
+return variantSchema;

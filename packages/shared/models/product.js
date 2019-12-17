@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const VARIANT_SCHEMA = require('./variant')
 const mongoosePaginate = require('mongoose-paginate');
 const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
 
@@ -22,6 +23,41 @@ const SHARE_HISTORY = {
   counter: Number
 }
 
+const IMAGES_SCHEMA = {
+  partnerId: {
+    type: String,
+    required: true,
+  },
+  partnerSpecificUrl: {
+    type: String
+  },
+  thumbnailUrl: {
+    type: String
+  },
+  partnerCreatedAt: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  partnerUpdatedAt: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  imgUniqKey: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  position: {
+    type: Number,
+  },
+  active: {
+    type: Boolean,
+    default: true,
+    index: true
+  },
+  shareHistory: [SHARE_HISTORY]
+}
+
 const productSchema = new Schema({
   store: {
     type: Schema.Types.ObjectId,
@@ -35,12 +71,7 @@ const productSchema = new Schema({
       index: true
     }
   ],
-  variants: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Variant'
-    }
-  ],
+  variants: [VARIANT_SCHEMA],
   title: {
     type: String,
     required: true,
@@ -52,6 +83,7 @@ const productSchema = new Schema({
       ref: 'Image'
     }
   ],
+  images_list: [IMAGES_SCHEMA],
   description: {
     type: String
   },
