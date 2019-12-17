@@ -14,7 +14,11 @@ module.exports = async () => {
           ssl: true,
           sslCA: returnCerts(),
           dbName: process.env.STAGE,
-          useUnifiedTopology: true
+          useUnifiedTopology: true,
+          keepAlive: true,
+          poolSize: 30,
+          autoReconnect: true,
+          connectTimeoutMS: 360000
         });
       } catch (error) {
         console.log("TCL: error", error)
