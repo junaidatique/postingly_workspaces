@@ -161,7 +161,7 @@ custom:
         - subnet-08f8f22623b8c212b
       
     events:
-      - schedule: 'cron(*/2 * * * ? *)'
+      - schedule: 'cron(*/3 * * * ? *)'
     timeout: 20
     prewarm: true
     concurrency: 1
