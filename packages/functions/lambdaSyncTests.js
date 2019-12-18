@@ -5,6 +5,7 @@ module.exports = {
     const StoreModel = shared.StoreModel;
     const PartnerShopify = shared.PartnerShopify;
     const storeDetail = await StoreModel.findOne();
+    console.log("TCL: storeDetail", storeDetail.title)
     // const storeDetail = await StoreModel.findById('5dc439c89a44ab02a5ace9bf')
     const storeId = storeDetail._id;
     // const storeId = '5dc4c7b2f5de187854e125b9';
@@ -29,6 +30,6 @@ module.exports = {
     //   "collectionId": null
     // })
     // await syncCollectionPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: 'custom_collections', pageInfo: null, productId: null });
-    await syncProductPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
+    await PartnerShopify.syncProductPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
   }
 }

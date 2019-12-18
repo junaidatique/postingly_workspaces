@@ -846,7 +846,8 @@ module.exports = {
     const currency = currencyFormat.substr(currencyFormat.length - 3);
 
     const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description');
-
+    console.log("TCL: dbProducts.length", dbProducts.length)
+    return;
 
 
     // sync products
