@@ -42,11 +42,6 @@ const IMAGES_SCHEMA = {
     type: Date,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
-  imgUniqKey: {
-    type: String,
-    required: true,
-    unique: true
-  },
   position: {
     type: Number,
   },
@@ -71,23 +66,17 @@ const productSchema = new Schema({
       index: true
     }
   ],
-  variants: [VARIANT_SCHEMA],
   title: {
     type: String,
     required: true,
   },
-  url: [SHORT_LINK],
-  images: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Image'
-    }
-  ],
-  images_list: [IMAGES_SCHEMA],
   description: {
     type: String
   },
   suggestedText: {
+    type: String
+  },
+  partnerSpecificUrl: {
     type: String
   },
   partner: {
@@ -99,9 +88,6 @@ const productSchema = new Schema({
   partnerId: {
     type: String,
     required: true,
-  },
-  partnerSpecificUrl: {
-    type: String
   },
   partnerCreatedAt: {
     type: Date,
@@ -162,7 +148,24 @@ const productSchema = new Schema({
     default: false,
     index: true
   },
-  shareHistory: [SHARE_HISTORY]
+  variants: [VARIANT_SCHEMA],
+  imagesList: [IMAGES_SCHEMA],
+  url: [SHORT_LINK],
+  shareHistory: [SHARE_HISTORY],
+  ///////////////////
+  images: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Image'
+    }
+  ],
+
+
+
+
+
+
+
 
 });
 

@@ -59,6 +59,10 @@ module.exports = {
 
     let approvedUpdates = [];
     const ruleDetail = await RuleModel.findById(event.rule);
+    if (ruleDetail === null) {
+      console.log(`rule not found for ${event.rule}`);
+      return;
+    }
     const ruleCaptions = ruleDetail.captions.map(caption => {
       return caption;
     });

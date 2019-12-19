@@ -179,7 +179,6 @@ const createImageStub = async (partner, ref, reference_id) => {
       // thumbnailUrl: `https://picsum.photos/seed/picsum/100/100`,
       thumbnailUrl: faker.image.imageUrl(100, 100),
       partnerCreatedAt: faker.date.past().toISOString(),
-      imgUniqKey: uniqKey,
       position: i,
     };
     if (ref === 'product') {

@@ -16,10 +16,10 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
 
 
-    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
-    // await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
-    // await ImageModel.collection.deleteMany({ _id: { $exists: true } });
-    // await ProductModel.collection.deleteMany({ _id: { $exists: true } });
+    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
+    await ImageModel.collection.deleteMany({ _id: { $exists: true } });
+    await ProductModel.collection.deleteMany({ _id: { $exists: true } });
     // await VariantModel.collection.deleteMany({ _id: { $exists: true } });
 
 
@@ -30,6 +30,6 @@ module.exports = {
     //   "collectionId": null
     // })
     // await syncCollectionPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: 'custom_collections', pageInfo: null, productId: null });
-    await PartnerShopify.syncProductPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
+    await PartnerShopify.syncProductPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null }, context);
   }
 }

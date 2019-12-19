@@ -33,7 +33,9 @@ module.exports = {
     console.log("TCL: getNotSharedProducts")
     const notSharedOnThisProfileQuery = this.getProductsQuery(update, existingScheduleItems);
     console.log("TCL: notSharedOnThisProfileQuery", notSharedOnThisProfileQuery)
-    const notSharedProductsForCount = await notSharedOnThisProfileQuery.countDocuments({ "shareHistory.profile": { $ne: profileId } });
+    const notSharedProductsForCount = await notSharedOnThisProfileQuery.countDocuments(
+      { "shareHistory.profile": { $ne: profileId } }
+    );
     console.log("TCL: getProductsForSchedule notSharedProductsForCount", notSharedProductsForCount)
     if (notSharedProductsForCount > 0) {
       let notSharedOnThisProfileLimitQuery = this.getProductsQuery(update, existingScheduleItems);
@@ -45,7 +47,7 @@ module.exports = {
       notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.find(
         { "shareHistory.profile": { $ne: profileId } }
       ).skip(updateIndex).limit(1);
-      let products = await notSharedOnThisProfileLimitQuery.populate('images');
+      let products = await notSharedOnThisProfileLimitQuery;
       return products;
     } else {
       return [];
@@ -64,7 +66,7 @@ module.exports = {
       lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.random() * productCount);
     }
     lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ "shareHistory.counter": 1 }).skip(updateIndex).limit(1);
-    let products = await lessSharedOnThisProfile.populate('images');
+    let products = await lessSharedOnThisProfile;
     if (!_.isEmpty(products)) {
       existingScheduleItems.push(products[0]._id);
     }
@@ -132,7 +134,7 @@ module.exports = {
         const variantCount = await VariantModel.countDocuments({ store: update.store, active: true });
         query = query.limit(-1).skip(Math.random() * variantCount)
       }
-      let variants = await query.find({ "shareHistory.profile": { $ne: profileId } }).skip(updateIndex).limit(1).populate('images');
+      let variants = await query.find({ "shareHistory.profile": { $ne: profileId } }).skip(updateIndex).limit(1);
       return variants;
     } else {
       return [];
@@ -146,7 +148,7 @@ module.exports = {
       const variantCount = await VariantModel.countDocuments({ store: update.store, active: true });
       lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.random() * variantCount)
     }
-    let varaints = await lessSharedOnThisProfile.find({ "shareHistory.profile": profileId }).sort({ "shareHistory.counter": 1 }).skip(updateIndex).limit(1).populate('images');
+    let varaints = await lessSharedOnThisProfile.find({ "shareHistory.profile": profileId }).sort({ "shareHistory.counter": 1 }).skip(updateIndex).limit(1);
     return varaints;
   },
   getVariantsQuery: function (update, existingScheduleItems) {

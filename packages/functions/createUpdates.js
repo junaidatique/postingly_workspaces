@@ -2,7 +2,11 @@ const shared = require('shared');
 const sqsHelper = require('shared').sqsHelper;
 const moment = require('moment-timezone');
 const _ = require('lodash');
-const { NOT_SCHEDULED, PENDING, POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
+const {
+  NOT_SCHEDULED,
+  SCHEDULE_TYPE_PRODUCT,
+  SCHEDULE_TYPE_VARIANT
+} = require('shared/constants');
 const dbConnection = require('./db');
 
 module.exports = {

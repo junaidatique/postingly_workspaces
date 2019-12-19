@@ -6,17 +6,22 @@ const {
   PENDING,
   SCHEDULE_TYPE_PRODUCT,
   SCHEDULE_TYPE_VARIANT,
-
   POST_AS_OPTION_FB_ALBUM,
   POST_AS_OPTION_TW_ALBUM,
   POST_AS_OPTION_FB_PHOTO,
-  POST_AS_OPTION_TW_PHOTO
+  POST_AS_OPTION_TW_PHOTO,
+  COLLECTION_OPTION_ALL,
+  COLLECTION_OPTION_SELECTED,
 } = require('shared/constants');
 const dbConnection = require('./db');
 const schedulerHelper = require('./helpers/productScheduleFns')
 module.exports = {
   // event = { ruleId: ID }
   schedule: async function (eventSQS, context) {
+    const totalTime = Math.ceil(context.getRemainingTimeInMillis() / 1000);
+    console.log("TCL: totalTime", totalTime)
+    await dbConnection.createConnection(context);
+    console.log('schedule after db connection =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
     let event;
     if (_.isUndefined(eventSQS.Records)) {
       event = eventSQS;
@@ -30,22 +35,20 @@ module.exports = {
       return 'lambda is warm!';
     }
     console.log('schedule event start', (context.getRemainingTimeInMillis() / 1000));
-    await dbConnection.createConnection(context);
-    console.log('schedule after db connection =>', (context.getRemainingTimeInMillis() / 1000));
+
+
     // load models
     const RuleModel = shared.RuleModel;
     const UpdateModel = shared.UpdateModel;
     const ProductModel = shared.ProductModel;
-    const VariantModel = shared.VariantModel;
     const ImageModel = shared.ImageModel;
     const StoreModel = shared.StoreModel;
 
     // define vars
-    let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting, updateData;
+    let itemType, imageLimit, itemImages, imagesForPosting, updateData;
     // get rule and store
     const ruleDetail = await RuleModel.findById(event.ruleId);
     console.log('schedule ruledetail =>', (context.getRemainingTimeInMillis() / 1000));
-    // console.log("TCL: ruleDetail", ruleDetail)
     if (ruleDetail === null) {
       console.log(`rule not found for ${event.ruleId}`);
       return;
@@ -90,7 +93,7 @@ module.exports = {
     ).sort({ scheduleTime: 1 }).select('_id product variant');
     console.log('schedule scheduledUpdates =>', (context.getRemainingTimeInMillis() / 1000));
     if (ruleDetail.postAsVariants) {
-      itemModel = VariantModel;
+      itemModel = ProductModel;
       itemType = SCHEDULE_TYPE_VARIANT;
       existingScheduleItems = scheduledUpdates.map(update => update.variant);
     } else {
@@ -98,24 +101,16 @@ module.exports = {
       itemType = SCHEDULE_TYPE_PRODUCT;
       existingScheduleItems = scheduledUpdates.map(update => update.product);
     }
-    console.log("TCL: scheduledUpdates", scheduledUpdates)
-    console.log("TCL: existingScheduleItems", existingScheduleItems)
-    // sreturn;
-
-
-
+    console.log("TCL: scheduledUpdates", scheduledUpdates);
+    console.log("TCL: existingScheduleItems", existingScheduleItems);
 
     // loop on all the profiles of the rule
     await Promise.all(updates.map(async (update, updateIndex) => {
       console.log("TCL: updateIndex", updateIndex)
-      // get all the updaets of this rule that are not scheduled yet. 
       profile = update.profile;
-      // get variants or products based on the rule settings. 
-      if (ruleDetail.postAsVariants) {
-        tempObject = await schedulerHelper.getVariantsForSchedule(update, profile, existingScheduleItems, updateIndex);
-      } else {
-        tempObject = await schedulerHelper.getProductsForSchedule(update, profile, existingScheduleItems, updateIndex, context);
-      }
+
+      const scheduleProduct = await schedulerHelper.getProductsForSchedule(update, profile, existingScheduleItems, updateIndex, context);
+
       console.log(`after ${updateIndex} product =>`, (context.getRemainingTimeInMillis() / 1000));
       if (_.isUndefined(tempObject.item)) {
         console.log("TCL: tempObject", tempObject)
@@ -127,8 +122,7 @@ module.exports = {
       console.log("TCL: item ID", item._id)
       // if no image is found for the variant than pick the image from product. 
       if (itemType === SCHEDULE_TYPE_VARIANT && item.images.length === 0) {
-        productImages = await ImageModel.find({ product: item.product });
-        itemImages = _.orderBy(productImages, ['position'], ['asc']);
+
       } else {
         itemImages = _.orderBy(item.images, ['position'], ['asc']);
       }
