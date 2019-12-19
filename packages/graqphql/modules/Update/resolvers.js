@@ -139,6 +139,7 @@ module.exports = {
           searchQuery.failedMessage = new RegExp(args.filter.failedMessage, "i");
         }
       }
+      console.log("TCL: searchQuery", searchQuery)
 
       searchOptions = {
         sort: { scheduleTime: 1 },
