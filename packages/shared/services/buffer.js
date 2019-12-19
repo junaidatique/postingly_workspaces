@@ -42,7 +42,7 @@ module.exports = {
   getProfile: async function (storeId, code, serviceProfile) {
     const tokenResponse = await this.getAccessToken(code);
     const userResponse = await fetch(`${BUFFER_API_URL}user.json?access_token=${tokenResponse.accessToken}`).then(response => response.json());
-    console.log("TCL: userResponse", userResponse)
+    console.log("TCL: getProfile userResponse", userResponse)
 
     const uniqKey = `${BUFFER_PROFILE}-${storeId}-${userResponse.id}`;
     let profile = await ProfileModel.findOne({ uniqKey: uniqKey });
@@ -67,6 +67,9 @@ module.exports = {
       const storeDetail = await StoreModel.findById(storeId);
       storeDetail.profiles = [...storeDetail.profiles, profile._id];
       const s = await storeDetail.save();
+    } else {
+      profile.accessToken = tokenResponse.accessToken;
+      await profile.save();
     }
     const updatedProfile = await this.getUserProfiles(profile);
     console.log(" -- Buffer getUserDetail End -- ");
@@ -76,7 +79,11 @@ module.exports = {
     try {
       const storeId = bufferProfile.store;
       const userResponse = await fetch(`${BUFFER_API_URL}profiles.json?access_token=${bufferProfile.accessToken}`).then(response => response.json());
-      console.log("TCL: userResponse", userResponse)
+      console.log("TCL: getUserProfiles userResponse", userResponse);
+      if (!_.isUndefined(userResponse.error)) {
+        console.log("TCL: userResponse.error", userResponse.error)
+        throw new Error(userResponse.error);
+      }
       const bulkProfileInsert = userResponse.map(profile => {
         let serviceProfile = null;
         let profileLink = null;
