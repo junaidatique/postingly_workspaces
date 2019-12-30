@@ -34,32 +34,29 @@ module.exports = {
       await new Promise(r => setTimeout(r, 25));
       return 'lambda is warm!';
     }
-    console.log('schedule event start', (context.getRemainingTimeInMillis() / 1000));
-
-
     // load models
     const RuleModel = shared.RuleModel;
     const UpdateModel = shared.UpdateModel;
     const ProductModel = shared.ProductModel;
     const ImageModel = shared.ImageModel;
-    const StoreModel = shared.StoreModel;
 
     // define vars
     let itemType, imageLimit, itemImages, imagesForPosting, updateData;
     // get rule and store
     const ruleDetail = await RuleModel.findById(event.ruleId);
-    console.log('schedule ruledetail =>', (context.getRemainingTimeInMillis() / 1000));
+    console.log('schedule after ruleDetail =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    console.log("TCL: ruleDetail.store", ruleDetail.store)
     if (ruleDetail === null) {
       console.log(`rule not found for ${event.ruleId}`);
       return;
     }
-    const StoreDetail = await StoreModel.findById(ruleDetail.store);
-    let productLimit = 8;
+    if (_.isUndefined(event.postingCollectionOption))
+      let productLimit = 8;
     if (ruleDetail.store == '5dc45f599a44abb12eace9ec') {
       productLimit = 2;
     }
-    console.log("TCL: StoreDetail", StoreDetail.title)
-    console.log('schedule storedetail =>', (context.getRemainingTimeInMillis() / 1000));
+
+
     // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
     if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
       imageLimit = 4;
