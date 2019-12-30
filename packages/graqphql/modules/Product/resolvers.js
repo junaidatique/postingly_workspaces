@@ -104,7 +104,7 @@ module.exports = {
   syncProducts: async (obj, args, context, info) => {
     try {
       const storeDetail = await StoreModel.findById(args.storeId);
-      await ProductModel.updateMany({ store: storeDetail._id }, { active: false });
+      // await ProductModel.updateMany({ store: storeDetail._id }, { active: false });
       if (process.env.IS_OFFLINE === 'false') {
         const storePayload = {
           "storeId": args.storeId,
