@@ -55,6 +55,9 @@ module.exports = {
     if (ruleDetail.store == '5dc45f599a44abb12eace9ec') {
       productLimit = 2;
     }
+    if (ruleDetail.store == '5dc4e4e0f5de185295e125d5') {
+      productLimit = 2;
+    }
     console.log("TCL: StoreDetail", StoreDetail.title)
     console.log('schedule storedetail =>', (context.getRemainingTimeInMillis() / 1000));
     // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
