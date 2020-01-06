@@ -179,7 +179,8 @@ const updateSchema = new mongoose.Schema({
   response: updateResponse,
   postingCollectionOption: {
     type: String,
-    enum: COLLECTION_OPTION
+    enum: COLLECTION_OPTION,
+    index: true,
   },
   allowedCollections: [
     {
