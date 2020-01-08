@@ -40,13 +40,14 @@ module.exports = {
     let servicesQuery = UpdateModel.find(
       {
         scheduleState: PENDING,
-        scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(1, 'days') },
-        // scheduleTime: { $gt: moment.utc() },
+        scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(3, 'days') },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
         rule: { $exists: true },
+        URLForCaption: { $exists: true },
         autoApproveUpdates: true,
         autoAddCaptionOfUpdates: true,
         userEdited: false,
+        captionsUpdated: false,
         rule: event.rule
       }
     );
@@ -73,34 +74,18 @@ module.exports = {
     await Promise.all(updates.map(async update => {
       const updatedObject = {};
       if (update.autoAddCaptionOfUpdates) {
-        let productId, variantDetail;
-        if (ruleDetail.postAsVariants) {
-          variantDetail = await VariantModel.findById(update[SCHEDULE_TYPE_VARIANT]);
-          productId = variantDetail.product;
-        } else {
-          productId = update.product;
-        }
-        const productDetail = await ProductModel.findById(productId);
-
-        let title, price;
-        if (ruleDetail.postAsVariants) {
-          title = variantDetail.title;
-          price = variantDetail.price;
-        } else {
-          title = productDetail.title;
-          price = productDetail.minimumPrice;
-        }
+        const title = update.titleForCaption;
+        const price = update.priceForCaption;
         let description;
-        if (update.serviceProfile === TWITTER_PROFILE || update.BUFFER_TWITTER_PROFILE) {
+        if (update.serviceProfile === TWITTER_PROFILE || update.serviceProfile === BUFFER_TWITTER_PROFILE) {
           description = '';
         } else {
-          description = productDetail.description;
+          description = update.descriptionForCaption;
         }
-        const defaultShortLinkService = StoreDetail.shortLinkService;
-        const productDetailURL = await productDetail.url.map(urls => urls);
-        const url = await shortLink.getItemShortLink(defaultShortLinkService, productDetail.partnerSpecificUrl, productDetailURL);
+
+        const url = update.URLForCaption;
         if (!_.isNull(url)) {
-          captionsForUpdate = productDetail.collections.map(productCategory => {
+          captionsForUpdate = update.productCollections.map(productCategory => {
             return ruleCaptions.filter(caption => {
               if (caption.collections.includes(productCategory)) {
                 return caption;
@@ -137,7 +122,5 @@ module.exports = {
     if (!_.isEmpty(approvedUpdates)) {
       const updateUpdates = await UpdateModel.bulkWrite(approvedUpdates);
     }
-
-
   }
 }

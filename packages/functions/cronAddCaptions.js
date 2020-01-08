@@ -17,6 +17,7 @@ module.exports = {
         scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(3, 'days') },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
         rule: { $exists: true },
+        URLForCaption: { $exists: true },
         autoApproveUpdates: { $ne: false },
         autoAddCaptionOfUpdates: { $ne: false },
         userEdited: false,

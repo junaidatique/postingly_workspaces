@@ -1,5 +1,6 @@
 const shared = require('shared');
 const moment = require('moment');
+const sqsHelper = require('shared').sqsHelper;
 const _ = require('lodash');
 const {
   NOT_SCHEDULED,
@@ -36,9 +37,9 @@ module.exports = {
     }
     // load models
     const RuleModel = shared.RuleModel;
+    const StoreModel = shared.StoreModel;
     const UpdateModel = shared.UpdateModel;
     const ProductModel = shared.ProductModel;
-    const ImageModel = shared.ImageModel;
 
     // get rule and store
     const ruleDetail = await RuleModel.findById(event.ruleId);
@@ -48,6 +49,8 @@ module.exports = {
       console.log(`rule not found for ${event.ruleId}`);
       return;
     }
+    const storeDetail = await StoreModel.findById(ruleDetail.store);
+    const defaultShortLinkService = storeDetail.shortLinkService;
 
     // define vars    
     let imageLimit;
@@ -55,6 +58,11 @@ module.exports = {
     let imagesForUpdate;
     let imagesForPosting;
     let updateData;
+    let titleForCaption;
+    let priceForCaption;
+    let descriptionForCaption;
+    let productCollections;
+    let URLForCaption;
     let allowedCollections = [];
     const maxNumberOfDays = 7;
     // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
@@ -118,7 +126,7 @@ module.exports = {
     if (updates.length === 0) {
       // if postingCollectionOption is from all collection now check for selected collection.
       if (postingCollectionOption === COLLECTION_OPTION_ALL) {
-        await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule, postingCollectionOption: COLLECTION_OPTION_SELECTED });
+        await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: COLLECTION_OPTION_SELECTED });
       }
       return;
     }
@@ -161,6 +169,7 @@ module.exports = {
       } else {
         imagesForUpdate = product.images;
       }
+      // console.log("TCL: imagesForUpdate", imagesForUpdate)
       // to update the products after all the updates.
       const productUpdateObject = {
         id: product._id,
@@ -169,11 +178,25 @@ module.exports = {
         variants: product.variants
       }
 
+
+
       if (ruleDetail.postAsVariants) {
 
       } else {
         itemImages = _.orderBy(imagesForUpdate, ['position'], ['asc']);
+        titleForCaption = product.title;
+        priceForCaption = product.minimumPrice;
       }
+      // console.log("TCL: itemImages-1", itemImages)
+      descriptionForCaption = product.description;
+      productCollections = product.collections;
+      productExternalURL = product.partnerSpecificUrl;
+      URLForCaption = product.url.map(productUrls => {
+        if (defaultShortLinkService === productUrls.service) {
+          return productUrls.url;
+        }
+      }).filter(item => !_.isUndefined(item));
+
       // First calculate images. 
       // for single image rotation is possible.
       // for multiple images just post first 4 images.
@@ -197,25 +220,30 @@ module.exports = {
               itemImages = itemImages.slice(0, ruleDetail.rotateImageLimit);
             }
           }
+          // console.log("TCL: itemImages0", itemImages)
 
           // get image histories. 
           // if no history is found than create an empty object. 
           itemImages = itemImages.map(image => {
-            // check if the image has history for this profile. 
-            const imageHistoryResponse = image.shareHistory.map(history => {
-              // console.log("TCL: history", history)
-              if (history.profile.toString() == profile.toString()) {
-                return {
-                  'imageId': image._id,
-                  'partnerSpecificUrl': image.partnerSpecificUrl,
-                  'thumbnailUrl': image.thumbnailUrl,
-                  'partnerId': image.partnerId,
-                  'position': image.position,
-                  'historyId': history._id,
-                  'counter': history.counter,
-                };
-              }
-            }).filter(item => !_.isUndefined(item));
+            // console.log("TCL: itemImages image", image)
+            // check if the image has history for this profile.
+            let imageHistoryResponse = [];
+            if (!_.isUndefined(image.shareHistory)) {
+              imageHistoryResponse = image.shareHistory.map(history => {
+                // console.log("TCL: history", history)
+                if (history.profile.toString() == profile.toString()) {
+                  return {
+                    'imageId': image._id,
+                    'partnerSpecificUrl': image.partnerSpecificUrl,
+                    'thumbnailUrl': image.thumbnailUrl,
+                    'partnerId': image.partnerId,
+                    'position': image.position,
+                    'historyId': history._id,
+                    'counter': history.counter,
+                  };
+                }
+              }).filter(item => !_.isUndefined(item));
+            }
             // if no history is found. 
             if (_.isEmpty(imageHistoryResponse)) {
               return {
@@ -232,7 +260,9 @@ module.exports = {
             }
           });
 
+          // console.log("TCL: itemImages1", itemImages)
           itemImages = _.orderBy(itemImages, ['counter', 'position'], ['asc', 'asc']);
+          // console.log("TCL: itemImages2", itemImages)
           const postingImage = itemImages[0];
           imagesForPosting = [
             {
@@ -242,10 +272,10 @@ module.exports = {
               partnerId: postingImage.partnerId
             }
           ];
-          console.log("TCL: postingImage", postingImage)
+          // console.log("TCL: postingImage", postingImage)
           productUpdateObject.imagesList = productUpdateObject.imagesList.map(image => {
-            console.log("TCL: imagesList image", image)
-            if (postingImage.imageId.toString() === image.id.toString()) {
+            // console.log("TCL: imagesList image", image)
+            if (postingImage.imageId.toString() === image._id.toString()) {
               let imageShareHistory = image.shareHistory.map(history => {
                 if (history.profile.toString() == profile.toString()) {
                   return history;
@@ -266,12 +296,7 @@ module.exports = {
 
             }
             return image;
-
           })
-
-
-
-
         } else {
           postingImage = itemImages[0];
           imagesForPosting = [
@@ -285,8 +310,6 @@ module.exports = {
         }
 
       }
-
-
       updateData = {};
       if (ruleDetail.postAsVariants) {
         // updateData[SCHEDULE_TYPE_VARIANT] = product._id;
@@ -294,6 +317,15 @@ module.exports = {
       updateData[SCHEDULE_TYPE_PRODUCT] = product._id;
       updateData.images = imagesForPosting;
       updateData.scheduleState = PENDING;
+      updateData.titleForCaption = titleForCaption;
+      updateData.priceForCaption = priceForCaption;
+      updateData.descriptionForCaption = descriptionForCaption;
+      updateData.productExternalURL = productExternalURL;
+      if (!_.isEmpty(URLForCaption)) {
+        updateData.URLForCaption = URLForCaption[0];
+      }
+      updateData.productCollections = productCollections;
+      updateData.defaultShortLinkService = defaultShortLinkService;
       // console.log("TCL: updateData", updateData)
       bulkUpdate.push({
         updateOne: {
@@ -328,7 +360,7 @@ module.exports = {
       bulkProductUpdate.push(productUpdateObject);
 
     }));
-    // console.log("TCL: bulkUpdate", bulkUpdate)
+    console.log("TCL: bulkUpdate.length", bulkUpdate.length)
     // console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.filter))
     // console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.update))
     if (!_.isEmpty(bulkUpdate)) {
@@ -352,12 +384,11 @@ module.exports = {
     // console.log("TCL: productUpdate", productUpdate.map(product => product.updateOne.update.imagesList))
     if (!_.isEmpty(productUpdate)) {
       const productUpdates = await ProductModel.bulkWrite(productUpdate);
-      // console.log("TCL: productUpdates", productUpdates)
     }
-    // console.log("TCL: bulkShareHistory final", bulkShareHistory)
-
+    // console.log("TCL: bulkUpdate.length", bulkUpdate.length)
+    if (bulkUpdate.length > 0) {
+      await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: postingCollectionOption });
+    }
   },
-
-
 }
 

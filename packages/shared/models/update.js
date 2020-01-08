@@ -209,6 +209,33 @@ const updateSchema = new mongoose.Schema({
     type: String,
     index: true,
   },
+  titleForCaption: {
+    type: String,
+  },
+  priceForCaption: {
+    type: String,
+  },
+  descriptionForCaption: {
+    type: String,
+  },
+  productExternalURL: {
+    type: String,
+  },
+  URLForCaption: {
+    type: String,
+    index: true,
+  },
+  defaultShortLinkService: {
+    type: String
+  },
+  productCollections: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Collection',
+      index: true,
+    }
+  ]
+
 });
 
 
