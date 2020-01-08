@@ -339,35 +339,12 @@ functions:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ProductsDelete
           batchSize: 1
           enabled: true
-  data-seed:
-    handler: seeddata.createStore
-    warmup:
-      enabled: false
-    timeout: 20
-  data-test:
-    handler: seeddata.testData
-    warmup:
-      enabled: false
-    timeout: 20
-  rule-test:
-    handler: seeddata.testRules
-    warmup:
-      enabled: false
-    timeout: 20
-  updates-test:
-    handler: seeddata.testUpdates
-    warmup:
-      enabled: false
-    timeout: 20
+  
   fetch-test:
     handler: seeddata.testFetch
     warmup:
       enabled: false
     timeout: 20    
-  sync-stores:
-    handler: seeddata.syncStores
-    warmup:
-      enabled: false
     events:
       - schedule:
           rate: cron(*/5 * * * ? *)
