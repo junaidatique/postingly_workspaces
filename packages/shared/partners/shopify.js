@@ -1011,24 +1011,8 @@ module.exports = {
         );
       }
       console.log("TCL: storeDetail", storeDetail);
-      const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
-      console.log("TCL: productsCreate url", url)
-      const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
-      if (_.isNull(json)) {
-        if (!_.isNull(error)) {
-          if (error.indexOf('Exceeded') >= 0) {
-            if (process.env.IS_OFFLINE === 'false') {
-              // retry this event
-              await sqsHelper.addToQueue('ProductsCreate', event);
-            }
-            return;
-          } else {
-            throw new Error(error);
-          }
-        }
-        return;
-      }
-      const apiProducts = [json.product];
+
+      apiProducts = [JSON.parse(event.body)];
       console.log("TCL: apiProducts", apiProducts)
 
       const syncEvent = {
@@ -1038,7 +1022,6 @@ module.exports = {
       }
       console.log("TCL: syncEvent", syncEvent)
       await this.syncProducts(syncEvent, apiProducts, storeDetail, context);
-      await this.syncWebhookProductCollections(apiProducts, storeDetail);
       await this.syncProductCount(syncEvent);
       if (process.env.IS_OFFLINE === 'false') {
         const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
@@ -1066,6 +1049,7 @@ module.exports = {
       // console.log("TCL: StoreModel", StoreModel)
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       console.log("TCL: storeDetail", storeDetail)
+      // if store is not found. 
       if (_.isNull(storeDetail)) {
         return httpHelper.ok(
           {
@@ -1073,28 +1057,7 @@ module.exports = {
           }
         );
       }
-      if (!_.isUndefined(event.shopDomain)) {
-        const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${event.partnerId}.json`;
-        console.log("TCL: productsCreate url", url)
-        const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
-        if (_.isNull(json)) {
-          if (!_.isNull(error)) {
-            if (error.indexOf('Exceeded') >= 0) {
-              if (process.env.IS_OFFLINE === 'false') {
-                // retry this event
-                // await sqsHelper.addToQueue('ProductsCreate', event);
-              }
-              return;
-            } else {
-              throw new Error(error);
-            }
-          }
-          return;
-        }
-        apiProducts = [json.product];
-      } else {
-        apiProducts = [JSON.parse(event.body)];
-      }
+      apiProducts = [JSON.parse(event.body)];
       console.log("TCL: apiProducts.length", apiProducts.length)
       const syncEvent = {
         "storeId": storeDetail._id,
@@ -1149,7 +1112,7 @@ module.exports = {
   },
   productsDelete: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
-      const productDetail = await shared.ProductModel.findOne({ partnerId: event.partnerId });
+      const productDetail = await shared.ProductModel.findOne({ partnerId: JSON.parse(event.body).id });
       if (!_.isNull(productDetail)) {
         const imageDelete = await shared.ImageModel.deleteMany({ product: productDetail._id });
         const updateDelete = await shared.UpdateModel.deleteMany({ product: productDetail._id, scheduleState: { $in: [PENDING, APPROVED] }, });
