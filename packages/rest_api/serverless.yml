@@ -91,6 +91,7 @@ functions:
           cors: true
   productsCreate:
     handler: index.productsCreate
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_WEBHOOK_CREATE_PRODUCT}
     events:
       - http:
           path: /partners/{partner_slug}/productsCreate
@@ -106,6 +107,7 @@ functions:
           cors: true
   productsDelete:
     handler: index.productsDelete
+    reservedConcurrency: ${env:RESERVED_CONCURRENCY_WEBHOOK_DELETE_PRODUCT}
     events:
       - http:
           path: /partners/{partner_slug}/productsDelete
