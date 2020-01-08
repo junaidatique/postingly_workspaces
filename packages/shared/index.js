@@ -17,7 +17,7 @@ exports.ProfileModel = require('./models/profile');
 exports.RuleModel = require('./models/rule');
 exports.UpdateModel = require('./models/update');
 exports.ProductModel = require('./models/product');
-exports.VariantModel = require('./models/variant');
+// exports.VariantModel = require('./models/variant');
 exports.CollectionModel = require('./models/collection');
 exports.ImageModel = require('./models/image');
 

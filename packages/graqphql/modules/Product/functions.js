@@ -8,7 +8,7 @@ const formattedProduct = async (product) => {
     id: product._id,
     partnerCreatedAt: (product.partnerCreatedAt !== undefined) ? product.partnerCreatedAt : null,
     store: storeFunctions.getStoreByID.bind(this, product._doc.store),
-    images: imageFunctions.getProductImages.bind(this, product._id),
+    images: imageFunctions.getProductImages.bind(this, product.imagesList),
     variants: formattedVariant.bind(this, product.variants),
     minimumPrice: product.minimumPrice.toString()
   }

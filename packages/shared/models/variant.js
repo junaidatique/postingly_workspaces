@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
 const { PARTNERS } = require('shared/constants');
 
 const SHARE_HISTORY = {
@@ -11,34 +10,55 @@ const SHARE_HISTORY = {
   counter: Number
 }
 
+const IMAGES_SCHEMA = {
+  partnerId: {
+    type: String,
+    required: true,
+  },
+  partnerSpecificUrl: {
+    type: String
+  },
+  thumbnailUrl: {
+    type: String
+  },
+  partnerCreatedAt: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  partnerUpdatedAt: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  position: {
+    type: Number,
+  },
+  active: {
+    type: Boolean,
+    default: true,
+    index: true
+  }
+}
+
 const variantSchema = new Schema({
-  store: {
-    type: Schema.Types.ObjectId,
-    ref: 'Store',
-    index: true,
-  },
-  collections: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Collection',
-      index: true,
-    }
-  ],
-  product: {
-    type: Schema.Types.ObjectId,
-    ref: 'Product',
-    index: true,
-  },
-  images: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Image',
-      index: true,
-    }
-  ],
   title: {
     type: String,
     required: true,
+  },
+  price: {
+    type: Number
+  },
+  salePrice: {
+    type: Number
+  },
+  onSale: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  uniqKey: {
+    type: String,
+    required: true,
+    unique: true
   },
   partner: {
     type: String,
@@ -60,40 +80,11 @@ const variantSchema = new Schema({
     index: true,
     get: date => (date !== undefined) ? date.toISOString() : null,
   },
-  uniqKey: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  active: {
-    type: Boolean,
-    default: true,
-    index: true
-  },
-  quantity: {
-    type: Number
-  },
-  suggestedText: {
-    type: String
-  },
-  price: {
-    type: Number
-  },
-  salePrice: {
-    type: Number
-  },
-  onSale: {
-    type: Boolean,
-    default: false,
-    index: true
-  },
   position: {
     type: Number,
   },
-  postableByImage: {
-    type: Boolean,
-    default: false,
-    index: true
+  quantity: {
+    type: Number
   },
   postableByQuantity: {
     type: Boolean,
@@ -115,14 +106,15 @@ const variantSchema = new Schema({
     default: false,
     index: true
   },
-  shareHistory: [SHARE_HISTORY]
+  active: {
+    type: Boolean,
+    default: true,
+    index: true
+  },
+  shareHistory: [SHARE_HISTORY],
+  images: [IMAGES_SCHEMA]
 });
 
 variantSchema.set('timestamps', true);
 
-
-if (process.env.IS_OFFLINE) {
-  delete mongoose.connection.models.Variant;
-}
-
-module.exports = mongoose.model('Variant', variantSchema);
+return variantSchema;

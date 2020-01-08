@@ -5,8 +5,7 @@ const formattedImage = async (image) => {
     id: image._id,
   }
 }
-const getProductImages = async productId => {
-  const images = await ImageModel.find({ product: productId });
+const getProductImages = async images => {
   return images.map(image => {
     return formattedImage(image)
   });
