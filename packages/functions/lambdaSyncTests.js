@@ -4,9 +4,9 @@ module.exports = {
   execute: async function (event, context) {
     const StoreModel = shared.StoreModel;
     const PartnerShopify = shared.PartnerShopify;
-    const storeDetail = await StoreModel.findOne();
+    // const storeDetail = await StoreModel.findOne();
+    const storeDetail = await StoreModel.findById('5e14818c0c8e8dc9c7db3327')
     console.log("TCL: storeDetail", storeDetail.title)
-    // const storeDetail = await StoreModel.findById('5dc439c89a44ab02a5ace9bf')
     const storeId = storeDetail._id;
     // const storeId = '5dc4c7b2f5de187854e125b9';
     const CollectionModel = shared.CollectionModel;
@@ -16,10 +16,10 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
 
 
-    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
-    await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
-    await ImageModel.collection.deleteMany({ _id: { $exists: true } });
-    await ProductModel.collection.deleteMany({ _id: { $exists: true } });
+    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    // await CollectionModel.collection.deleteMany({ _id: { $exists: true } });
+    // await ImageModel.collection.deleteMany({ _id: { $exists: true } });
+    // await ProductModel.collection.deleteMany({ _id: { $exists: true } });
     // await VariantModel.collection.deleteMany({ _id: { $exists: true } });
 
 

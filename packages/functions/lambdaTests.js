@@ -34,11 +34,11 @@ module.exports = {
     console.log("TCL: createUpdates ---------------------------------------------------------")
     await createUpdates({ ruleId: ruleDetail._id });
     // console.log("TCL: schedule ---------------------------------------------------------")
-    await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
+    // await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
     // console.log("TCL: updateProductUrls ---------------------------------------------------------")
     // await updateProductUrls();
-    // console.log("TCL: changeCaption ---------------------------------------------------------")
-    // await changeCaption({ rule: ruleDetail._id, storeId: null });
+    console.log("TCL: changeCaption ---------------------------------------------------------")
+    await changeCaption({ rule: ruleDetail._id, storeId: null });
     // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
 
     // // second iteration.
