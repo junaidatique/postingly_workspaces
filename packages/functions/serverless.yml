@@ -224,10 +224,10 @@ functions:
     handler: cronThisWeekRulesForUpdates.excute
     warmup:
       enabled: false
-    events:
-      - schedule:
-          rate: cron(*/30 * * * ? *)
-          enabled: true
+    # events:
+    #   - schedule:
+    #       rate: cron(*/30 * * * ? *)
+    #       enabled: true
   # This updates simply takes the rule id and schedule all the not scheduled updates. 
   schedule-updates:
     handler: scheduleProductUpdates.schedule
