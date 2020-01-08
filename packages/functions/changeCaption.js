@@ -40,7 +40,7 @@ module.exports = {
     let servicesQuery = UpdateModel.find(
       {
         scheduleState: PENDING,
-        scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(3, 'days') },
+        scheduleTime: { $lt: moment.utc().add(3, 'days') },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
         rule: { $exists: true },
         URLForCaption: { $exists: true },
