@@ -492,7 +492,18 @@ module.exports = {
     await this.syncProductCount(event);
     const ProductModel = shared.ProductModel;
     // Collections are reset so that new collections can be assigned to products. 
-    const dbCollectionsUpdate = await ProductModel.updateMany({ store: event.storeId }, { collections: [] });
+    // const dbCollectionsUpdate = await ProductModel.updateMany({ store: event.storeId }, { collections: [] });
+
+    const collectionsUpdateForProduct = [{
+      updateOne: {
+        filter: { store: event.storeId },
+        update: {
+          collections: []
+        }
+      }
+    }];
+    const productUpdates = await ProductModel.bulkWrite(collectionsUpdateForProduct);
+
     const syncCustomCollectionPayload = {
       storeId: event.storeId,
       partnerStore: PARTNERS_SHOPIFY,
