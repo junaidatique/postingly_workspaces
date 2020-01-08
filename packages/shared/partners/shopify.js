@@ -511,12 +511,7 @@ module.exports = {
       collectionId: null,
       pageInfo: null
     }
-    const syncVariantPayload = {
-      storeId: event.storeId,
-      partnerStore: PARTNERS_SHOPIFY,
-      collectionId: null,
-      pageInfo: null
-    }
+
     // console.log("TCL: syncCustomCollectionPayload", syncCustomCollectionPayload)
     // console.log("TCL: syncSmartCollectionPayload", syncSmartCollectionPayload)
     // console.log("TCL: syncProductPayload", syncProductPayload)
@@ -527,8 +522,6 @@ module.exports = {
       await sqsHelper.addToQueue('SyncCollectionPage', syncSmartCollectionPayload);
       // syncing products
       await sqsHelper.addToQueue('SyncProductPage', syncProductPayload);
-      // syncing Variants
-      await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayload);
     } else {
       await this.syncCollectionPage(syncCustomCollectionPayload);
       await this.syncCollectionPage(syncSmartCollectionPayload);
@@ -732,91 +725,10 @@ module.exports = {
       if (!_.isUndefined(context)) {
         console.log('syncProductPage event after lambda.invoke', (context.getRemainingTimeInMillis() / 1000));
       }
-    } else {
-      console.log("All products are now sycned. its time to sync variants. ")
-      if (process.env.IS_OFFLINE === 'false') {
-        // sync variant products
-        // syncing Variants
-        const syncVariantPayload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: null };
-        await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayload);
-
-      } else {
-        await this.syncVariantPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: null });
-      }
     }
     console.log("TCL: Sync Prdouct completed for this api call. ")
   },
-  syncVariantPage: async function (event, context) {
-    console.log('syncVariantPage event', event);
-    if (!_.isUndefined(context)) {
-      console.log('syncVariantPage event start', (context.getRemainingTimeInMillis() / 1000));
-    }
-    const StoreModel = shared.StoreModel;
-    const CollectionModel = shared.CollectionModel;
-    const storeDetail = await StoreModel.findById(event.storeId);
-    if (storeDetail.isUninstalled) {
-      console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
-      return false;
-    }
-    let collectionQuery = '';
-    let pageInfoQuery = '';
 
-    if (!_.isNull(event.pageInfo)) {
-      pageInfoQuery = `&page_info=${event.pageInfo}`;
-    } else {
-      pageInfoQuery = '&published_status=published'
-      if (!_.isNull(event.collectionId)) {
-        const collectionDetail = await CollectionModel.findById(event.collectionId);
-        collectionQuery = `&collection_id=${collectionDetail.partnerId}`;
-      }
-    }
-    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=20${collectionQuery}${pageInfoQuery}`;
-    console.log("TCL: syncVariantPage url", url)
-    const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
-    if (_.isNull(json)) {
-      if (!_.isNull(error)) {
-        if (error.indexOf('Exceeded') >= 0) {
-          if (process.env.IS_OFFLINE === 'false') {
-            // retry this event
-            await sqsHelper.addToQueue('SyncVariantPage', event);
-          }
-          return;
-        } else {
-          throw new Error(error);
-        }
-      }
-      return;
-    }
-    const apiProducts = json.products;
-    console.log("TCL: apiProducts.length", apiProducts.length);
-    if (!_.isUndefined(context)) {
-      console.log('syncVariantPage event after api call', (context.getRemainingTimeInMillis() / 1000));
-    }
-    if (apiProducts.length > 0) {
-      await this.syncVariants(event, apiProducts, storeDetail, context);
-    }
-    if (!_.isUndefined(context)) {
-      console.log('syncVariantPage event after syncVariants', (context.getRemainingTimeInMillis() / 1000));
-    }
-    if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
-      console.log("TCL: There is next page. ")
-      const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
-      if (!_.isNull(pageInfo)) {
-        if (process.env.IS_OFFLINE === 'false') {
-          // syncing Variants
-          const syncVariantPayloadPageInfo = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
-          await sqsHelper.addToQueue('SyncVariantPage', syncVariantPayloadPageInfo);
-        } else {
-          const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
-          await this.syncVariantPage(payload);
-        }
-      }
-      if (!_.isUndefined(context)) {
-        console.log('syncVariantPage event after lambda.invoke', (context.getRemainingTimeInMillis() / 1000));
-      }
-    }
-    console.log("TCL: Sync Prdouct completed for this api call. ")
-  },
   addCollectiontoItems: async function (model, items, collectionId) {
     if (items.length > 0) {
       const bulkCollectionUpdate = items.map(item => {
@@ -836,31 +748,105 @@ module.exports = {
       }
     }
   },
+
+  formatVariants: function (varaintsFromAPI, varaintsFromDb, imagesFromAPI) {
+    variantsToReturn = [];
+    varaintsFromAPI.forEach(variant => {
+      const varaintImages = imagesFromAPI.map(productImage => {
+        const thumbnailUrl = `${productImage.src.slice(0, productImage.src.lastIndexOf('.'))}_small.${productImage.src.slice(productImage.src.lastIndexOf('.') + 1)}`;
+        if (productImage.id === variant.image_id) {
+          return {
+            partnerId: productImage.id,
+            partnerSpecificUrl: productImage.src,
+            partneCreatedAt: productImage.published_at,
+            partnerUpdatedAt: productImage.updated_at,
+            position: productImage.position,
+            thumbnailUrl,
+            active: true,
+          }
+        }
+      }).filter(item => !_.isUndefined(item));
+      const dbVariant = varaintsFromDb.find(dbVar => dbVar.uniqKey === `${PARTNERS_SHOPIFY}-${variant.id}`);
+      const onSale = ((variant.compare_at_price != variant.price)) ? true : false;
+      variantsToReturn.push({
+        title: variant.title,
+        price: variant.price,
+        salePrice: variant.compare_at_price,
+        onSale: onSale,
+        uniqKey: `${PARTNERS_SHOPIFY}-${variant.id}`,
+        partner: PARTNERS_SHOPIFY,
+        partnerId: variant.id,
+        partnerCreatedAt: variant.created_at,
+        partnerUpdatedAt: variant.updated_at,
+        position: variant.position,
+        quantity: variant.inventory_quantity,
+        postableByQuantity: (variant.inventory_quantity > 0) ? true : false,
+        postableByPrice: (variant.price > 0) ? true : false,
+        postableIsNew: (moment(variant.created_at).isAfter(moment().subtract(7, 'days'))) ? true : false,
+        postableBySale: onSale,
+        active: true,
+        shareHistory: (_.isUndefined(dbVariant)) ? [] : dbVariant.shareHistory,
+        images: varaintImages,
+      })
+    });
+    return variantsToReturn;
+  },
+
+  formatImagesForProduct: function (imagesFromAPI, imagesFromDB) {
+    const returnImages = imagesFromAPI.map(productImage => {
+      const dbImage = imagesFromDB.find(img => img.partnerId === productImage.id);
+      const thumbnailUrl = `${productImage.src.slice(0, productImage.src.lastIndexOf('.'))}_small.${productImage.src.slice(productImage.src.lastIndexOf('.') + 1)}`;
+      return {
+        partnerId: productImage.id,
+        partnerSpecificUrl: productImage.src,
+        partneCreatedAt: productImage.created_at,
+        partnerUpdatedAt: productImage.updated_at,
+        position: productImage.position,
+        thumbnailUrl,
+        active: true,
+        shareHistory: (_.isUndefined(dbImage)) ? [] : dbImage.shareHistory,
+      }
+    })
+    return returnImages;
+  },
   syncProducts: async function (event, apiProducts, storeDetail, context) {
-    // console.log("TCL: apiProducts", apiProducts)
-    let productImages = [];
     const ProductModel = shared.ProductModel;
     const ImageModel = shared.ImageModel;
     const currencyFormat = stringHelper.stripTags(storeDetail.moneyWithCurrencyFormat);
     const currency = currencyFormat.substr(currencyFormat.length - 3);
+
+    const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description variants imagesList');
+    console.log("TCL: dbProducts.length", dbProducts.length)
+
     // sync products
     const bulkProductInsert = apiProducts.map(product => {
+      // get product from the list of dbProducts;
+      const productFromDB = dbProducts.find(dbProduct => dbProduct.uniqKey === `${PARTNERS_SHOPIFY}-${product.id}`);
+      let productVaraints = [];
+      let productImages = [];
+      if (!_.isUndefined(productFromDB)) {
+        productVaraints = productFromDB.variants;
+        productImages = productFromDB.imagesList;
+      }
+      const embeddedVariants = this.formatVariants(product.variants, productVaraints, product.images);
+      const embeddedImages = this.formatImagesForProduct(product.images, productImages);
+      // return;
       const quantity = product.variants.map(variant => variant.inventory_quantity).reduce((prev, curr) => prev + curr, 0);
       const minimumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p < v && p > 0) ? p : v));
       const maximumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p > v) ? p : v));
       const onSale = product.variants.map(variant => (variant.compare_at_price != variant.price) ? true : false).includes(true);
       const partnerSpecificUrl = `https://${storeDetail.url}/products/${product.handle}`;
+      const suggestedText = stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, partnerSpecificUrl, minimumPrice, stringHelper.stripTags(product.body_html), currency);
       return {
         updateOne: {
           filter: { uniqKey: `${PARTNERS_SHOPIFY}-${product.id}` },
           update: {
             title: product.title,
             description: stringHelper.stripTags(product.body_html),
-            suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, partnerSpecificUrl, minimumPrice, stringHelper.stripTags(product.body_html), currency),
+            suggestedText: suggestedText,
             partnerSpecificUrl: partnerSpecificUrl,
             partner: PARTNERS_SHOPIFY,
             partnerId: product.id,
-            partnerName: product.title,
             partnerCreatedAt: product.created_at,
             partnerUpdatedAt: product.updated_at,
             uniqKey: `${PARTNERS_SHOPIFY}-${product.id}`,
@@ -874,7 +860,9 @@ module.exports = {
             postableByQuantity: (quantity > 0) ? true : false,
             postableByPrice: (minimumPrice > 0) ? true : false,
             postableIsNew: (moment(product.created_at).isAfter(moment().subtract(1, 'days'))) ? true : false,
-            postableBySale: onSale
+            postableBySale: onSale,
+            variants: embeddedVariants,
+            imagesList: embeddedImages
           },
           upsert: true
         }
@@ -882,253 +870,32 @@ module.exports = {
     });
     try {
       if (!_.isEmpty(bulkProductInsert)) {
+        // console.log("TCL: bulkProductInsert", bulkProductInsert.map(pro => pro.updateOne.update.variants))
         const products = await ProductModel.bulkWrite(bulkProductInsert);
       }
     } catch (error) {
-      console.log("TCL: bulkProductInsert error", error.message)
-
+      console.error("TCL: bulkProductInsert error", error.message)
     }
+    // return;
 
     console.log("TCL: syncProducts bulkProductInsert.length", bulkProductInsert.length)
     if (!_.isUndefined(context)) {
       console.log('syncProducts event after bulkProductInsert', (context.getRemainingTimeInMillis() / 1000));
     }
-    const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description');
+
     if (!_.isNull(event.collectionId)) {
-      await this.addCollectiontoItems(ProductModel, dbProducts, event.collectionId);
+      const colltionProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description variants imagesList');
+      await this.addCollectiontoItems(ProductModel, colltionProducts, event.collectionId);
     } else {
-      if (dbProducts.length > 0) {
-        // set active to false so that deleted images and variants are eliminated. 
-        const dbImagesUpdate = await ImageModel.updateMany({ product: { $in: dbProducts.map(product => product._id) } }, { active: false });
-        // sync images for the products.
-        const bulkImageInsert = apiProducts.map(product => {
-          const productId = dbProducts.find(dbProduct => dbProduct.uniqKey === `${PARTNERS_SHOPIFY}-${product.id}`)._id;
-          return product.images.map(productImage => {
-            const thumbnailUrl = `${productImage.src.slice(0, productImage.src.lastIndexOf('.'))}_small.${productImage.src.slice(productImage.src.lastIndexOf('.') + 1)}`;
-            return {
-              updateOne: {
-                filter: { imgUniqKey: `product-${PARTNERS_SHOPIFY}-${productImage.id}` },
-                update: {
-                  partnerSpecificUrl: productImage.src,
-                  partnerId: productImage.id,
-                  partneCreatedAt: productImage.published_at,
-                  partnerUpdatedAt: productImage.updated_at,
-                  partner: PARTNERS_SHOPIFY,
-                  imgUniqKey: `product-${PARTNERS_SHOPIFY}-${productImage.id}`,
-                  position: productImage.position,
-                  thumbnailUrl,
-                  active: true,
-                  store: event.storeId,
-                  product: productId,
-                },
-                upsert: true
-              }
-            }
-          })
-        });
-        console.log("TCL: bulkImageInsert", bulkImageInsert[0])
-        if (!_.isEmpty(bulkImageInsert[0])) {
-          const images = await ImageModel.bulkWrite([].concat.apply([], bulkImageInsert));
-        }
-        console.log("TCL: syncProducts bulkImageInsert.length", bulkImageInsert.length)
-        if (!_.isUndefined(context)) {
-          console.log('syncProducts event after images', (context.getRemainingTimeInMillis() / 1000));
-        }
-
-
-        // now all the images and variants are synced. now we need to create relationship with products
-        // first images that are recently synced.
-        const dbImages = await ImageModel.where('product').in(dbProducts.map(product => product._id));
-        dbImages.forEach(image => {
-          if (_.isEmpty(productImages[image.product])) {
-            productImages[image.product] = [];
-          }
-          productImages[image.product].push(image._id)
-        })
-
-        // query to update variants and images for the products. 
-        bulkProductUpdate = dbProducts.map(product => {
-          return {
-            updateOne: {
-              filter: { _id: product._id },
-              update: {
-                images: productImages[product._id],
-              }
-            }
-          }
-        })
-        const r = await ProductModel.bulkWrite(bulkProductUpdate);
-        if (!_.isUndefined(context)) {
-          console.log('syncProducts event after bulkProductUpdate', (context.getRemainingTimeInMillis() / 1000));
-        }
-        const productCount = await ProductModel.countDocuments({ store: storeDetail._id, active: true });
-        console.log("TCL: productCount", productCount)
-        storeDetail.noOfActiveProducts = productCount;
-        await storeDetail.save();
-        console.log("TCL: All Done")
-        // all done.
-      }
+      const productCount = await ProductModel.countDocuments({ store: storeDetail._id, active: true });
+      console.log("TCL: productCount", productCount)
+      storeDetail.noOfActiveProducts = productCount;
+      await storeDetail.save();
+      console.log("TCL: All Done")
+      // all done.
     }
   },
-  syncVariants: async function (event, apiProducts, storeDetail, context) {
-    let productVariants = [], variantImages = [];
-    const ProductModel = shared.ProductModel;
-    const ImageModel = shared.ImageModel;
-    const VariantModel = shared.VariantModel;
 
-    const currencyFormat = stringHelper.stripTags(storeDetail.moneyWithCurrencyFormat);
-    const currency = currencyFormat.substr(currencyFormat.length - 3);
-
-    const dbProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description');
-
-    const dbVariantsUpdate = await VariantModel.updateMany({ product: { $in: dbProducts.map(product => product._id) } }, { active: false });
-    // sync variants for the product
-    let bulkVariantInsert = [];
-    apiProducts.forEach(product => {
-      const productForVariant = dbProducts.find(dbProduct => dbProduct.uniqKey === `${PARTNERS_SHOPIFY}-${product.id}`);
-      if (_.isUndefined(productForVariant)) {
-        return;
-      }
-      // console.log("TCL: product.variants", product.variants)
-      product.variants.forEach(variant => {
-        const onSale = ((variant.compare_at_price != variant.price)) ? true : false;
-        if (variant.image_id) {
-          variantImages.push({ variantUniqKey: `${PARTNERS_SHOPIFY}-${variant.id}`, imagePartnerId: variant.image_id });
-        }
-        bulkVariantInsert.push({
-          updateOne: {
-            filter: { uniqKey: `${PARTNERS_SHOPIFY}-${variant.id}` },
-            update: {
-              title: variant.title,
-              price: variant.price,
-              salePrice: variant.compare_at_price,
-              onSale: onSale,
-              uniqKey: `${PARTNERS_SHOPIFY}-${variant.id}`,
-              partner: PARTNERS_SHOPIFY,
-              partnerId: variant.id,
-              partnerCreatedAt: variant.created_at,
-              partnerUpdatedAt: variant.updated_at,
-              position: variant.position,
-              quantity: variant.inventory_quantity,
-              store: event.storeId,
-              suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, variant.title, productForVariant.partnerSpecificUrl, variant.price, stringHelper.stripTags(productForVariant.description), currency),
-              product: productForVariant._id,
-              postableByImage: productForVariant.postableByImage,
-              postableByQuantity: (variant.inventory_quantity > 0) ? true : false,
-              postableByPrice: (variant.price > 0) ? true : false,
-              postableIsNew: (moment(variant.created_at).isAfter(moment().subtract(7, 'days'))) ? true : false,
-              postableBySale: onSale,
-              active: true
-            },
-            upsert: true
-          }
-        });
-      })
-    });
-
-    console.log("TCL: syncVariants bulkVariantInsert.length", bulkVariantInsert.length);
-    try {
-      if (!_.isEmpty(bulkVariantInsert)) {
-        const variants = await VariantModel.bulkWrite(bulkVariantInsert);
-      }
-    } catch (error) {
-      console.log("TCL: bulkVariantInsert error", error.message)
-    }
-    if (!_.isUndefined(context)) {
-      console.log('syncVariants event after variants', (context.getRemainingTimeInMillis() / 1000));
-    }
-    const dbVariants = await VariantModel.where('product').in(dbProducts.map(product => product._id)).select('_id product collections uniqKey');
-    if (!_.isNull(event.collectionId)) {
-      await this.addCollectiontoItems(VariantModel, dbVariants, event.collectionId);
-    } else {
-      // now all the images and variants are synced. now we need to create relationship with products      
-      // creating productVariants to add variants that are recently synced for the product.
-      if (dbVariants.length > 0) {
-        dbVariants.forEach(variant => {
-          if (_.isEmpty(productVariants[variant.product])) {
-            productVariants[variant.product] = [];
-          }
-          productVariants[variant.product].push(variant._id)
-        })
-        // query to update variants and images for the products. 
-        bulkProductUpdate = dbProducts.map(product => {
-          return {
-            updateOne: {
-              filter: { _id: product._id },
-              update: {
-                variants: productVariants[product._id],
-              }
-            }
-          }
-        })
-        const r = await ProductModel.bulkWrite(bulkProductUpdate);
-        if (!_.isUndefined(context)) {
-          console.log('syncVariants event after bulkProductUpdate', (context.getRemainingTimeInMillis() / 1000));
-        }
-        const dbImages = await ImageModel.where('product').in(dbProducts.map(product => product._id));
-        // variants may also have images. so syncing images with varaints. 
-        const bulkVariantImages = variantImages.map(variantImage => {
-          const image = dbImages.find(dbImage => dbImage.imgUniqKey === `product-${PARTNERS_SHOPIFY}-${variantImage.imagePartnerId}`);
-          if (_.isUndefined(image)) {
-            return;
-          }
-          const variant = dbVariants.find(dbVariant => dbVariant.uniqKey === variantImage.variantUniqKey);
-          return {
-            updateOne: {
-              filter: { imgUniqKey: `variant-${PARTNERS_SHOPIFY}-${variantImage.imagePartnerId}` },
-              update: {
-                partnerSpecificUrl: image.partnerSpecificUrl,
-                partnerId: image.partnerId,
-                partneCreatedAt: image.partneCreatedAt,
-                partnerUpdatedAt: image.partnerUpdatedAt,
-                partner: PARTNERS_SHOPIFY,
-                position: image.position,
-                thumbnailUrl: image.thumbnailUrl,
-                active: true,
-                store: event.storeId,
-                variant: variant._id,
-              },
-              upsert: true
-            }
-          }
-        }).filter(item => !_.isUndefined(item));
-
-        if (!_.isEmpty(bulkVariantImages)) {
-          // console.log("TCL: bulkVariantImages", bulkVariantImages)
-          const t = await ImageModel.bulkWrite(bulkVariantImages);
-        }
-        console.log("TCL: syncVariants bulkVariantImages.length", bulkVariantImages.length)
-        if (!_.isUndefined(context)) {
-          console.log('syncVariants event after VariantImages', (context.getRemainingTimeInMillis() / 1000));
-        }
-        const dbVariantImages = await ImageModel.where('variant').in(dbVariants.map(variant => variant._id));
-        console.log("TCL: syncVariants dbVariantImages.length", dbVariantImages.length);
-        if (!_.isUndefined(context)) {
-          console.log('syncVariants event after dbVariantImages', (context.getRemainingTimeInMillis() / 1000));
-        }
-        const bulkVariantUpdate = dbVariantImages.map(variantImage => {
-          return {
-            updateOne: {
-              filter: { _id: variantImage.variant },
-              update: {
-                images: variantImage._id,
-              }
-            }
-          }
-        });
-        if (!_.isEmpty(bulkVariantUpdate)) {
-          const s = await VariantModel.bulkWrite(bulkVariantUpdate);
-        }
-        console.log("TCL: syncVariants bulkVariantUpdate.length", bulkVariantUpdate.length);
-        if (!_.isUndefined(context)) {
-          console.log('syncVariants event after bulkVariantUpdate', (context.getRemainingTimeInMillis() / 1000));
-        }
-        // update number of products for store    
-        console.log("TCL: All Variant Done")
-        // all done.
-      }
-    }
-  },
   getWebhooks: async function (event) {
     console.log("TCL: event", event)
     const storeDetail = await shared.StoreModel.findById(event.storeId);
@@ -1260,7 +1027,6 @@ module.exports = {
       }
       console.log("TCL: syncEvent", syncEvent)
       await this.syncProducts(syncEvent, apiProducts, storeDetail, context);
-      await this.syncVariants(syncEvent, apiProducts, storeDetail, context);
       await this.syncWebhookProductCollections(apiProducts, storeDetail);
       await this.syncProductCount(syncEvent);
       if (process.env.IS_OFFLINE === 'false') {
@@ -1326,9 +1092,6 @@ module.exports = {
       }
       console.log("TCL: syncEvent", syncEvent)
       await this.syncProducts(syncEvent, apiProducts, storeDetail, context);
-      await this.syncVariants(syncEvent, apiProducts, storeDetail, context);
-      // await this.syncWebhookProductCollections(apiProducts, storeDetail);
-      // await this.syncProductCount(syncEvent);
       return httpHelper.ok(
         {
           message: "Recieved"
@@ -1377,7 +1140,6 @@ module.exports = {
     if (!_.isNull(event) && !_.isUndefined(event)) {
       const productDetail = await shared.ProductModel.findOne({ partnerId: event.partnerId });
       if (!_.isNull(productDetail)) {
-        const variantDelete = await shared.VariantModel.deleteMany({ product: productDetail._id });
         const imageDelete = await shared.ImageModel.deleteMany({ product: productDetail._id });
         const updateDelete = await shared.UpdateModel.deleteMany({ product: productDetail._id, scheduleState: { $in: [PENDING, APPROVED] }, });
         const productDelete = await shared.ProductModel.deleteOne({ _id: productDetail._id });
@@ -1589,8 +1351,6 @@ module.exports = {
         console.log("TCL: ruleDelete", ruleDelete)
         const updateDelete = await shared.UpdateModel.deleteMany({ store: storeDetail._id });
         console.log("TCL: updateDelete", updateDelete)
-        const variantDelete = await shared.VariantModel.deleteMany({ store: storeDetail._id });
-        console.log("TCL: variantDelete", variantDelete)
         storeDetail.isUninstalled = true;
         storeDetail.uninstalledDate = new Date().toISOString();
         storeDetail.isCharged = false;

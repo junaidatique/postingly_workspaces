@@ -12,7 +12,9 @@ module.exports = {
       QueueUrl: QueueUrl
     };
     console.log(`TCL: ${queueName} params`, params)
-    const response = await sqs.sendMessage(params).promise();
-    console.log(`TCL: ${queueName} response`, response)
+    if (process.env.IS_OFFLINE === 'false') {
+      const response = await sqs.sendMessage(params).promise();
+      console.log(`TCL: ${queueName} response`, response)
+    }
   }
 }

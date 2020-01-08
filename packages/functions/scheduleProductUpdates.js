@@ -1,22 +1,28 @@
 const shared = require('shared');
 const moment = require('moment');
+const sqsHelper = require('shared').sqsHelper;
 const _ = require('lodash');
 const {
   NOT_SCHEDULED,
   PENDING,
   SCHEDULE_TYPE_PRODUCT,
   SCHEDULE_TYPE_VARIANT,
-
   POST_AS_OPTION_FB_ALBUM,
   POST_AS_OPTION_TW_ALBUM,
   POST_AS_OPTION_FB_PHOTO,
-  POST_AS_OPTION_TW_PHOTO
+  POST_AS_OPTION_TW_PHOTO,
+  COLLECTION_OPTION_ALL,
+  COLLECTION_OPTION_SELECTED,
 } = require('shared/constants');
 const dbConnection = require('./db');
 const schedulerHelper = require('./helpers/productScheduleFns')
 module.exports = {
   // event = { ruleId: ID }
   schedule: async function (eventSQS, context) {
+    const totalTime = Math.ceil(context.getRemainingTimeInMillis() / 1000);
+    console.log("TCL: totalTime", totalTime)
+    await dbConnection.createConnection(context);
+    console.log('schedule after db connection =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
     let event;
     if (_.isUndefined(eventSQS.Records)) {
       event = eventSQS;
@@ -29,37 +35,36 @@ module.exports = {
       await new Promise(r => setTimeout(r, 25));
       return 'lambda is warm!';
     }
-    console.log('schedule event start', (context.getRemainingTimeInMillis() / 1000));
-    await dbConnection.createConnection(context);
-    console.log('schedule after db connection =>', (context.getRemainingTimeInMillis() / 1000));
     // load models
     const RuleModel = shared.RuleModel;
+    const StoreModel = shared.StoreModel;
     const UpdateModel = shared.UpdateModel;
     const ProductModel = shared.ProductModel;
-    const VariantModel = shared.VariantModel;
-    const ImageModel = shared.ImageModel;
-    const StoreModel = shared.StoreModel;
 
-    // define vars
-    let postItems, itemModel, itemType, counter = 0, count = 0, update, imageLimit, itemImages, imagesForPosting, updateData;
     // get rule and store
     const ruleDetail = await RuleModel.findById(event.ruleId);
-    console.log('schedule ruledetail =>', (context.getRemainingTimeInMillis() / 1000));
-    // console.log("TCL: ruleDetail", ruleDetail)
+    console.log('schedule after ruleDetail =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    console.log("TCL: ruleDetail.store", ruleDetail.store)
     if (ruleDetail === null) {
       console.log(`rule not found for ${event.ruleId}`);
       return;
     }
-    const StoreDetail = await StoreModel.findById(ruleDetail.store);
-    let productLimit = 8;
-    if (ruleDetail.store == '5dc45f599a44abb12eace9ec') {
-      productLimit = 2;
-    }
-    if (ruleDetail.store == '5dc4e4e0f5de185295e125d5') {
-      productLimit = 2;
-    }
-    console.log("TCL: StoreDetail", StoreDetail.title)
-    console.log('schedule storedetail =>', (context.getRemainingTimeInMillis() / 1000));
+    const storeDetail = await StoreModel.findById(ruleDetail.store);
+    const defaultShortLinkService = storeDetail.shortLinkService;
+
+    // define vars    
+    let imageLimit;
+    let itemImages;
+    let imagesForUpdate;
+    let imagesForPosting;
+    let updateData;
+    let titleForCaption;
+    let priceForCaption;
+    let descriptionForCaption;
+    let productCollections;
+    let URLForCaption;
+    let allowedCollections = [];
+    const maxNumberOfDays = 7;
     // set limit for product images that if selected as fb alubm or twitter album than select first 4 images. 
     if (ruleDetail.postAsOption === POST_AS_OPTION_FB_ALBUM || ruleDetail.postAsOption === POST_AS_OPTION_TW_ALBUM) {
       imageLimit = 4;
@@ -68,81 +73,145 @@ module.exports = {
     }
     // all updates are pushed into this array for update. 
     let bulkUpdate = [];
-    let bulkShareHistory = [];
+    let bulkProductUpdate = [];
     let existingScheduleItems = [];
+    let updates = [];
+    let dbImages = [];
+    let productLimit = 8;
 
-
-    const updates = await UpdateModel.find(
-      {
-        rule: ruleDetail._id,
-        scheduleState: NOT_SCHEDULED,
-        scheduleTime: { $gt: moment.utc(), $lt: moment().add(3, 'days').utc() },
-        // scheduleTime: { $gt: moment.utc() },
-        scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+    // this will help in the query to max number of products. 
+    let postingCollectionOption = COLLECTION_OPTION_ALL;
+    if (!_.isUndefined(event.postingCollectionOption)) {
+      postingCollectionOption = event.postingCollectionOption;
+    }
+    // if postingCollectionOption is from all collection get all the updates that are 
+    // supposted to shared from all collections. 
+    if (postingCollectionOption === COLLECTION_OPTION_ALL) {
+      updates = await UpdateModel.find(
+        {
+          rule: ruleDetail._id,
+          scheduleState: NOT_SCHEDULED,
+          scheduleTime: { $gt: moment.utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
+          scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+          postingCollectionOption: COLLECTION_OPTION_ALL
+        }
+      ).sort({ scheduleTime: 1 }).limit(productLimit);
+    } else {
+      // get posting timeing id and select updates one by one. 
+      const postTimingIds = await UpdateModel.distinct('postTimingId',
+        {
+          rule: ruleDetail._id,
+          scheduleState: NOT_SCHEDULED,
+          scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(maxNumberOfDays, 'days') },
+          scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+          postingCollectionOption: COLLECTION_OPTION_SELECTED
+        }
+      );
+      if (postTimingIds.length > 0) {
+        const unScheduledPostTimingId = postTimingIds[0];
+        updates = await UpdateModel.find(
+          {
+            rule: ruleDetail._id,
+            scheduleState: NOT_SCHEDULED,
+            scheduleTime: { $gt: moment.utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
+            scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+            postTimingId: unScheduledPostTimingId
+          }
+        ).sort({ scheduleTime: 1 }).limit(productLimit);
+        allowedCollections = updates[0].allowedCollections;
       }
-    ).sort({ scheduleTime: 1 }).limit(productLimit);
-    console.log('schedule updates =>', (context.getRemainingTimeInMillis() / 1000));
+    }
+    console.log('schedule after updates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    // if no updates are found
+    if (updates.length === 0) {
+      // if postingCollectionOption is from all collection now check for selected collection.
+      if (postingCollectionOption === COLLECTION_OPTION_ALL) {
+        await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: COLLECTION_OPTION_SELECTED });
+      }
+      return;
+    }
+    // profile for this rule. 
+    const profile = ruleDetail.profile;
+    // get all the sceduled products that are shared in one last day and 
+    // for next 7 days. 
     const scheduledUpdates = await UpdateModel.find(
       {
-        profile: ruleDetail.profile,
+        profile: profile,
         scheduleState: { $ne: NOT_SCHEDULED },
-        scheduleTime: { $gt: moment().add(-1, 'days').utc(), $lt: moment().add(7, 'days').utc() },
-        // scheduleTime: { $gt: moment.utc() },
+        scheduleTime: { $gt: moment().add(-1, 'days').utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
     ).sort({ scheduleTime: 1 }).select('_id product variant');
-    console.log('schedule scheduledUpdates =>', (context.getRemainingTimeInMillis() / 1000));
-    if (ruleDetail.postAsVariants) {
-      itemModel = VariantModel;
-      itemType = SCHEDULE_TYPE_VARIANT;
-      existingScheduleItems = scheduledUpdates.map(update => update.variant);
-    } else {
-      itemModel = ProductModel;
-      itemType = SCHEDULE_TYPE_PRODUCT;
-      existingScheduleItems = scheduledUpdates.map(update => update.product);
-    }
-    console.log("TCL: scheduledUpdates", scheduledUpdates)
-    console.log("TCL: existingScheduleItems", existingScheduleItems)
-    // sreturn;
+    console.log('schedule after scheduledUpdates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
 
-
-
+    existingScheduleItems = scheduledUpdates.map(update => update.product);
+    const productsToSchedule = await schedulerHelper.getProductsForSchedule(ruleDetail, existingScheduleItems, allowedCollections, context);
+    console.log('schedule after productsToSchedule =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
 
     // loop on all the profiles of the rule
-    await Promise.all(updates.map(async (update, updateIndex) => {
-      console.log("TCL: updateIndex", updateIndex)
-      // get all the updaets of this rule that are not scheduled yet. 
-      profile = update.profile;
-      // get variants or products based on the rule settings. 
-      if (ruleDetail.postAsVariants) {
-        tempObject = await schedulerHelper.getVariantsForSchedule(update, profile, existingScheduleItems, updateIndex);
-      } else {
-        tempObject = await schedulerHelper.getProductsForSchedule(update, profile, existingScheduleItems, updateIndex, context);
-      }
-      console.log(`after ${updateIndex} product =>`, (context.getRemainingTimeInMillis() / 1000));
-      if (_.isUndefined(tempObject.item)) {
-        console.log("TCL: tempObject", tempObject)
+    await Promise.all(productsToSchedule.map(async (product, productIndex) => {
+      console.log(`after ${productIndex} product =>`, (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+      console.log("TCL: item ID", product._id);
+      scheduleUpdate = updates[productIndex];
+      // if no update is found, this means all updates are scheduled and return. 
+      if (_.isUndefined(scheduleUpdate)) {
         return;
       }
-      item = tempObject.item;
-
-      counter = 0;
-      console.log("TCL: item ID", item._id)
       // if no image is found for the variant than pick the image from product. 
-      if (itemType === SCHEDULE_TYPE_VARIANT && item.images.length === 0) {
-        productImages = await ImageModel.find({ product: item.product });
-        itemImages = _.orderBy(productImages, ['position'], ['asc']);
-      } else {
-        itemImages = _.orderBy(item.images, ['position'], ['asc']);
-      }
-      // if no image is found don't schedule and return. 
-      console.log("TCL: itemImages.length", itemImages.length)
-      if (itemImages.length === 0) {
+      console.log("TCL: product.images.length", product.images.length)
+      console.log("TCL: product.imagesList.length", product.imagesList.length)
+      if (product.images.length === 0 && product.imagesList.length === 0) {
         return;
       }
-      // if image is one than record the rotaion.
-      if (imageLimit == 1) {
-        // if rotation is enabled and post as single image. 
+      // this option is just give backup compatiblity for the old db structure. To be removed in future. 
+      if (product.imagesList.length > 0) {
+        imagesForUpdate = product.imagesList;
+      } else {
+        imagesForUpdate = product.images;
+      }
+      // console.log("TCL: imagesForUpdate", imagesForUpdate)
+      // to update the products after all the updates.
+      const productUpdateObject = {
+        id: product._id,
+        shareHistory: product.shareHistory,
+        imagesList: imagesForUpdate,
+        variants: product.variants
+      }
+
+
+
+      if (ruleDetail.postAsVariants) {
+
+      } else {
+        itemImages = _.orderBy(imagesForUpdate, ['position'], ['asc']);
+        titleForCaption = product.title;
+        priceForCaption = product.minimumPrice;
+      }
+      // console.log("TCL: itemImages-1", itemImages)
+      descriptionForCaption = product.description;
+      productCollections = product.collections;
+      productExternalURL = product.partnerSpecificUrl;
+      URLForCaption = product.url.map(productUrls => {
+        if (defaultShortLinkService === productUrls.service) {
+          return productUrls.url;
+        }
+      }).filter(item => !_.isUndefined(item));
+
+      // First calculate images. 
+      // for single image rotation is possible.
+      // for multiple images just post first 4 images.
+      if (imageLimit === 4) {
+        imagesForPosting = itemImages.slice(0, imageLimit).map(postingImage => {
+          return {
+            url: postingImage.partnerSpecificUrl,
+            thumbnailUrl: postingImage.thumbnailUrl,
+            imageId: postingImage._id,
+            partnerId: postingImage.partnerId
+          }
+        });
+      } else {
+        // if image limit is only one means only one image will be posted. 
+        // if rotation of image is enabled. 
         if (ruleDetail.rotateImages && (ruleDetail.postAsOption === POST_AS_OPTION_FB_PHOTO || ruleDetail.postAsOption === POST_AS_OPTION_TW_PHOTO)) {
           if (ruleDetail.rotateImageLimit > 0) {
             // if rotateimageLimit is 1 it means rotate all images
@@ -151,26 +220,30 @@ module.exports = {
               itemImages = itemImages.slice(0, ruleDetail.rotateImageLimit);
             }
           }
-          // images list
-          // console.log("TCL: itemImages", itemImages)
+          // console.log("TCL: itemImages0", itemImages)
+
           // get image histories. 
           // if no history is found than create an empty object. 
           itemImages = itemImages.map(image => {
-            // check if the image has history for this profile. 
-            const imageHistoryResponse = image.shareHistory.map(history => {
-              // console.log("TCL: history", history)
-              if (history.profile.toString() == profile.toString()) {
-                return {
-                  'imageId': image._id,
-                  'partnerSpecificUrl': image.partnerSpecificUrl,
-                  'thumbnailUrl': image.thumbnailUrl,
-                  'partnerId': image.partnerId,
-                  'position': image.position,
-                  'historyId': history._id,
-                  'counter': history.counter,
-                };
-              }
-            }).filter(item => !_.isUndefined(item));
+            // console.log("TCL: itemImages image", image)
+            // check if the image has history for this profile.
+            let imageHistoryResponse = [];
+            if (!_.isUndefined(image.shareHistory)) {
+              imageHistoryResponse = image.shareHistory.map(history => {
+                // console.log("TCL: history", history)
+                if (history.profile.toString() == profile.toString()) {
+                  return {
+                    'imageId': image._id,
+                    'partnerSpecificUrl': image.partnerSpecificUrl,
+                    'thumbnailUrl': image.thumbnailUrl,
+                    'partnerId': image.partnerId,
+                    'position': image.position,
+                    'historyId': history._id,
+                    'counter': history.counter,
+                  };
+                }
+              }).filter(item => !_.isUndefined(item));
+            }
             // if no history is found. 
             if (_.isEmpty(imageHistoryResponse)) {
               return {
@@ -187,76 +260,96 @@ module.exports = {
             }
           });
 
-          count = 0;
-          // if image has history for this profile than
-          // console.log("TCL: itemImages2", itemImages)
+          // console.log("TCL: itemImages1", itemImages)
           itemImages = _.orderBy(itemImages, ['counter', 'position'], ['asc', 'asc']);
-          // console.log("TCL: itemImages3", itemImages)
+          // console.log("TCL: itemImages2", itemImages)
           const postingImage = itemImages[0];
+          imagesForPosting = [
+            {
+              url: postingImage.partnerSpecificUrl,
+              thumbnailUrl: postingImage.thumbnailUrl,
+              imageId: postingImage.imageId,
+              partnerId: postingImage.partnerId
+            }
+          ];
           // console.log("TCL: postingImage", postingImage)
-          imagesForPosting = [{ url: postingImage.partnerSpecificUrl, thumbnailUrl: postingImage.thumbnailUrl, imageId: postingImage.imageId, partnerId: postingImage.partnerId }];
-          const dbImage = await ImageModel.findById(postingImage.imageId);
-          if (_.isNull(postingImage.historyId)) {
-            dbImage.shareHistory = { profile: profile, counter: 1 };
-            await dbImage.save();
-          } else {
-            const dbhistory = await dbImage.shareHistory.id(postingImage.historyId);
-            r = await dbhistory.set({ counter: dbhistory.counter + 1 });
-            await dbImage.save();
-          }
+          productUpdateObject.imagesList = productUpdateObject.imagesList.map(image => {
+            // console.log("TCL: imagesList image", image)
+            if (postingImage.imageId.toString() === image._id.toString()) {
+              let imageShareHistory = image.shareHistory.map(history => {
+                if (history.profile.toString() == profile.toString()) {
+                  return history;
+                } else {
+                  return undefined;
+                }
+              }).filter(item => !_.isUndefined(item));
+              if (_.isEmpty(imageShareHistory) || _.isUndefined(imageShareHistory)) {
+                image.shareHistory[image.shareHistory.length] = { profile: profile, counter: 1 };
+              } else {
+                image.shareHistory = image.shareHistory.map(history => {
+                  if (history.profile.toString() === profile.toString()) {
+                    history.counter = history.counter + 1;
+                  }
+                  return history;
+                });
+              }
+
+            }
+            return image;
+          })
         } else {
-          imagesForPosting = [{ url: itemImages[0].partnerSpecificUrl, thumbnailUrl: itemImages[0].thumbnailUrl, imageId: itemImages[0]._id, partnerId: itemImages[0].partnerId }];
+          postingImage = itemImages[0];
+          imagesForPosting = [
+            {
+              url: postingImage.partnerSpecificUrl,
+              thumbnailUrl: postingImage.thumbnailUrl,
+              imageId: postingImage._id,
+              partnerId: postingImage.partnerId
+            }
+          ];
         }
-      } else {
-        imagesForPosting = itemImages.slice(0, imageLimit).map(image => {
-          return { url: image.partnerSpecificUrl, thumbnailUrl: image.thumbnailUrl, imageId: image._id, partnerId: image.partnerId }
-        });
+
       }
       updateData = {};
-      if (itemType === SCHEDULE_TYPE_VARIANT) {
-        updateData[SCHEDULE_TYPE_PRODUCT] = item.product;
+      if (ruleDetail.postAsVariants) {
+        // updateData[SCHEDULE_TYPE_VARIANT] = product._id;
       }
+      updateData[SCHEDULE_TYPE_PRODUCT] = product._id;
       updateData.images = imagesForPosting;
-      // update = updates[counter];
-      updateData[itemType] = item._id;
       updateData.scheduleState = PENDING;
-      console.log("TCL: updateData", updateData)
+      updateData.titleForCaption = titleForCaption;
+      updateData.priceForCaption = priceForCaption;
+      updateData.descriptionForCaption = descriptionForCaption;
+      updateData.productExternalURL = productExternalURL;
+      if (!_.isEmpty(URLForCaption)) {
+        updateData.URLForCaption = URLForCaption[0];
+      }
+      updateData.productCollections = productCollections;
+      updateData.defaultShortLinkService = defaultShortLinkService;
+      // console.log("TCL: updateData", updateData)
       bulkUpdate.push({
         updateOne: {
-          filter: { uniqKey: update.uniqKey },
+          filter: { uniqKey: scheduleUpdate.uniqKey },
           update: updateData,
           upsert: true
         }
-      })
-      counter++;
+      });
 
-      // add current share counter to shared history into product or varaint
-      // first check that if the item is already scanned in this loop
-      // and present in bulkShareHistory
-      shareHistoryForItem = bulkShareHistory.map(history => {
-        if (history.id === item.id) {
-          return history;
-        }
-      }).filter(item => !_.isUndefined(item))[0];
-      // if not than initialize with share history
-      if (_.isEmpty(shareHistoryForItem)) {
-        shareHistoryForItem = { id: item.id, shareHistory: item.shareHistory };
-        bulkShareHistory.push(shareHistoryForItem);
-      }
+
       // profile history for given profile in the item share history
-      profileHistory = shareHistoryForItem.shareHistory.map(history => {
+      profileHistory = productUpdateObject.shareHistory.map(history => {
         if (history.profile.toString() === profile.toString()) {
           return history
         } else {
           return undefined;
         }
-      }).filter(item => !_.isUndefined(item))[0];;
+      }).filter(item => !_.isUndefined(item))[0];
       // if no share history is found counter is set to one. 
       if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory)) {
-        shareHistoryForItem.shareHistory[shareHistoryForItem.shareHistory.length] = { profile: update.profile, counter: 1 };
+        productUpdateObject.shareHistory[productUpdateObject.shareHistory.length] = { profile: profile, counter: 1 };
       } else {
         // otherwise counter is incremented and history is returned. 
-        shareHistoryForItem.shareHistory = shareHistoryForItem.shareHistory.map(history => {
+        productUpdateObject.shareHistory = productUpdateObject.shareHistory.map(history => {
           if (history.profile.toString() === profile.toString()) {
             history.counter = history.counter + 1;
           }
@@ -264,36 +357,38 @@ module.exports = {
         });
       }
       // now update the main array to reflect the changes. 
-      bulkShareHistory = bulkShareHistory.map(history => {
-        if (history.id === shareHistoryForItem.id) {
-          history.shareHistory = shareHistoryForItem.shareHistory;
-        }
-        return history;
-      })
+      bulkProductUpdate.push(productUpdateObject);
+
     }));
-    console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.filter))
-    console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.update))
+    console.log("TCL: bulkUpdate.length", bulkUpdate.length)
+    // console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.filter))
+    // console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.update))
     if (!_.isEmpty(bulkUpdate)) {
       const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
     }
-    const productUpdate = bulkShareHistory.map(history => {
+
+    const productUpdate = bulkProductUpdate.map(productObject => {
       return {
         updateOne: {
-          filter: { _id: history.id },
+          filter: { _id: productObject.id },
           update: {
-            shareHistory: history.shareHistory
+            shareHistory: productObject.shareHistory,
+            imagesList: productObject.imagesList,
+            // variants: productObject.variants
           }
         }
       }
     })
+    // console.log("TCL: productUpdate", productUpdate)
+    // console.log("TCL: productUpdate", productUpdate.map(product => product.updateOne.filter))
+    // console.log("TCL: productUpdate", productUpdate.map(product => product.updateOne.update.imagesList))
     if (!_.isEmpty(productUpdate)) {
       const productUpdates = await ProductModel.bulkWrite(productUpdate);
-      // console.log("TCL: productUpdates", productUpdates)
     }
-    // console.log("TCL: bulkShareHistory final", bulkShareHistory)
-
+    // console.log("TCL: bulkUpdate.length", bulkUpdate.length)
+    if (bulkUpdate.length > 0) {
+      await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: postingCollectionOption });
+    }
   },
-
-
 }
 

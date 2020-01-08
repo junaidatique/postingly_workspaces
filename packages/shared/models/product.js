@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const VARIANT_SCHEMA = require('./variant')
 const mongoosePaginate = require('mongoose-paginate');
 const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
 
@@ -22,6 +23,36 @@ const SHARE_HISTORY = {
   counter: Number
 }
 
+const IMAGES_SCHEMA = {
+  partnerId: {
+    type: String,
+    required: true,
+  },
+  partnerSpecificUrl: {
+    type: String
+  },
+  thumbnailUrl: {
+    type: String
+  },
+  partnerCreatedAt: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  partnerUpdatedAt: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  position: {
+    type: Number,
+  },
+  active: {
+    type: Boolean,
+    default: true,
+    index: true
+  },
+  shareHistory: [SHARE_HISTORY]
+}
+
 const productSchema = new Schema({
   store: {
     type: Schema.Types.ObjectId,
@@ -35,27 +66,17 @@ const productSchema = new Schema({
       index: true
     }
   ],
-  variants: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Variant'
-    }
-  ],
   title: {
     type: String,
     required: true,
   },
-  url: [SHORT_LINK],
-  images: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Image'
-    }
-  ],
   description: {
     type: String
   },
   suggestedText: {
+    type: String
+  },
+  partnerSpecificUrl: {
     type: String
   },
   partner: {
@@ -67,9 +88,6 @@ const productSchema = new Schema({
   partnerId: {
     type: String,
     required: true,
-  },
-  partnerSpecificUrl: {
-    type: String
   },
   partnerCreatedAt: {
     type: Date,
@@ -130,7 +148,24 @@ const productSchema = new Schema({
     default: false,
     index: true
   },
-  shareHistory: [SHARE_HISTORY]
+  variants: [VARIANT_SCHEMA],
+  imagesList: [IMAGES_SCHEMA],
+  url: [SHORT_LINK],
+  shareHistory: [SHARE_HISTORY],
+  ///////////////////
+  images: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Image'
+    }
+  ],
+
+
+
+
+
+
+
 
 });
 

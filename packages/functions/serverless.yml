@@ -167,6 +167,25 @@ custom:
     concurrency: 1
 
 functions:
+  # creates update for the current week. this lambda will execute every 6 hours. 
+  cron-create-updates-for-this-week:
+    handler: createUpdates.createUpdatesforThisWeek
+    warmup:
+      enabled: false
+    events:
+      - schedule:
+          rate: cron(0 */6 * * ? *)
+          enabled: true
+  # creates update for the next week. this lambda will execute on every 
+  # wednesday midnight
+  cron-create-updates-for-next-week:
+    handler: createUpdates.createUpdatesforNextWeek
+    warmup:
+      enabled: false
+    events:
+      - schedule:
+          rate: cron(0 0 ? * WED *)
+          enabled: true  
   # create update lambda. this function recieves rule id from either 
   # manage rule resolver or from cron-create-updates-for-next-week lambda function. 
   # this function creates updates with rule id. 
@@ -178,24 +197,7 @@ functions:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}CreateUpdates
           batchSize: 1
           enabled: true
-  # creates update for the next week. this lambda will execute on every 
-  # wednesday midnight
-  cron-create-updates-for-next-week:
-    handler: createUpdates.createUpdatesforNextWeek
-    warmup:
-      enabled: false
-    events:
-      - schedule:
-          rate: cron(0 0 ? * WED *)
-          enabled: true
-  cron-create-updates-for-this-week:
-    handler: createUpdates.createUpdatesforThisWeek
-    warmup:
-      enabled: false
-    events:
-      - schedule:
-          rate: cron(0 */6 * * ? *)
-          enabled: true
+  
   # this lambda executes every thirty minutes and pass distinct rule 
   #  based on the updates that are not scheduled. 
   cron-this-week-rules:
@@ -214,6 +216,13 @@ functions:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ScheduleUpdates
           batchSize: 1
+          enabled: true
+  # This lambda updates the urls for the scheduled products and also updates them in DB. 
+  cron-add-product-urls:
+    handler: updateProductUrls.update
+    events:
+      - schedule:
+          rate: cron(*/5 * * * ? *)
           enabled: true
   # This lambda takes the cron and add captions to the scheduled updates. plus also approve them. 
   cron-add-captions:
@@ -330,35 +339,12 @@ functions:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ProductsDelete
           batchSize: 1
           enabled: true
-  data-seed:
-    handler: seeddata.createStore
-    warmup:
-      enabled: false
-    timeout: 20
-  data-test:
-    handler: seeddata.testData
-    warmup:
-      enabled: false
-    timeout: 20
-  rule-test:
-    handler: seeddata.testRules
-    warmup:
-      enabled: false
-    timeout: 20
-  updates-test:
-    handler: seeddata.testUpdates
-    warmup:
-      enabled: false
-    timeout: 20
+  
   fetch-test:
     handler: seeddata.testFetch
     warmup:
       enabled: false
     timeout: 20    
-  sync-stores:
-    handler: seeddata.syncStores
-    warmup:
-      enabled: false
     events:
       - schedule:
           rate: cron(*/5 * * * ? *)

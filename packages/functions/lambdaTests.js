@@ -8,30 +8,36 @@ const schedule = require('functions').scheduleProducts.schedule;
 const cronThisWeekRulesForUpdates = require('functions').cronThisWeekRulesForUpdates.excute;
 const cronAddCaptions = require('functions').cronAddCaptions.execute;
 const changeCaption = require('functions').changeCaption.update;
+const updateProductUrls = require('functions').updateProductUrls.execute;
 const shareUpdates = require('functions').shareUpdates.share;
 
-const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE, APPROVED, POSTED, FAILED } = require('shared/constants')
+const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE, APPROVED, POSTED, FAILED, COLLECTION_OPTION_SELECTED } = require('shared/constants')
 module.exports = {
   execute: async function (event, context) {
     const StoreModel = shared.StoreModel;
     // console.log("TCL: StoreModel", StoreModel)
     const ProductModel = shared.ProductModel;
     // const storeDetail = await StoreModel.findOne()
-    const storeDetail = await StoreModel.findOne({ _id: '5def99b37222ca8804c43092' })
+    const storeDetail = await StoreModel.findOne({ _id: '5e14818c0c8e8dc9c7db3327' })
     // console.log("TCL: storeDetail", storeDetail)
 
     const UpdateModel = shared.UpdateModel;
     const storeId = storeDetail._id;
     const PartnerShopify = shared.PartnerShopify;
 
-    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
 
     const RuleModel = shared.RuleModel;
     const ruleDetail = await RuleModel.findOne({ store: storeId, type: 'old' }).populate('profiles');
 
     // first iteration.
+    console.log("TCL: createUpdates ---------------------------------------------------------")
     await createUpdates({ ruleId: ruleDetail._id });
-    await schedule({ ruleId: ruleDetail._id });
+    // console.log("TCL: schedule ---------------------------------------------------------")
+    // await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
+    // console.log("TCL: updateProductUrls ---------------------------------------------------------")
+    // await updateProductUrls();
+    console.log("TCL: changeCaption ---------------------------------------------------------")
     await changeCaption({ rule: ruleDetail._id, storeId: null });
     // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
 
