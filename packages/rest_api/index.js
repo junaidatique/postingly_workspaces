@@ -38,9 +38,8 @@ exports.productsCreate = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  const partner = event.pathParameters.partner_slug;
-  const shopDomain = event.headers['X-Shopify-Shop-Domain'];
-  await sqsHelper.addToQueue('ProductsCreate', { partnerStore: partner, shopDomain: shopDomain, partnerId: JSON.parse(event.body).id });
+  await dbConnection.createConnection(context);
+  await partner.productsCreate(event, context);
   return httpHelper.ok(
     { "message": "success" }
   );
@@ -52,9 +51,6 @@ exports.productsUpdate = async function (event, context) {
     return 'lambda is warm!';
   }
   await dbConnection.createConnection(context);
-  console.log("TCL: productsUpdate");
-  const StoreModel = shared.StoreModel;
-  // console.log("TCL: StoreModel", StoreModel)
   await partner.productsUpdate(event, context);
   const response = httpHelper.ok(
     { "message": "success" }
@@ -68,9 +64,8 @@ exports.productsDelete = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  const partner = event.pathParameters.partner_slug;
-  const shopDomain = event.headers['X-Shopify-Shop-Domain'];
-  await sqsHelper.addToQueue('ProductsDelete', { partnerStore: partner, shopDomain: shopDomain, partnerId: JSON.parse(event.body).id });
+  await dbConnection.createConnection(context);
+  await partner.productsDelete(event, context);
   return httpHelper.ok(
     { "message": "success" }
   );
