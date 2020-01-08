@@ -145,6 +145,11 @@ const storeSchema = new mongoose.Schema({
   },
   intercomId: {
     type: String
+  },
+  dBUpdated: {
+    type: Boolean,
+    default: false,
+    index: true
   }
 });
 
