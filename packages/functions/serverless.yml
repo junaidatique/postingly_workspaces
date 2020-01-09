@@ -219,7 +219,7 @@ functions:
           enabled: true
   # This lambda updates the urls for the scheduled products and also updates them in DB. 
   cron-add-product-urls:
-    handler: updateProductUrls.update
+    handler: updateProductUrls.execute
     events:
       - schedule:
           rate: cron(*/5 * * * ? *)
