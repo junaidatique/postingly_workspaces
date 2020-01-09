@@ -1112,7 +1112,7 @@ module.exports = {
   },
   productsDelete: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
-      console.log("TCL: productDelete Start")
+      console.log("TCL: productDelete Start", JSON.parse(event.body).id)
       const productDetail = await shared.ProductModel.findOne({ partnerId: JSON.parse(event.body).id });
       console.log("TCL: productDelete after productDetail")
       if (!_.isNull(productDetail)) {
