@@ -1297,6 +1297,8 @@ module.exports = {
         return { json: null, res: res, error: null };
       } else if (errorResponse.indexOf('Unavailable Shop') >= 0) {
         return { json: null, res: res, error: null };
+      } else if (errorResponse.indexOf('Internal') >= 0) {
+        return { json: null, res: res, error: null };
       } else {
         return { json: null, res: res, error: errorResponse };
       }
