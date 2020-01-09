@@ -59,46 +59,6 @@ module.exports = {
       await shopifyAPI.deleteSingleWebhook(event);
     }
   },
-  productsCreate: async function (eventSQS, context) {
-    let event;
-    if (_.isUndefined(eventSQS.Records)) {
-      event = eventSQS;
-    } else {
-      event = JSON.parse(eventSQS.Records[0].body);
-    }
-    console.log("TCL: schedule event", event)
-    if (event.source === 'serverless-plugin-warmup') {
-      console.log('WarmUP - Lambda is warm!')
-      await new Promise(r => setTimeout(r, 25));
-      return 'lambda is warm!';
-    }
-    console.log("TCL: productsCreate event", event)
-    await dbConnection.createConnection(context);
-    if (event.partnerStore === PARTNERS_SHOPIFY) {
-      const shopifyAPI = shared.PartnerShopify;
-      await shopifyAPI.productsCreate(event);
-    }
-  },
 
-  productsDelete: async function (eventSQS, context) {
-    let event;
-    if (_.isUndefined(eventSQS.Records)) {
-      event = eventSQS;
-    } else {
-      event = JSON.parse(eventSQS.Records[0].body);
-    }
-    console.log("TCL: schedule event", event)
-    if (event.source === 'serverless-plugin-warmup') {
-      console.log('WarmUP - Lambda is warm!')
-      await new Promise(r => setTimeout(r, 25));
-      return 'lambda is warm!';
-    }
-    console.log("TCL: productsDelete event", event)
-    await dbConnection.createConnection(context);
-    if (event.partnerStore == PARTNERS_SHOPIFY) {
-      const shopifyAPI = shared.PartnerShopify;
-      await shopifyAPI.productsDelete(event);
-    }
-  },
 
 }
