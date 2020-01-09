@@ -239,7 +239,7 @@ functions:
           enabled: true
   # This lambda updates the urls for the scheduled products and also updates them in DB. 
   cron-add-product-urls:
-    handler: updateProductUrls.update
+    handler: updateProductUrls.execute
     events:
       - schedule:
           rate: cron(*/5 * * * ? *)
@@ -341,24 +341,7 @@ functions:
     warmup:
       enabled: false
     timeout: 20
-  products-create:
-    handler: webhooks.productsCreate
-    timeout: 720 
-    reservedConcurrency: ${env:RESERVED_CONCURRENCY_WEBHOOK_CREATE_PRODUCT}
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ProductsCreate
-          batchSize: 1
-          enabled: true  
-  products-delete:
-    handler: webhooks.productsDelete
-    timeout: 720 
-    reservedConcurrency: ${env:RESERVED_CONCURRENCY_WEBHOOK_DELETE_PRODUCT}
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ProductsDelete
-          batchSize: 1
-          enabled: true
+  
   
   fetch-test:
     handler: seeddata.testFetch
