@@ -59,13 +59,15 @@ module.exports = {
     const StoreModel = require('shared').StoreModel;
     const storeDetail = await StoreModel.findOne({ dBUpdated: { $ne: true }, "isUninstalled": false });
     console.log("TCL: storeDetail", storeDetail)
-    const storePayload = {
-      "storeId": storeDetail._id,
-      "partnerStore": storeDetail.partner,
-      "collectionId": null
+    if (!_.isNull(storeDetail)) {
+      const storePayload = {
+        "storeId": storeDetail._id,
+        "partnerStore": storeDetail.partner,
+        "collectionId": null
+      }
+      await sqsHelper.addToQueue('SyncStoreData', storePayload);
+      await StoreModel.updateOne({ _id: storeDetail._id }, { dBUpdated: true });
     }
-    await sqsHelper.addToQueue('SyncStoreData', storePayload);
-    await StoreModel.updateOne({ _id: storeDetail._id }, { dBUpdated: true });
 
 
   },
