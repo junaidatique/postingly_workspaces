@@ -44,6 +44,7 @@ const storeSchema = new mongoose.Schema({
   partnerId: {
     type: String,
     required: true,
+    index: true,
   },
   partnerPlan: {
     type: String
