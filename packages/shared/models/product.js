@@ -27,6 +27,7 @@ const IMAGES_SCHEMA = {
   partnerId: {
     type: String,
     required: true,
+    index: true,
   },
   partnerSpecificUrl: {
     type: String
