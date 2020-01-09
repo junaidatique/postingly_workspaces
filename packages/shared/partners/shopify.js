@@ -1112,11 +1112,16 @@ module.exports = {
   },
   productsDelete: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
+      console.log("TCL: productDelete Start")
       const productDetail = await shared.ProductModel.findOne({ partnerId: JSON.parse(event.body).id });
+      console.log("TCL: productDelete after productDetail")
       if (!_.isNull(productDetail)) {
-        const imageDelete = await shared.ImageModel.deleteMany({ product: productDetail._id });
+        // const imageDelete = await shared.ImageModel.deleteMany({ product: productDetail._id });
+        console.log("TCL: productDelete after deleteing images")
         const updateDelete = await shared.UpdateModel.deleteMany({ product: productDetail._id, scheduleState: { $in: [PENDING, APPROVED] }, });
+        console.log("TCL: productDelete after deleteing updates")
         const productDelete = await shared.ProductModel.deleteOne({ _id: productDetail._id });
+        console.log("TCL: productDelete after deleteing product")
         console.log("TCL: productDelete", productDelete)
       }
       return httpHelper.ok(
