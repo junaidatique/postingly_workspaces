@@ -94,7 +94,7 @@ module.exports = {
     if (ruleDetail.disallowedCollections.length > 0) {
       query = query.where('collections').nin(ruleDetail.disallowedCollections);
     }
-    console.log("TCL: getProductsQuery query", query)
+    // console.log("TCL: getProductsQuery query", query)
     return query;
   },
 
