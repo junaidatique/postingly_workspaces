@@ -79,9 +79,9 @@ module.exports = {
       query = query.where({ _id: { $nin: existingScheduleItems } });
     }
     // if the rule is of type old than don't schedule new products
-    if (ruleDetail.postType == RULE_TYPE_OLD) {
+    if (ruleDetail.type == RULE_TYPE_OLD) {
       query = query.where({ postableIsNew: false })
-    } else if (ruleDetail.postType == RULE_TYPE_NEW) {
+    } else if (ruleDetail.type == RULE_TYPE_NEW) {
       query = query.where({ postableIsNew: true });
     }
     // if zero quantity is not allowed than only select in stock products 
@@ -94,7 +94,7 @@ module.exports = {
     if (ruleDetail.disallowedCollections.length > 0) {
       query = query.where('collections').nin(ruleDetail.disallowedCollections);
     }
-    console.log("TCL: getProductsQuery query", query)
+    // console.log("TCL: getProductsQuery query", query)
     return query;
   },
 
