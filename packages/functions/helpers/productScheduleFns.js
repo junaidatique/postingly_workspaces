@@ -9,29 +9,29 @@ const {
   POSTING_SORTORDER_NEWEST
 } = require('shared/constants');
 module.exports = {
-  getProductsForSchedule: async function (ruleDetail, existingScheduleItems, allowedCollections, context) {
+  getProductsForSchedule: async function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, context) {
     let products;
-    products = await this.getNotSharedProducts(ruleDetail, existingScheduleItems, allowedCollections);
+    products = await this.getNotSharedProducts(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
     if (products.length === 0) {
-      products = await this.getLessSharedProducts(ruleDetail, existingScheduleItems, allowedCollections);
+      products = await this.getLessSharedProducts(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
       if (products.length === 0) {
-        products = await this.getLessSharedProducts(ruleDetail, [], allowedCollections);
+        products = await this.getLessSharedProducts(ruleDetail, [], postingCollectionOption, allowedCollections);
       }
     }
     return products;
 
   },
   // get all the products that are not shared on this profile. 
-  getNotSharedProducts: async function (ruleDetail, existingScheduleItems, allowedCollections) {
+  getNotSharedProducts: async function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections) {
     console.log("TCL: getNotSharedProducts")
     const profileId = ruleDetail.profile;
-    const notSharedOnThisProfileQuery = this.getProductsQuery(ruleDetail, existingScheduleItems, allowedCollections);
+    const notSharedOnThisProfileQuery = this.getProductsQuery(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
     const notSharedProductsForCount = await notSharedOnThisProfileQuery.countDocuments(
       { "shareHistory.profile": { $ne: profileId } }
     );
     console.log("TCL: getProductsForSchedule notSharedProductsForCount", notSharedProductsForCount)
     if (notSharedProductsForCount > 0) {
-      let notSharedOnThisProfileLimitQuery = this.getProductsQuery(ruleDetail, existingScheduleItems, allowedCollections);
+      let notSharedOnThisProfileLimitQuery = this.getProductsQuery(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
       if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
         notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.sort({ partnerCreatedAt: -1 })
       } else {
@@ -46,9 +46,9 @@ module.exports = {
       return [];
     }
   },
-  getLessSharedProducts: async function (ruleDetail, existingScheduleItems, allowedCollections) {
+  getLessSharedProducts: async function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections) {
     console.log("TCL: lessSharedOnThisProfile")
-    let lessSharedOnThisProfile = this.getProductsQuery(ruleDetail, existingScheduleItems, allowedCollections);
+    let lessSharedOnThisProfile = this.getProductsQuery(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
     lessSharedOnThisProfile = lessSharedOnThisProfile.find({ "shareHistory.profile": ruleDetail.profile });
     console.log("TCL: ruleDetail.postingProductOrder", ruleDetail.postingProductOrder)
     if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
@@ -60,12 +60,13 @@ module.exports = {
     }
     lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ "shareHistory.counter": 1 }).limit(8);
     let products = await lessSharedOnThisProfile;
-    if (!_.isEmpty(products)) {
-      existingScheduleItems.push(products[0]._id);
-    }
+    // if (!_.isEmpty(products)) {
+    //   existingScheduleItems.push(products[0]._id);
+    // }
     return products;
   },
-  getProductsQuery: function (ruleDetail, existingScheduleItems, allowedCollections) {
+  getProductsQuery: function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections) {
+    console.log("TCL: allowedCollections", allowedCollections)
     let query;
     query = ProductModel.find(
       {
@@ -88,13 +89,13 @@ module.exports = {
     if (!ruleDetail.allowZeroQuantity) {
       query = query.where({ postableByQuantity: true })
     }
-    if (ruleDetail.postingCollectionOption === COLLECTION_OPTION_SELECTED && allowedCollections.length > 0) {
+    if (postingCollectionOption === COLLECTION_OPTION_SELECTED && allowedCollections.length > 0) {
       query = query.where('collections').in(allowedCollections);
     }
     if (ruleDetail.disallowedCollections.length > 0) {
       query = query.where('collections').nin(ruleDetail.disallowedCollections);
     }
-    // console.log("TCL: getProductsQuery query", query)
+    console.log("TCL: getProductsQuery query['_conditions']", query['_conditions'])
     return query;
   },
 
