@@ -18,26 +18,26 @@ module.exports = {
     // console.log("TCL: StoreModel", StoreModel)
     const ProductModel = shared.ProductModel;
     // const storeDetail = await StoreModel.findOne()
-    const storeDetail = await StoreModel.findOne({ _id: '5e1ebeb6f054e38406cb4461' })
+    const storeDetail = await StoreModel.findOne({ _id: '5e2019a5f054e38406cb49b6' })
     // console.log("TCL: storeDetail", storeDetail)
 
     const UpdateModel = shared.UpdateModel;
     const storeId = storeDetail._id;
     const PartnerShopify = shared.PartnerShopify;
 
-    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
 
     const RuleModel = shared.RuleModel;
     const ruleDetail = await RuleModel.findOne({ store: storeId, type: 'old' }).populate('profiles');
 
     // first iteration.
     // console.log("TCL: createUpdates ---------------------------------------------------------")
-    // await createUpdates({ ruleId: ruleDetail._id });
+    await createUpdates({ ruleId: ruleDetail._id });
     console.log("TCL: schedule ---------------------------------------------------------")
-    // await schedule({ ruleId: ruleDetail._id }, context);
+    await schedule({ ruleId: ruleDetail._id }, context);
     // await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
     // console.log("TCL: updateProductUrls ---------------------------------------------------------")
-    // await updateProductUrls();
+    await updateProductUrls();
     // console.log("TCL: changeCaption ---------------------------------------------------------")
     await changeCaption({ rule: ruleDetail._id, storeId: null });
     // console.log("TCL: Postupdates ---------------------------------------------------------")
