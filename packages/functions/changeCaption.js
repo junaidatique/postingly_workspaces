@@ -51,10 +51,10 @@ module.exports = {
         rule: event.rule
       }
     );
-    // console.log("TCL: event.storeId", event.storeId)
-    // if (!_.isNull(event.storeId) && !_.isUndefined(event.storeId)) {
-    //   servicesQuery = servicesQuery.where({ store: event.storeId });
-    // }
+    console.log("TCL: event.storeId", event.storeId)
+    if (!_.isNull(event.storeId) && !_.isUndefined(event.storeId)) {
+      servicesQuery = servicesQuery.where({ store: event.storeId });
+    }
     const updates = await servicesQuery.limit(50);
     // console.log("TCL: updates", updates)
 
@@ -91,7 +91,7 @@ module.exports = {
                 return caption;
               }
             })
-          })
+          }).filter(item => !_.isEmpty(item))
           captionsForUpdate = captionsForUpdate[0];
           if (_.isEmpty(captionsForUpdate)) {
             captionsForUpdate = ruleCaptions.filter(caption => {
