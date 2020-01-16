@@ -18,7 +18,7 @@ module.exports = {
     // console.log("TCL: StoreModel", StoreModel)
     const ProductModel = shared.ProductModel;
     // const storeDetail = await StoreModel.findOne()
-    const storeDetail = await StoreModel.findOne({ _id: '5e14818c0c8e8dc9c7db3327' })
+    const storeDetail = await StoreModel.findOne({ _id: '5e1ebeb6f054e38406cb4461' })
     // console.log("TCL: storeDetail", storeDetail)
 
     const UpdateModel = shared.UpdateModel;
@@ -31,14 +31,16 @@ module.exports = {
     const ruleDetail = await RuleModel.findOne({ store: storeId, type: 'old' }).populate('profiles');
 
     // first iteration.
-    console.log("TCL: createUpdates ---------------------------------------------------------")
-    await createUpdates({ ruleId: ruleDetail._id });
-    // console.log("TCL: schedule ---------------------------------------------------------")
+    // console.log("TCL: createUpdates ---------------------------------------------------------")
+    // await createUpdates({ ruleId: ruleDetail._id });
+    console.log("TCL: schedule ---------------------------------------------------------")
+    // await schedule({ ruleId: ruleDetail._id }, context);
     // await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
     // console.log("TCL: updateProductUrls ---------------------------------------------------------")
     // await updateProductUrls();
-    console.log("TCL: changeCaption ---------------------------------------------------------")
+    // console.log("TCL: changeCaption ---------------------------------------------------------")
     await changeCaption({ rule: ruleDetail._id, storeId: null });
+    // console.log("TCL: Postupdates ---------------------------------------------------------")
     // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
 
     // // second iteration.

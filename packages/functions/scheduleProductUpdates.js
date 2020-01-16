@@ -145,7 +145,7 @@ module.exports = {
     console.log('schedule after scheduledUpdates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
 
     existingScheduleItems = scheduledUpdates.map(update => update.product);
-    const productsToSchedule = await schedulerHelper.getProductsForSchedule(ruleDetail, existingScheduleItems, allowedCollections, context);
+    const productsToSchedule = await schedulerHelper.getProductsForSchedule(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, context);
     console.log('schedule after productsToSchedule =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
 
     // loop on all the profiles of the rule
