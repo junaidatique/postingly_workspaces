@@ -158,17 +158,13 @@ module.exports = {
         return;
       }
       // if no image is found for the variant than pick the image from product. 
-      console.log("TCL: product.images.length", product.images.length)
+
       console.log("TCL: product.imagesList.length", product.imagesList.length)
-      if (product.images.length === 0 && product.imagesList.length === 0) {
+      if (product.imagesList.length === 0) {
         return;
       }
-      // this option is just give backup compatiblity for the old db structure. To be removed in future. 
-      if (product.imagesList.length > 0) {
-        imagesForUpdate = product.imagesList;
-      } else {
-        imagesForUpdate = product.images;
-      }
+
+      imagesForUpdate = product.imagesList;
       // console.log("TCL: imagesForUpdate", imagesForUpdate)
       // to update the products after all the updates.
       const productUpdateObject = {
