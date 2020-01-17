@@ -29,6 +29,9 @@ module.exports = {
   },
   formatCaptionText: function (captionText, title, url, price, description, currency) {
     let formattedCaption = captionText;
+    if (!formattedCaption) {
+      return '';
+    }
     formattedCaption = formattedCaption.replace('[product-title]', title);
     formattedCaption = formattedCaption.replace('[product-price]', price);
     formattedCaption = formattedCaption.replace('[product-url]', url);
