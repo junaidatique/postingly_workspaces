@@ -56,17 +56,19 @@ module.exports = {
     console.log('testFetch event start', (context.getRemainingTimeInMillis() / 1000));
 
     await dbConnection.createConnection(context);
+    const PartnerShopify = shared.PartnerShopify;
     const StoreModel = require('shared').StoreModel;
-    const storeDetail = await StoreModel.findOne({ dBUpdated: { $ne: true }, isUninstalled: false });
+    const storeDetail = await StoreModel.find({ dBUpdated: { $ne: true }, isUninstalled: false });
     console.log("TCL: storeDetail", storeDetail)
     if (!_.isNull(storeDetail)) {
-      const storePayload = {
-        "storeId": storeDetail._id,
-        "partnerStore": storeDetail.partner,
-        "collectionId": null
+      const webhookPayload = {
+        partnerStore: PARTNERS_SHOPIFY,
+        shopURL: storeDetail.partnerSpecificUrl,
+        accessToken: storeDetail.partnerToken,
+        storeId: storeDetail._id
       }
-      await sqsHelper.addToQueue('SyncStoreData', storePayload);
-      await StoreModel.updateOne({ _id: storeDetail._id }, { dBUpdated: true });
+      PartnerShopify.getWebhooks(webhookPayload);
+
     }
 
 
