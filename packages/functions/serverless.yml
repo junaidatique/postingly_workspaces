@@ -327,11 +327,8 @@ functions:
     handler: seeddata.testFetch
     warmup:
       enabled: false
-    timeout: 20    
-    events:
-      - schedule:
-          rate: cron(*/5 * * * ? *)
-          enabled: true
+    timeout: 120    
+    
   
   # cognito 
   cognito-create-auth-challenge:
