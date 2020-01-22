@@ -58,7 +58,7 @@ module.exports = {
     await dbConnection.createConnection(context);
     const PartnerShopify = shared.PartnerShopify;
     const StoreModel = require('shared').StoreModel;
-    const storeDetail = await StoreModel.find({ dBUpdated: { $ne: true }, isUninstalled: false });
+    const storeDetail = await StoreModel.find({ isUninstalled: false });
     console.log("TCL: storeDetail", storeDetail)
     if (!_.isNull(storeDetail)) {
       const webhookPayload = {
