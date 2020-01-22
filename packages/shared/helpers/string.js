@@ -32,11 +32,11 @@ module.exports = {
     if (!formattedCaption) {
       return '';
     }
-    formattedCaption = formattedCaption.replace('[product-title]', title);
-    formattedCaption = formattedCaption.replace('[product-price]', price);
-    formattedCaption = formattedCaption.replace('[product-url]', url);
-    formattedCaption = formattedCaption.replace('[product-description]', description);
-    formattedCaption = formattedCaption.replace('[product-currency]', currency);
+    formattedCaption = formattedCaption.split('[product-title]').join(title);
+    formattedCaption = formattedCaption.split('[product-price]').join(price);
+    formattedCaption = formattedCaption.split('[product-url]').join(url);
+    formattedCaption = formattedCaption.split('[product-description]').join(description);
+    formattedCaption = formattedCaption.split('[product-currency]').join(currency);
     return formattedCaption;
   },
   getShopifyPageInfo: function (link) {

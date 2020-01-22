@@ -3,7 +3,7 @@ const querystring = require('querystring')
 const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
 const ProductModel = require('shared').ProductModel;
-const VariantModel = require('shared').VariantModel;
+
 const _ = require('lodash')
 const { FACEBOOK_SERVICE, FACEBOOK_GRPAHAPI_URL, FACEBOOK_PROFILE, FACEBOOK_PAGE, FACEBOOK_GROUP, FAILED, POSTED, FB_DEFAULT_ALBUM } = require('shared/constants');
 module.exports = {
@@ -317,11 +317,8 @@ module.exports = {
       return this.shareFacebookPostAsPhoto(update);
     }
     let albumTitle, updateItem;
-    if (!_.isNull(update.product) && !_.isUndefined(update.product)) {
-      updateItem = await ProductModel.findById(update.product);
-    } else if (!_.isNull(update.variant) && !_.isUndefined(update.variant)) {
-      updateItem = await VariantModel.findById(update.variant);
-    }
+    updateItem = await ProductModel.findById(update.product);
+
     albumTitle = updateItem.title;
     const albumResponse = await this.createAlbum(profile.serviceUserId, albumTitle, update.text, profile.accessToken);
     const albumCreateResponse = albumResponse.albumCreateResponse;
@@ -352,13 +349,9 @@ module.exports = {
   shareFacebookPostAsLink: async function (update) {
     const profile = await ProfileModel.findById(update.profile);
     let itemLink, updateItem;
-    if (!_.isNull(update.product) && !_.isUndefined(update.product)) {
-      updateItem = await ProductModel.findById(update.product);
-      itemLink = updateItem.partnerSpecificUrl;
-    } else if (!_.isNull(update.variant) && !_.isUndefined(update.variant)) {
-      updateItem = await VariantModel.findById(update.variant);
-      itemLink = updateItem.product.partnerSpecificUrl;
-    }
+    updateItem = await ProductModel.findById(update.product);
+    itemLink = updateItem.partnerSpecificUrl;
+
     const image = `https://posting.ly/image?url=${update.images[0].url}`
 
     const requestBody = {

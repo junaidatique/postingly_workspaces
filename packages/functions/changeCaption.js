@@ -31,10 +31,7 @@ module.exports = {
 
     const UpdateModel = shared.UpdateModel;
     const RuleModel = shared.RuleModel;
-    const ProductModel = shared.ProductModel;
-    const VariantModel = shared.VariantModel;
     const StoreModel = shared.StoreModel;
-    const shortLink = shared.shortLink;
     const stringHelper = shared.stringHelper;
     let captionsForUpdate;
     let servicesQuery = UpdateModel.find(
@@ -70,6 +67,7 @@ module.exports = {
     const StoreDetail = await StoreModel.findById(ruleDetail.store);
     let currencyFormat = stringHelper.stripTags(StoreDetail.moneyFormat);
     currencyFormat = currencyFormat.replace('{{amount}}', "");
+    currencyFormat = currencyFormat.replace('{{amount_with_comma_separator}}', "");
     const currency = currencyFormat; //.substr(currencyFormat.length - 3);
     // console.log("TCL: ruleCaptions", ruleCaptions)
     await Promise.all(updates.map(async update => {

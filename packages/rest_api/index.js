@@ -11,8 +11,10 @@ exports.auth = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  return await partner.getAuthURL(event, new Date());
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    return await partner.getAuthURL(event, new Date());
+  }
 };
 exports.callback = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -20,8 +22,10 @@ exports.callback = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  return await partner.verifyCallback(event, new Date());
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    return await partner.verifyCallback(event, new Date());
+  }
 };
 exports.activatePayment = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -29,8 +33,10 @@ exports.activatePayment = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  return await partner.activatePayment(event, new Date());
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    return await partner.activatePayment(event, new Date());
+  }
 };
 exports.productsCreate = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -38,11 +44,13 @@ exports.productsCreate = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  await partner.productsCreate(event, context);
-  return httpHelper.ok(
-    { "message": "success" }
-  );
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    await partner.productsCreate(event, context);
+    return httpHelper.ok(
+      { "message": "success" }
+    );
+  }
 };
 exports.productsUpdate = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -50,13 +58,15 @@ exports.productsUpdate = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  await partner.productsUpdate(event, context);
-  const response = httpHelper.ok(
-    { "message": "success" }
-  );
-  console.log("TCL: response", response)
-  return response;
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    await partner.productsUpdate(event, context);
+    const response = httpHelper.ok(
+      { "message": "success" }
+    );
+    console.log("TCL: response", response)
+    return response;
+  }
 };
 exports.productsDelete = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -64,11 +74,13 @@ exports.productsDelete = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  await partner.productsDelete(event, context);
-  return httpHelper.ok(
-    { "message": "success" }
-  );
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    await partner.productsDelete(event, context);
+    return httpHelper.ok(
+      { "message": "success" }
+    );
+  }
 };
 exports.collectionsCreate = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -76,11 +88,13 @@ exports.collectionsCreate = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  await partner.collectionsCreate(event, context);
-  return httpHelper.ok(
-    { "message": "success" }
-  );
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    await partner.collectionsCreate(event, context);
+    return httpHelper.ok(
+      { "message": "success" }
+    );
+  }
 };
 exports.collectionsUpdate = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -88,11 +102,13 @@ exports.collectionsUpdate = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  await partner.collectionsUpdate(event, context);
-  return httpHelper.ok(
-    { "message": "success" }
-  );
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    await partner.collectionsUpdate(event, context);
+    return httpHelper.ok(
+      { "message": "success" }
+    );
+  }
 };
 exports.collectionsDelete = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -100,11 +116,13 @@ exports.collectionsDelete = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  await partner.collectionsDelete(event, context);
-  return httpHelper.ok(
-    { "message": "success" }
-  );
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    await partner.collectionsDelete(event, context);
+    return httpHelper.ok(
+      { "message": "success" }
+    );
+  }
 };
 exports.appUninstalled = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -112,11 +130,13 @@ exports.appUninstalled = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  await partner.appUninstalled(event, new Date());
-  return httpHelper.ok(
-    { "message": "success" }
-  );
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    await partner.appUninstalled(event, new Date());
+    return httpHelper.ok(
+      { "message": "success" }
+    );
+  }
 };
 exports.shopUpdate = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -124,11 +144,13 @@ exports.shopUpdate = async function (event, context) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  await dbConnection.createConnection(context);
-  await partner.shopUpdate(event, new Date());
-  return httpHelper.ok(
-    { "message": "success" }
-  );
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    await partner.shopUpdate(event, new Date());
+    return httpHelper.ok(
+      { "message": "success" }
+    );
+  }
 };
 exports.twitterRequestToken = async function (event, context, callback) {
   if (event.source === 'serverless-plugin-warmup') {
@@ -136,6 +158,8 @@ exports.twitterRequestToken = async function (event, context, callback) {
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
-  const respones = await TwitterService.getRequestToken(callback);
-  return respones;
+  if (event.source !== 'serverless-plugin-warmup') {
+    const respones = await TwitterService.getRequestToken(callback);
+    return respones;
+  }
 }

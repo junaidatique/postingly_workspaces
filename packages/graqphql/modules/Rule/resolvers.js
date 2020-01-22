@@ -1,7 +1,6 @@
 const StoreModel = require('shared').StoreModel;
 const RuleModel = require('shared').RuleModel;
 const UpdateModel = require('shared').UpdateModel;
-const VariantModel = require('shared').VariantModel;
 const ProductModel = require('shared').ProductModel;
 const ProfileModel = require('shared').ProfileModel;
 const CollectionModel = require('shared').CollectionModel;
@@ -62,15 +61,8 @@ module.exports = {
     if (_.has(args.input, 'id')) {
       const sampleUpdate = await UpdateModel.findOne({ rule: args.input.id, scheduleState: { $in: [PENDING, APPROVED] } });
       if (!_.isNull(sampleUpdate)) {
-        let itemToSelect;
-        let itemModel;
-        if (!_.isUndefined(sampleUpdate.variant)) {
-          itemToSelect = 'variant';
-          itemModel = VariantModel;
-        } else if (!_.isUndefined(sampleUpdate.product)) {
-          itemToSelect = 'product';
-          itemModel = ProductModel;
-        }
+        const itemToSelect = 'product';
+        const itemModel = ProductModel;
         const ruleUpdates = await UpdateModel.find({
           rule: args.input.id,
           scheduleState: { $in: [PENDING, APPROVED] }
