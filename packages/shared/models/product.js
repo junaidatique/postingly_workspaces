@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const VARIANT_SCHEMA = require('./variant')
 const mongoosePaginate = require('mongoose-paginate');
-const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
+const { LINK_SHORTNER_SERVICES, PARTNERS, RULE_TYPE } = require('shared/constants');
 
 const SHORT_LINK = {
   service: {
@@ -20,7 +20,15 @@ const SHARE_HISTORY = {
     ref: 'Profile',
     index: true,
   },
-  counter: Number
+  counter: {
+    type: Number,
+    index: true
+  },
+  postType: {
+    type: String,
+    enum: RULE_TYPE,
+    index: true, // 'old', 'new', 'sale'
+  }
 }
 
 const IMAGES_SCHEMA = {
