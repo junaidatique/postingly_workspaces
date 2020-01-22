@@ -145,7 +145,13 @@ module.exports = {
     console.log('schedule after scheduledUpdates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
 
     existingScheduleItems = scheduledUpdates.map(update => update.product);
-    const productsToSchedule = await schedulerHelper.getProductsForSchedule(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, context);
+    const productsToSchedule = await schedulerHelper.getProductsForSchedule(
+      ruleDetail,
+      existingScheduleItems,
+      postingCollectionOption,
+      allowedCollections,
+      storeDetail.noOfActiveProducts
+    );
     console.log('schedule after productsToSchedule =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
 
     // loop on all the profiles of the rule
@@ -334,7 +340,7 @@ module.exports = {
 
       // profile history for given profile in the item share history
       profileHistory = productUpdateObject.shareHistory.map(history => {
-        if (history.profile.toString() === profile.toString()) {
+        if ((history.profile.toString() === profile.toString()) && history.postType === ruleDetail.type) {
           return history
         } else {
           return undefined;
@@ -342,7 +348,7 @@ module.exports = {
       }).filter(item => !_.isUndefined(item))[0];
       // if no share history is found counter is set to one. 
       if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory)) {
-        productUpdateObject.shareHistory[productUpdateObject.shareHistory.length] = { profile: profile, counter: 1 };
+        productUpdateObject.shareHistory[productUpdateObject.shareHistory.length] = { profile: profile, counter: 1, postType: ruleDetail.type };
       } else {
         // otherwise counter is incremented and history is returned. 
         productUpdateObject.shareHistory = productUpdateObject.shareHistory.map(history => {

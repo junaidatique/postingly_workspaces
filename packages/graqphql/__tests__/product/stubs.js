@@ -1,7 +1,6 @@
 const faker = require('faker');
 const StoreModel = require('shared').StoreModel;
 const ProductModel = require('shared').ProductModel;
-const VariantModel = require('shared').VariantModel;
 const CollectionModel = require('shared').CollectionModel;
 const ImageModel = require('shared').ImageModel;
 const stringHelper = require('shared').stringHelper;
@@ -105,7 +104,7 @@ const createProductStub = async (storeId, numberOfProducts, collectionIds) => {
       });
       await CollectionModel.bulkWrite(bulkCollectionUpdate);
 
-      // variant
+
       for (let j = 1; j <= 5; j++) {
         title = faker.commerce.productName();
         const random = faker.random.number({ min: 10000000 });
@@ -114,49 +113,9 @@ const createProductStub = async (storeId, numberOfProducts, collectionIds) => {
         quantity = faker.random.number({ min: 0, max: 10 });
         postableByQuantity = (quantity > 0) ? true : false;
         postableByPrice = (minimumPrice > 0) ? true : false;
-        variantParams = {
-          title: title,
-          price: minimumPrice,
-          uniqKey: uniqKey,
-          partner: storeDetail.partner,
-          partnerId: partnerId,
-          partnerCreatedAt: faker.date.past().toISOString(),
-          partnerUpdatedAt: faker.date.past().toISOString(),
-          position: j,
-          quantity: quantity,
-          store: storeId,
-          product: product._id,
-          suggestedText: stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, title, partnerSpecificUrl, minimumPrice, stringHelper.stripTags(description)),
-          postableByPrice,
-          postableByQuantity,
-          postableBySale,
-          postableIsNew,
-          postableByImage,
-          images: images,
-          collections: collectionIds
-        };
-        variant = await VariantModel.create(variantParams);
-        if ((Math.floor(Math.random() * 10) + 1) > 2) {
-          images = await createImageStub(storeDetail.partner, 'variant', variant._id);
-          await Promise.all(images.map(async image => {
-            await variant.images.push(image._id);
-          }));
-        }
 
-        const bulkCollectionUpdate = collectionDetails.map(collection => {
-          let variants = collection.variants;
-          variants.push(variant._id);
-          return {
-            updateOne: {
-              filter: { _id: collection._id },
-              update: {
-                variants: variants
-              }
-            }
-          }
-        });
+
         await CollectionModel.bulkWrite(bulkCollectionUpdate);
-        t = await product.variants.push(variant);
         await product.save();
       }
     }
@@ -183,8 +142,6 @@ const createImageStub = async (partner, ref, reference_id) => {
     };
     if (ref === 'product') {
       imageParams['product'] = reference_id;
-    } else {
-      imageParams['variant'] = reference_id;
     }
     // console.log("TCL: createImageStub -> imageParams", imageParams)
     image = await ImageModel.create(imageParams);

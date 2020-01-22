@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
-const VariantModel = require('shared').VariantModel;
 const ProductModel = require('shared').ProductModel;
 const querystring = require('qs');
 const {
@@ -156,12 +155,8 @@ module.exports = {
       const profile = await ProfileModel.findById(update.profile);
       console.log("TCL: profile", profile)
       let productId;
-      if (update.scheduleType === SCHEDULE_TYPE_VARIANT) {
-        const variantDetail = await VariantModel.findById(update.variant);
-        productId = variantDetail.product;
-      } else {
-        productId = update.product;
-      }
+
+      productId = update.product;
       const productDetail = await ProductModel.findById(productId);
 
       const requestBody = querystring.stringify({

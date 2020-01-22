@@ -1,7 +1,6 @@
 const storeFunctions = require('../Store/functions');
 const imageFunctions = require('../Image/functions');
 const ProductModel = require('shared').ProductModel;
-const VariantModel = require('shared').VariantModel;
 const formattedProduct = async (product) => {
   return {
     ...product._doc,
@@ -30,13 +29,6 @@ const formattedVariant = async (variant) => {
     product: getProductById.bind(this, variant.product)
   }
 }
-const getVariantById = async (variantId) => {
-  const variantDetail = await VariantModel.findOne(variantId);
-  if (variantDetail === null) {
-    throw new UserInputError('variant not found.');
-  }
-  return formattedVariant(variantDetail)
-}
+
 exports.formattedProduct = formattedProduct
 exports.getProductById = getProductById
-exports.getVariantById = getVariantById

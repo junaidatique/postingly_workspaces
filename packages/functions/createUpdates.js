@@ -71,6 +71,8 @@ module.exports = {
       throw new Error(`rule not found for ${event.ruleId}`);
     }
     const storeDetail = await StoreModel.findById(ruleDetail.store);
+    console.log("TCL: ruleDetail.store", storeDetail._id)
+    console.log("TCL: ruleDetail.store.title", storeDetail.title)
     if (event.scheduleWeek === 'next') {
       startOfWeek = moment().add(1, 'weeks').tz(storeDetail.timezone).startOf('isoWeek');
       endOfWeek = moment().add(1, 'weeks').tz(storeDetail.timezone).endOf('isoWeek');
