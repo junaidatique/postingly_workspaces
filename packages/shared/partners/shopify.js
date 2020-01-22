@@ -925,9 +925,9 @@ module.exports = {
     }
     console.log("TCL: WEBHOOKS[PARTNERS_SHOPIFY].length", WEBHOOKS[PARTNERS_SHOPIFY].length)
     console.log("TCL: json.webhooks.length", json.webhooks.length)
-    if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
-      await this.createWebhooks(event);
-    }
+    // if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
+    //   await this.createWebhooks(event);
+    // }
   },
   createWebhooks: async function (event) {
     console.log("TCL: event", event)
