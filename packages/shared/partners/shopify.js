@@ -977,11 +977,11 @@ module.exports = {
     console.log("TCL: json.webhooks.length", json.webhooks.length)
     if (json.webhooks.length > 0) {
       await Promise.all(json.webhooks.map(async item => {
-        if (item.address.indexOf('REST_API_URL') >= 0) {
-          console.log("TCL: item", item)
-          await this.deleteSingleWebhook({ shopUrl: event.shopUrl, itemId: item.id });
+        await this.deleteSingleWebhook({ shopUrl: event.shopUrl, itemId: item.id });
+        // if (item.address.indexOf('REST_API_URL') >= 0) {
+        //   console.log("TCL: item", item)
 
-        }
+        // }
       }));
     }
   },
@@ -1288,9 +1288,9 @@ module.exports = {
       console.log("TCL: shopUrl", shopUrl);
       console.log("TCL: errorResponse", errorResponse)
       if (errorResponse.indexOf('[API] Invalid API') >= 0) {
-        const StoreModel = shared.StoreModel;
-        const storeDetail = await StoreModel.findOne({ $or: [{ "partnerSpecificUrl": shopUrl }, { "url": shopUrl }] })
-        await this.confirmUninstalled(storeDetail._id);
+        // const StoreModel = shared.StoreModel;
+        // const storeDetail = await StoreModel.findOne({ $or: [{ "partnerSpecificUrl": shopUrl }, { "url": shopUrl }] })
+        // await this.confirmUninstalled(storeDetail._id);
         return { json: null, res: res, error: null };
       } else if (errorResponse.indexOf('Not Found') >= 0) {
 

@@ -58,18 +58,21 @@ module.exports = {
     await dbConnection.createConnection(context);
     const PartnerShopify = shared.PartnerShopify;
     const StoreModel = require('shared').StoreModel;
-    const storeDetail = await StoreModel.find({ isUninstalled: false });
-    console.log("TCL: storeDetail", storeDetail)
-    if (!_.isNull(storeDetail)) {
-      const webhookPayload = {
-        partnerStore: PARTNERS_SHOPIFY,
-        shopURL: storeDetail.partnerSpecificUrl,
-        accessToken: storeDetail.partnerToken,
-        storeId: storeDetail._id
-      }
-      PartnerShopify.getWebhooks(webhookPayload);
+    const stores = await StoreModel.find({ isUninstalled: false }).skip(event.skip).limit(event.limit);
 
-    }
+    await Promise.all(stores.map(async storeDetail => {
+      if (!_.isNull(storeDetail)) {
+        const webhookPayload = {
+          partnerStore: PARTNERS_SHOPIFY,
+          shopURL: storeDetail.partnerSpecificUrl,
+          accessToken: storeDetail.partnerToken,
+          storeId: storeDetail._id
+        }
+        PartnerShopify.deleteWebhooks(webhookPayload);
+      }
+    }))
+
+
 
 
   },
