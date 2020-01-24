@@ -53,24 +53,7 @@ const {
 module.exports = {
 
   testFetch: async function (event, context) {
-    console.log('testFetch event start', (context.getRemainingTimeInMillis() / 1000));
 
-    await dbConnection.createConnection(context);
-    const PartnerShopify = shared.PartnerShopify;
-    const StoreModel = require('shared').StoreModel;
-    const stores = await StoreModel.find({ isUninstalled: false }).skip(event.skip).limit(event.limit);
-
-    await Promise.all(stores.map(async storeDetail => {
-      if (!_.isNull(storeDetail)) {
-        const webhookPayload = {
-          partnerStore: PARTNERS_SHOPIFY,
-          shopURL: storeDetail.partnerSpecificUrl,
-          accessToken: storeDetail.partnerToken,
-          storeId: storeDetail._id
-        }
-        PartnerShopify.deleteWebhooks(webhookPayload);
-      }
-    }))
 
 
 
