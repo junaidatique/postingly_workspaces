@@ -20,14 +20,7 @@ const StoreModel = require('shared').StoreModel
 const querystring = require('querystring')
 const jsonwebtoken = require('jsonwebtoken');
 
-let lambda;
 
-const AWS = require('aws-sdk');
-if (process.env.IS_OFFLINE === 'false') {
-  lambda = new AWS.Lambda({
-    region: process.env.AWS_REGION //change to your region
-  });
-}
 module.exports = {
   getAuthURL: async function (event, now) {
     try {
@@ -400,16 +393,8 @@ module.exports = {
         storeId: store._id
       }
       if (process.env.IS_OFFLINE === 'false') {
-        const webhookParams = {
-          FunctionName: `postingly-functions-${process.env.STAGE}-get-webhooks`,
-          InvocationType: 'Event',
-          LogType: 'Tail',
-          Payload: JSON.stringify(webhookPayload)
-        };
-        console.log("TCL: lambda.invoke webhookParams", webhookParams)
+        await sqsHelper.addToQueue('GetWebhooks', webhookPayload);
 
-        const webhookLambdaResponse = await lambda.invoke(webhookParams).promise();
-        console.log("TCL: webhookLambdaResponse", webhookLambdaResponse)
       } else {
         // this.getWebhooks(webhookPayload);
       }
@@ -734,7 +719,7 @@ module.exports = {
         }
       }
       if (!_.isUndefined(context)) {
-        console.log('syncProductPage event after lambda.invoke', (context.getRemainingTimeInMillis() / 1000));
+        console.log('syncProductPage event after sqs', (context.getRemainingTimeInMillis() / 1000));
       }
     }
     console.log("TCL: Sync Prdouct completed for this api call. ")
@@ -1251,6 +1236,9 @@ module.exports = {
     }
   },
   shopifyAPICall: async function (url, body, method, accessToken) {
+    if (!url || !accessToken) {
+      throw new Error(" url or accessToken not found. ");
+    }
     let res;
     res = await fetch(url, {
       body,
