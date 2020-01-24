@@ -925,9 +925,9 @@ module.exports = {
     }
     console.log("TCL: WEBHOOKS[PARTNERS_SHOPIFY].length", WEBHOOKS[PARTNERS_SHOPIFY].length)
     console.log("TCL: json.webhooks.length", json.webhooks.length)
-    // if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
-    //   await this.createWebhooks(event);
-    // }
+    if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
+      await this.createWebhooks(event);
+    }
   },
   createWebhooks: async function (event) {
     console.log("TCL: event", event)
@@ -977,7 +977,7 @@ module.exports = {
     console.log("TCL: json.webhooks.length", json.webhooks.length)
     if (json.webhooks.length > 0) {
       await Promise.all(json.webhooks.map(async item => {
-        await this.deleteSingleWebhook({ shopUrl: event.shopUrl, itemId: item.id });
+        await this.deleteSingleWebhook({ shopURL: event.shopURL, itemId: item.id, accessToken: event.accessToken });
         // if (item.address.indexOf('REST_API_URL') >= 0) {
         //   console.log("TCL: item", item)
 
