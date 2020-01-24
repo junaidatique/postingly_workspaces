@@ -314,7 +314,7 @@ functions:
     handler: webhooks.getWebhooks
     warmup:
       enabled: false
-    timeout: 20 
+    timeout: 60 
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}GetWebhooks
@@ -324,7 +324,7 @@ functions:
     handler: webhooks.createWebhooks
     warmup:
       enabled: false
-    timeout: 20
+    timeout: 60
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}CreateWebhooks
@@ -334,7 +334,7 @@ functions:
     handler: webhooks.deleteWebhooks    
     warmup:
       enabled: false
-    timeout: 20
+    timeout: 60
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}DeleteWebhooks
