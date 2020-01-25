@@ -10,12 +10,12 @@ const {
 module.exports = {
   getProductsForSchedule: async function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, noOfActiveProducts) {
     let products;
-    products = await this.checkAllProductsNotShared(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
+    products = await this.checkAllProductsNotShared(ruleDetail, [], postingCollectionOption, allowedCollections);
     if (products.length > 0) {
       return products;
     }
     if (ruleDetail.type === RULE_TYPE_NEW) {
-      products = await this.checkNewProductsNotShared(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
+      products = await this.checkNewProductsNotShared(ruleDetail, [], postingCollectionOption, allowedCollections);
       return products;
     }
     products = await this.getLessSharedProducts(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, noOfActiveProducts);
