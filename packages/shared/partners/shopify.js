@@ -220,7 +220,7 @@ module.exports = {
 
   // Check that the shopDomain is a valid myshop.com domain. This is required by Shopify
   validateShopDomain: function (shopDomain) {
-    if (shopDomain.match(/^[a-z][a-z0-9\-]*\.myshopify\.com$/i) === null) {
+    if (shopDomain.match(/^[a-z0-9][a-z0-9\-]*\.myshopify\.com$/i) === null) {
       console.log("Shop validation failed", shopDomain);
       return false;
     }
