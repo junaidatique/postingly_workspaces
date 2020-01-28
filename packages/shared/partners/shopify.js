@@ -984,7 +984,7 @@ module.exports = {
   productsCreate: async function (event, context) {
     console.log("TCL: event", event)
     if (!_.isNull(event) && !_.isUndefined(event)) {
-      const shopDomain = event.shopDomain;
+      const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
