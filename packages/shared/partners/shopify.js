@@ -1011,7 +1011,7 @@ module.exports = {
       if (process.env.IS_OFFLINE === 'false') {
         const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
         await Promise.all(rules.map(async rule => {
-          await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule });
+          await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule._id });
         }));
       }
       return httpHelper.ok(
