@@ -1,14 +1,13 @@
 const StoreModel = require('shared').StoreModel;
 const RuleModel = require('shared').RuleModel;
 const UpdateModel = require('shared').UpdateModel;
-const ProductModel = require('shared').ProductModel;
 const ProfileModel = require('shared').ProfileModel;
 const CollectionModel = require('shared').CollectionModel;
+const updateClass = require('shared').updateClass;
 const formattedRule = require('./functions').formattedRule
 const fetch = require('node-fetch');
 const sqsHelper = require('shared').sqsHelper;
 const _ = require('lodash');
-const moment = require('moment')
 const formattedStore = require('../Store/functions').formattedStore
 const {
   FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE,
@@ -59,62 +58,12 @@ module.exports = {
 
     // if the rule is for edit, than delete all the pending and approved posts and reschedule posts with new settings. 
     if (_.has(args.input, 'id')) {
-      const sampleUpdate = await UpdateModel.findOne({ rule: args.input.id, scheduleState: { $in: [PENDING, APPROVED] } });
-      if (!_.isNull(sampleUpdate)) {
-        const itemToSelect = 'product';
-        const itemModel = ProductModel;
-        const ruleUpdates = await UpdateModel.find({
-          rule: args.input.id,
-          scheduleState: { $in: [PENDING, APPROVED] }
-        }).select(itemToSelect)
-
-        const items = await itemModel.find({ _id: { $in: ruleUpdates.map(update => update[itemToSelect]) } })
-        let updateProducts = [];
-        items.map(item => {
-          const updateItemShareHistory = [];
-          item.shareHistory.map(itemScheduleHistory => {
-            if (ruleDetail.profile === itemScheduleHistory.profile) {
-              if ((itemScheduleHistory.counter - 1) > 0) {
-                updateItemShareHistory.push({
-                  _id: itemScheduleHistory._id,
-                  profile: itemScheduleHistory.profile,
-                  counter: itemScheduleHistory.counter - 1
-                })
-              }
-
-            } else {
-              updateItemShareHistory.push(itemScheduleHistory);
-            }
-          });
-          updateProducts.push(
-            {
-              updateOne: {
-                filter: { uniqKey: item.uniqKey },
-                update: {
-                  shareHistory: updateItemShareHistory
-                }
-              }
-            }
-          );
-        });
-        if (!_.isEmpty(updateProducts)) {
-          const products = await itemModel.bulkWrite(updateProducts);
-        }
-        const updatesDeleted = await UpdateModel.deleteMany(
-          {
-            rule: args.input.id,
-            scheduleState: { $in: [NOT_SCHEDULED, PENDING, APPROVED] },
-            scheduleTime: { $gte: moment().utc() },
-            scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
-          })
-      }
+      await updateClass.deleteScheduledUpdates(args.input.id)
     }
     if (process.env.IS_OFFLINE === 'false') {
       await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id });
     } else {
-      // await createUpdates({ ruleId: ruleDetail._id });
-      // await schedule({ ruleId: ruleDetail._id });
-      // await addCaptions();
+      await updateClass.createUpdates({ ruleId: ruleDetail._id })
     }
     const ruleResult = formattedRule(ruleDetail);
     return ruleResult;

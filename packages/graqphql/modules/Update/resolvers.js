@@ -79,7 +79,7 @@ module.exports = {
               images: args.input.images,
               product: args.input.product,
               scheduleType: args.input.scheduleType,
-              service: args.input.service,
+              service: profile.service,
               serviceProfile: profile.serviceProfile,
               profile: profile._id,
               uniqKey: `${profile._id}-${args.input.product}-${args.input.scheduleTime}-${str.getRandomString(8)}`,

@@ -30,4 +30,8 @@ exports.TwitterService = require('./services/twitter');
 exports.BufferService = require('./services/buffer');
 
 // functions
-exports.profileFns = require('./functions/profileFns')
+exports.profileFns = require('./functions/profileFns');
+
+// helper classes. 
+exports.updateClass = require('./classes/updates');
+exports.scheduleClass = require('./classes/schedule');
