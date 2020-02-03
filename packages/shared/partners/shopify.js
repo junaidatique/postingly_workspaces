@@ -651,6 +651,7 @@ module.exports = {
     }
     console.log("TCL: syncProductCount json", json);
     storeDetail.numberOfProducts = json.count;
+    storeDetail.noOfActiveProducts = json.count;
     await storeDetail.save();
   },
   syncProductPage: async function (event, context) {
@@ -703,7 +704,7 @@ module.exports = {
       await this.syncProducts(event, apiProducts, storeDetail, context);
     }
     if (!_.isUndefined(context)) {
-      console.log('syncProductPage event after syncProducts', (context.getRemainingTimeInMillis() / 1000));
+      console.log('syncProductPage event after syncProduct', (context.getRemainingTimeInMillis() / 1000));
     }
     if (!_.isNull(res.headers.get('link')) && !_.isUndefined(res.headers.get('link'))) {
       console.log("TCL: There is next page. ")
@@ -889,22 +890,22 @@ module.exports = {
     }
     // return;
 
-    console.log("TCL: syncProducts bulkProductInsert.length", bulkProductInsert.length)
+    console.log("TCL: syncProduct bulkProductInsert.length", bulkProductInsert.length)
     if (!_.isUndefined(context)) {
-      console.log('syncProducts event after bulkProductInsert', (context.getRemainingTimeInMillis() / 1000));
+      console.log('syncProduct event after bulkProductInsert', (context.getRemainingTimeInMillis() / 1000));
     }
 
     if (!_.isNull(event.collectionId)) {
       const colltionProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description variants imagesList');
       await this.addCollectiontoItems(ProductModel, colltionProducts, event.collectionId);
     } else {
-      const productCount = await ProductModel.countDocuments({ store: storeDetail._id, active: true });
-      console.log("TCL: productCount", productCount)
-      storeDetail.noOfActiveProducts = productCount;
-      await storeDetail.save();
-      console.log("TCL: All Done")
+      // const productCount = await ProductModel.countDocuments({ store: storeDetail._id, active: true });
+      // console.log("TCL: productCount", productCount)
+      // storeDetail.noOfActiveProducts = productCount;
+      // await storeDetail.save();
       // all done.
     }
+    console.log("TCL: All Done")
   },
 
   getWebhooks: async function (event) {
