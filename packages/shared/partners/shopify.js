@@ -730,11 +730,13 @@ module.exports = {
       const bulkCollectionUpdate = items.map(item => {
         let collections = item.collections;
         collections.push(collectionId);
+        let uniqueCollections = [...new Set(collections)];
+
         return {
           updateOne: {
             filter: { _id: item._id },
             update: {
-              collections: collections
+              collections: uniqueCollections
             }
           }
         }
