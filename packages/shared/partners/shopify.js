@@ -725,18 +725,31 @@ module.exports = {
     console.log("TCL: Sync Prdouct completed for this api call. ")
   },
 
+  uniqueArray1: function (ar) {
+    var j = {};
+
+    ar.forEach(function (v) {
+      j[v + '::' + typeof v] = v;
+    });
+
+    return Object.keys(j).map(function (v) {
+      return j[v];
+    });
+  },
+
   addCollectiontoItems: async function (model, items, collectionId) {
     if (items.length > 0) {
+      let collections;
       const bulkCollectionUpdate = items.map(item => {
-        let collections = item.collections;
+        collections = item.collections;
         collections.push(collectionId);
-        let uniqueCollections = [...new Set(collections)];
-
+        collections = this.uniqueArray1(collections);
+        console.log("TCL: collections", collections)
         return {
           updateOne: {
             filter: { _id: item._id },
             update: {
-              collections: uniqueCollections
+              collections: collections
             }
           }
         }
