@@ -64,61 +64,7 @@ resources:
       Properties:
         QueueName: stagingDeleteWebhooks
         VisibilityTimeout: 3600
-#     productionCreateUpdates:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionCreateUpdates
-#         VisibilityTimeout: 3600
-#     productionScheduleUpdates:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionScheduleUpdates
-#         VisibilityTimeout: 3600
-#     productionChangeCaption:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionChangeCaption
-#         VisibilityTimeout: 3600
-#     productionShareUpdates:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionShareUpdates
-#         VisibilityTimeout: 3600
-#     productionSyncStoreData:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionSyncStoreData
-#         VisibilityTimeout: 3600
-#     productionSyncCollectionPage:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionSyncCollectionPage
-#         VisibilityTimeout: 3600
-#     productionSyncProductPage:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionSyncProductPage
-#         VisibilityTimeout: 3600
-#     productionSyncVariantPage:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionSyncVariantPage
-#         VisibilityTimeout: 3600
-#     productionGetWebhooks:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionGetWebhooks
-#         VisibilityTimeout: 3600
-#     productionCreateWebhooks:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionCreateWebhooks
-#         VisibilityTimeout: 3600
-#     productionDeleteWebhooks:
-#       Type: "AWS::SQS::Queue"
-#       Properties:
-#         QueueName: productionDeleteWebhooks
-#         VisibilityTimeout: 3600
+
 
 
 provider:
