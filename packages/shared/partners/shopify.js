@@ -1115,7 +1115,7 @@ module.exports = {
           const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
           await Promise.all(rules.map(async rule => {
             await updateClass.deleteScheduledUpdates(rule._id)
-            await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule._id });
+            await sqsHelper.addToQueue('CreateUpdates', { ruleId: rule._id, ruleIdForScheduler: rule._id });
           }));
         }
       }
