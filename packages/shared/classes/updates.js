@@ -151,8 +151,11 @@ module.exports = {
           }
         }
       });
-
-      const updates = await UpdateModel.bulkWrite([].concat.apply([], bulkUpdatesWrite));
+      try {
+        const updates = await UpdateModel.bulkWrite([].concat.apply([], bulkUpdatesWrite));
+      } catch (error) {
+        console.log("TCL: error.message", error.message)
+      }
       // scheduleState is set seperately because there may be some updates that are updated. so scheduleState is updated for only newly created updates.
       console.log("TCL: -------------------------")
       console.log("TCL: updates.result.nUpserted", updates.result.nUpserted)
