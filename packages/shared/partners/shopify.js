@@ -1074,7 +1074,9 @@ module.exports = {
           }
         );
       }
-      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, null, null);
+      const currencyFormat = stringHelper.stripTags(storeDetail.moneyWithCurrencyFormat);
+      const currency = currencyFormat.substr(currencyFormat.length - 3);
+      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, productFromDB.postableIsNew);
 
       const productFromDBObject = {
         title: productFromDB.title,
