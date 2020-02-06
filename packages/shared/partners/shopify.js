@@ -1037,6 +1037,7 @@ module.exports = {
   },
   productsUpdate: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
+      const ProductModel = shared.ProductModel;
       let shopDomain, apiProducts;
       if (!_.isUndefined(event.shopDomain)) {
         shopDomain = event.shopDomain;
