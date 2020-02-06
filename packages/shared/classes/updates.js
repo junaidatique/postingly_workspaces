@@ -2,6 +2,7 @@
 const shared = require('shared');
 const _ = require('lodash');
 const moment = require('moment-timezone');
+const sqsHelper = require('shared').sqsHelper;
 const {
   NOT_SCHEDULED,
   SCHEDULE_TYPE_PRODUCT,
