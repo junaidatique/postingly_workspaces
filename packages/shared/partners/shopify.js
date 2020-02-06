@@ -3,6 +3,7 @@ const fetch = require('node-fetch');
 const _ = require('lodash');
 const moment = require('moment');
 const Intercom = require('intercom-client');
+const updateClass = require('shared').updateClass;
 const {
   PARTNERS_SHOPIFY, FACEBOOK_DEFAULT_TEXT,
   LINK_SHORTNER_SERVICES_POOOST,
@@ -1021,12 +1022,12 @@ module.exports = {
       console.log("TCL: syncEvent", syncEvent)
       await this.syncProducts(syncEvent, apiProducts, storeDetail, true, context);
       await this.syncProductCount(syncEvent);
-      if (process.env.IS_OFFLINE === 'false') {
-        const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
-        await Promise.all(rules.map(async rule => {
-          await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule._id });
-        }));
-      }
+      // if (process.env.IS_OFFLINE === 'false') {
+      //   const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
+      //   await Promise.all(rules.map(async rule => {
+      //     await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule._id });
+      //   }));
+      // }
       return httpHelper.ok(
         {
           message: "Recieved"
@@ -1098,6 +1099,13 @@ module.exports = {
           }
         }];
         const products = await ProductModel.bulkWrite(bulkProductInsert);
+        if (process.env.IS_OFFLINE === 'false' && productFromDBObject.postableIsNew) {
+          const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
+          await Promise.all(rules.map(async rule => {
+            await updateClass.deleteScheduledUpdates(rule._id)
+            await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule._id });
+          }));
+        }
       }
 
       return httpHelper.ok(
