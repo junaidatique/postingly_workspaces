@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const _ = require('lodash');
 const moment = require('moment');
 const Intercom = require('intercom-client');
-const updateClass = require('shared').updateClass;
+
 const {
   PARTNERS_SHOPIFY, FACEBOOK_DEFAULT_TEXT,
   LINK_SHORTNER_SERVICES_POOOST,
@@ -1038,6 +1038,7 @@ module.exports = {
   productsUpdate: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
       const ProductModel = shared.ProductModel;
+      const updateClass = require('shared').updateClass;
       let shopDomain, apiProducts;
       if (!_.isUndefined(event.shopDomain)) {
         shopDomain = event.shopDomain;
