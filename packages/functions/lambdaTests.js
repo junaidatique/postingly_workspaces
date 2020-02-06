@@ -3,6 +3,7 @@ const moment = require('moment')
 const _ = require('lodash')
 
 const createUpdates = require('functions').createUpdates.createUpdates;
+const createUpdatesforThisWeek = require('functions').createUpdates.createUpdatesforThisWeek;
 const createUpdatesforNextWeek = require('functions').createUpdates.createUpdatesforNextWeek;
 const schedule = require('functions').scheduleProducts.schedule;
 const cronThisWeekRulesForUpdates = require('functions').cronThisWeekRulesForUpdates.excute;
@@ -32,14 +33,15 @@ module.exports = {
 
     // first iteration.
     // console.log("TCL: createUpdates ---------------------------------------------------------")
-    await createUpdates({ ruleId: ruleDetail._id });
+    // await createUpdates({ ruleId: ruleDetail._id });
+    // await createUpdates({ ruleId: ruleDetail._id });
     // console.log("TCL: schedule ---------------------------------------------------------")
-    await schedule({ ruleId: ruleDetail._id }, context);
+    // await schedule({ ruleId: ruleDetail._id }, context);
     // await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
     // console.log("TCL: updateProductUrls ---------------------------------------------------------")
-    await updateProductUrls();
+    // await updateProductUrls();
     // console.log("TCL: changeCaption ---------------------------------------------------------")
-    await changeCaption({ rule: ruleDetail._id, storeId: null });
+    // await changeCaption({ rule: ruleDetail._id, storeId: null });
     // console.log("TCL: Postupdates ---------------------------------------------------------")
     // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
 

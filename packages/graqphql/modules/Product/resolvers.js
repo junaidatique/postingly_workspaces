@@ -104,7 +104,6 @@ module.exports = {
   syncProducts: async (obj, args, context, info) => {
     try {
       const storeDetail = await StoreModel.findById(args.storeId);
-      // await ProductModel.updateMany({ store: storeDetail._id }, { active: false });
       if (process.env.IS_OFFLINE === 'false') {
         const storePayload = {
           "storeId": args.storeId,
@@ -113,9 +112,7 @@ module.exports = {
         }
         await sqsHelper.addToQueue('SyncStoreData', storePayload);
       } else {
-        // console.log("TCL: storeDetail", storeDetail)
         await PartnerShopify.syncStoreData({ storeId: storeDetail._id, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
-        // await PartnerShopify.syncVariantPage({ storeId: storeDetail._id, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null });
       }
       const storeResult = formattedStore(storeDetail);
       return storeResult;

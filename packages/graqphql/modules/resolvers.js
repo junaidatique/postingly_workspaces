@@ -27,12 +27,12 @@ module.exports = {
     updateProfile: profileResolvers.updateProfile,
     deleteProfile: profileResolvers.deleteProfile,
     manageRule: ruleResolvers.manageRule,
-    deleteRule: ruleResolvers.deleteRule,
+    changeRuleStatus: ruleResolvers.changeRuleStatus,
     deleteUpdate: updateResolvers.deleteUpdate,
     editUpdate: updateResolvers.editUpdate,
     createUpdate: updateResolvers.createUpdate,
     syncProducts: productResolvers.syncProducts,
-    syncProfiles: profileResolvers.syncProfiles,
-    syncRules: ruleResolvers.syncRules,
+
+
   },
 }

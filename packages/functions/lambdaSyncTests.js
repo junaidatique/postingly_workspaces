@@ -26,7 +26,8 @@ module.exports = {
       "storeId": storeId,
       "partnerStore": "shopify",
       "collectionId": null
-    })
+    });
+    await ProductModel.updateMany({ "partnerCreatedAt": { $gte: ("2020-02-01T12:19:44.600+0000") } }, { postableIsNew: true })
     // await syncCollectionPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: 'custom_collections', pageInfo: null, productId: null });
     // await PartnerShopify.syncProductPage({ storeId: storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: null, pageInfo: null }, context);
   }
