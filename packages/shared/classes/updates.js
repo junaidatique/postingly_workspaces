@@ -14,6 +14,7 @@ module.exports = {
     console.log("TCL: event", event)
     const RuleModel = shared.RuleModel;
     const UpdateModel = shared.UpdateModel;
+    const ProductModel = shared.ProductModel;
     const activeRules = await RuleModel.find({ active: true });
     console.log("TCL: activeRules.length", activeRules.length)
     const scheduleWeekRules = await UpdateModel.distinct('rule',
@@ -36,6 +37,11 @@ module.exports = {
         await this.createUpdates({ ruleId: ruleDetail._id })
       }));
     }
+    const dbCollectionsUpdate = await ProductModel.updateMany(
+      { postableIsNew: true, partnerCreatedAt: { $lt: moment().subtract(14, 'day') } },
+      { postableIsNew: false }
+    );
+    console.log("TCL: dbCollectionsUpdate", dbCollectionsUpdate)
   },
   createUpdatesforNextWeek: async function (event, context) {
     const RuleModel = shared.RuleModel;
