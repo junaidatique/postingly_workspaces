@@ -701,7 +701,7 @@ module.exports = {
       console.log('syncProductPage event after api call', (context.getRemainingTimeInMillis() / 1000));
     }
     if (apiProducts.length > 0) {
-      await this.syncProducts(event, apiProducts, storeDetail, context);
+      await this.syncProducts(event, apiProducts, storeDetail, null, context);
     }
     if (!_.isUndefined(context)) {
       console.log('syncProductPage event after syncProduct', (context.getRemainingTimeInMillis() / 1000));
@@ -821,9 +821,50 @@ module.exports = {
     })
     return returnImages;
   },
-  syncProducts: async function (event, apiProducts, storeDetail, context) {
+  formatProductForQuery: function (storeDetail, product, productFromDB, currency, markIsNew) {
+    let productVaraints = [];
+    let productImages = [];
+    if (!_.isUndefined(productFromDB)) {
+      productVaraints = productFromDB.variants;
+      productImages = productFromDB.imagesList;
+    }
+    const embeddedVariants = this.formatVariants(product.variants, productVaraints, product.images);
+    const embeddedImages = this.formatImagesForProduct(product.images, productImages);
+
+
+    const quantity = product.variants.map(variant => variant.inventory_quantity).reduce((prev, curr) => prev + curr, 0);
+    const minimumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p < v && p > 0) ? p : v));
+    const maximumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p > v) ? p : v));
+    const onSale = product.variants.map(variant => (variant.compare_at_price != variant.price) ? true : false).includes(true);
+    const partnerSpecificUrl = `https://${storeDetail.url}/products/${product.handle}`;
+    const suggestedText = stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, partnerSpecificUrl, minimumPrice, stringHelper.stripTags(product.body_html), currency);
+    return {
+      title: product.title,
+      description: stringHelper.stripTags(product.body_html),
+      suggestedText: suggestedText,
+      partnerSpecificUrl: partnerSpecificUrl,
+      partner: PARTNERS_SHOPIFY,
+      partnerId: product.id,
+      partnerCreatedAt: product.created_at,
+      partnerUpdatedAt: product.updated_at,
+      uniqKey: `${PARTNERS_SHOPIFY}-${product.id}`,
+      active: (product.published_at) ? true : false,
+      store: storeDetail._id,
+      quantity: quantity,
+      minimumPrice: minimumPrice,
+      maximumPrice: maximumPrice,
+      onSale: onSale,
+      postableByImage: (product.images.length > 0) ? true : false,
+      postableByQuantity: (quantity > 0) ? true : false,
+      postableByPrice: (minimumPrice > 0) ? true : false,
+      postableIsNew: (!_.isNull(markIsNew)) ? markIsNew : false,
+      postableBySale: onSale,
+      variants: embeddedVariants,
+      imagesList: embeddedImages
+    };
+  },
+  syncProducts: async function (event, apiProducts, storeDetail, markIsNew = null, context) {
     const ProductModel = shared.ProductModel;
-    const ImageModel = shared.ImageModel;
     const currencyFormat = stringHelper.stripTags(storeDetail.moneyWithCurrencyFormat);
     const currency = currencyFormat.substr(currencyFormat.length - 3);
 
@@ -834,48 +875,11 @@ module.exports = {
     const bulkProductInsert = apiProducts.map(product => {
       // get product from the list of dbProducts;
       const productFromDB = dbProducts.find(dbProduct => dbProduct.uniqKey === `${PARTNERS_SHOPIFY}-${product.id}`);
-      let productVaraints = [];
-      let productImages = [];
-      if (!_.isUndefined(productFromDB)) {
-        productVaraints = productFromDB.variants;
-        productImages = productFromDB.imagesList;
-      }
-      const embeddedVariants = this.formatVariants(product.variants, productVaraints, product.images);
-      const embeddedImages = this.formatImagesForProduct(product.images, productImages);
-      // return;
-      const quantity = product.variants.map(variant => variant.inventory_quantity).reduce((prev, curr) => prev + curr, 0);
-      const minimumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p < v && p > 0) ? p : v));
-      const maximumPrice = product.variants.map(variant => (variant.price)).reduce((p, v) => ((p > v) ? p : v));
-      const onSale = product.variants.map(variant => (variant.compare_at_price != variant.price) ? true : false).includes(true);
-      const partnerSpecificUrl = `https://${storeDetail.url}/products/${product.handle}`;
-      const suggestedText = stringHelper.formatCaptionText(FACEBOOK_DEFAULT_TEXT, product.title, partnerSpecificUrl, minimumPrice, stringHelper.stripTags(product.body_html), currency);
+      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, markIsNew);
       return {
         updateOne: {
           filter: { uniqKey: `${PARTNERS_SHOPIFY}-${product.id}` },
-          update: {
-            title: product.title,
-            description: stringHelper.stripTags(product.body_html),
-            suggestedText: suggestedText,
-            partnerSpecificUrl: partnerSpecificUrl,
-            partner: PARTNERS_SHOPIFY,
-            partnerId: product.id,
-            partnerCreatedAt: product.created_at,
-            partnerUpdatedAt: product.updated_at,
-            uniqKey: `${PARTNERS_SHOPIFY}-${product.id}`,
-            active: (product.published_at) ? true : false,
-            store: storeDetail._id,
-            quantity: quantity,
-            minimumPrice: minimumPrice,
-            maximumPrice: maximumPrice,
-            onSale: onSale,
-            postableByImage: (product.images.length > 0) ? true : false,
-            postableByQuantity: (quantity > 0) ? true : false,
-            postableByPrice: (minimumPrice > 0) ? true : false,
-            postableIsNew: (moment(product.created_at).isAfter(moment().subtract(1, 'days'))) ? true : false,
-            postableBySale: onSale,
-            variants: embeddedVariants,
-            imagesList: embeddedImages
-          },
+          update: formatedProduct,
           upsert: true
         }
       }
@@ -898,12 +902,6 @@ module.exports = {
     if (!_.isNull(event.collectionId)) {
       const colltionProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description variants imagesList');
       await this.addCollectiontoItems(ProductModel, colltionProducts, event.collectionId);
-    } else {
-      // const productCount = await ProductModel.countDocuments({ store: storeDetail._id, active: true });
-      // console.log("TCL: productCount", productCount)
-      // storeDetail.noOfActiveProducts = productCount;
-      // await storeDetail.save();
-      // all done.
     }
     console.log("TCL: All Done")
   },
@@ -998,7 +996,6 @@ module.exports = {
     }
   },
   productsCreate: async function (event, context) {
-    console.log("TCL: event", event)
     if (!_.isNull(event) && !_.isUndefined(event)) {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       console.log("TCL: shopDomain", shopDomain)
@@ -1022,7 +1019,7 @@ module.exports = {
         "collectionId": null
       }
       console.log("TCL: syncEvent", syncEvent)
-      await this.syncProducts(syncEvent, apiProducts, storeDetail, context);
+      await this.syncProducts(syncEvent, apiProducts, storeDetail, true, context);
       await this.syncProductCount(syncEvent);
       if (process.env.IS_OFFLINE === 'false') {
         const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
@@ -1047,26 +1044,62 @@ module.exports = {
       }
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
-      // console.log("TCL: StoreModel", StoreModel)
+      const partnerId = JSON.parse(event.body).id;
+      console.log("TCL: partnerId", JSON.parse(event.body).id)
+
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       console.log("TCL: storeDetail", storeDetail)
       // if store is not found. 
       if (_.isNull(storeDetail)) {
+        console.log("TCL: storeDetail not found.")
         return httpHelper.ok(
           {
             message: "Recieved"
           }
         );
       }
-      apiProducts = [JSON.parse(event.body)];
-      console.log("TCL: apiProducts.length", apiProducts.length)
-      const syncEvent = {
-        "storeId": storeDetail._id,
-        "partnerStore": PARTNERS_SHOPIFY,
-        "collectionId": null
+      const product = [JSON.parse(event.body)];
+
+      const productFromDB = await ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${partnerId}` }).select(
+        '_id title partnerSpecificUrl active minimumPrice postableByImage postableByQuantity postableByPrice postableIsNew variants imagesList');
+
+      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, null, null);
+
+      const productFromDBObject = {
+        title: productFromDB.title,
+        partnerSpecificUrl: productFromDB.partnerSpecificUrl,
+        active: productFromDB.active,
+        minimumPrice: productFromDB.minimumPrice,
+        postableByImage: productFromDB.postableByImage,
+        postableByQuantity: productFromDB.postableByQuantity,
+        postableByPrice: productFromDB.postableByPrice,
+        postableIsNew: productFromDB.postableIsNew
       }
-      console.log("TCL: syncEvent", syncEvent)
-      await this.syncProducts(syncEvent, apiProducts, storeDetail, context);
+
+      const formatedProductObject = {
+        title: formatedProduct.title,
+        partnerSpecificUrl: formatedProduct.partnerSpecificUrl,
+        active: formatedProduct.active,
+        minimumPrice: formatedProduct.minimumPrice,
+        postableByImage: formatedProduct.postableByImage,
+        postableByQuantity: formatedProduct.postableByQuantity,
+        postableByPrice: formatedProduct.postableByPrice,
+        postableIsNew: formatedProduct.postableIsNew
+      }
+      if (!_.isEqual(productFromDBObject, formatedProductObject)) {
+        console.log("TCL: formatedProductObject", formatedProductObject)
+        console.log("TCL: productFromDBObject", productFromDBObject)
+        console.log("TCL: formatedProduct", formatedProduct)
+        const bulkProductInsert = [{
+          updateOne: {
+            filter: { uniqKey: `${PARTNERS_SHOPIFY}-${product.id}` },
+            update: formatedProduct,
+            upsert: true
+          }
+        }];
+        const products = await ProductModel.bulkWrite(bulkProductInsert);
+      }
+
       return httpHelper.ok(
         {
           message: "Recieved"
@@ -1117,7 +1150,6 @@ module.exports = {
       const productDetail = await shared.ProductModel.findOne({ partnerId: JSON.parse(event.body).id });
       console.log("TCL: productDelete after productDetail")
       if (!_.isNull(productDetail)) {
-        // const imageDelete = await shared.ImageModel.deleteMany({ product: productDetail._id });
         console.log("TCL: productDelete after deleteing images")
         const updateDelete = await shared.UpdateModel.deleteMany({ product: productDetail._id, scheduleState: { $in: [PENDING, APPROVED] }, });
         console.log("TCL: productDelete after deleteing updates")
@@ -1326,8 +1358,6 @@ module.exports = {
       if (!_.isNull(storeDetail)) {
         const collectionDelete = await shared.CollectionModel.deleteMany({ store: storeDetail._id });
         console.log("TCL: collectionDelete", collectionDelete)
-        const imageDelete = await shared.ImageModel.deleteMany({ store: storeDetail._id });
-        console.log("TCL: imageDelete", imageDelete)
         const productDelete = await shared.ProductModel.deleteMany({ store: storeDetail._id });
         console.log("TCL: productDelete", productDelete)
         const profileDelete = await shared.ProfileModel.deleteMany({ store: storeDetail._id });

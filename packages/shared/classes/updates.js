@@ -64,11 +64,13 @@ module.exports = {
     }
   },
   createUpdates: async function (event, context) {
+    console.log("TCL: event", event)
     let updateTimes = [];
     let startOfWeek, endOfWeek;
     const RuleModel = shared.RuleModel;
     const StoreModel = shared.StoreModel;
     const UpdateModel = shared.UpdateModel;
+    const scheduleClass = shared.scheduleClass;
     const ruleDetail = await RuleModel.findById(event.ruleId).populate('profile');
     if (ruleDetail === null) {
       throw new Error(`rule not found for ${event.ruleId}`);
@@ -163,62 +165,60 @@ module.exports = {
       }
     }
     console.log("TCL: event.ruleIdForScheduler", event.ruleIdForScheduler)
-    if (!_.isNull(event.ruleIdForScheduler) && !_.isUndefined(event.ruleIdForScheduler)) {
+    if (event.ruleIdForScheduler) {
       if (process.env.IS_OFFLINE === 'false') {
         await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleIdForScheduler });
-
       } else {
-        console.log("TCL: cronThisWeekRulesForUpdates event", event)
+        await scheduleClass.schedule({ ruleId: event.ruleIdForScheduler }, context);
       }
     }
   },
   deleteScheduledUpdates: async function (ruleId) {
     const UpdateModel = shared.UpdateModel;
     const ProductModel = shared.ProductModel;
-    const sampleUpdate = await UpdateModel.findOne({ rule: ruleId, scheduleState: { $in: [PENDING, APPROVED] } });
-    if (!_.isNull(sampleUpdate)) {
-      const itemToSelect = 'product';
-      const itemModel = ProductModel;
-      const ruleUpdates = await UpdateModel.find({
-        rule: args.input.id,
-        scheduleState: { $in: [PENDING, APPROVED] }
-      }).select(itemToSelect)
+    const RuleModel = shared.RuleModel;
+    const ruleDetail = await RuleModel.findOne({ _id: ruleId });
+    console.log("TCL: ruleDetail", ruleDetail.profile)
+    const ruleUpdates = await UpdateModel.find({ rule: ruleId, scheduleState: { $in: [PENDING, APPROVED] } }).select('product');
 
-      const items = await itemModel.find({ _id: { $in: ruleUpdates.map(update => update[itemToSelect]) } })
-      let updateProducts = [];
-      items.map(item => {
-        const updateItemShareHistory = [];
-        item.shareHistory.map(itemScheduleHistory => {
-          if (ruleDetail.profile === itemScheduleHistory.profile) {
-            if ((itemScheduleHistory.counter - 1) > 0) {
-              updateItemShareHistory.push({
-                _id: itemScheduleHistory._id,
-                profile: itemScheduleHistory.profile,
-                counter: itemScheduleHistory.counter - 1
-              })
+
+    if (!_.isNull(ruleUpdates)) {
+      const items = await ProductModel.find({ _id: { $in: ruleUpdates.map(update => update['product']) } })
+
+      let updateItemShareHistory = [];
+      const updateProducts = items.map(item => {
+        updateItemShareHistory = [];
+        console.log("TCL: item.shareHistory", item.shareHistory)
+        updateItemShareHistory = item.shareHistory.map(itemScheduleHistory => {
+          console.log("TCL: itemScheduleHistory", itemScheduleHistory)
+          if ((ruleDetail.profile.toString() === itemScheduleHistory.profile.toString()) && (ruleDetail.type === itemScheduleHistory.postType)) {
+            return {
+              profile: itemScheduleHistory.profile,
+              postType: itemScheduleHistory.postType,
+              counter: itemScheduleHistory.counter - 1
             }
-
           } else {
-            updateItemShareHistory.push(itemScheduleHistory);
+            return itemScheduleHistory
           }
         });
-        updateProducts.push(
-          {
-            updateOne: {
-              filter: { uniqKey: item.uniqKey },
-              update: {
-                shareHistory: updateItemShareHistory
-              }
+
+        console.log("TCL: updateItemShareHistory", updateItemShareHistory)
+        return {
+          updateOne: {
+            filter: { uniqKey: item.uniqKey },
+            update: {
+              shareHistory: updateItemShareHistory
             }
           }
-        );
+        }
       });
+      console.log("TCL: updateProducts", updateProducts)
       if (!_.isEmpty(updateProducts)) {
-        const products = await itemModel.bulkWrite(updateProducts);
+        const products = await ProductModel.bulkWrite(updateProducts);
       }
       const updatesDeleted = await UpdateModel.deleteMany(
         {
-          rule: args.input.id,
+          rule: ruleId,
           scheduleState: { $in: [NOT_SCHEDULED, PENDING, APPROVED] },
           scheduleTime: { $gte: moment().utc() },
           scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },

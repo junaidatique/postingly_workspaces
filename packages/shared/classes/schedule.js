@@ -2,6 +2,7 @@ const shared = require('shared');
 const moment = require('moment');
 const sqsHelper = require('shared').sqsHelper;
 const _ = require('lodash');
+const ProductModel = shared.ProductModel;
 const {
   NOT_SCHEDULED,
   PENDING,
@@ -13,12 +14,17 @@ const {
   POST_AS_OPTION_TW_PHOTO,
   COLLECTION_OPTION_ALL,
   COLLECTION_OPTION_SELECTED,
+  RULE_TYPE_OLD,
+  RULE_TYPE_NEW,
+  POSTING_SORTORDER_NEWEST
 } = require('shared/constants');
 
 module.exports = {
   schedule: async function (event, context) {
     const totalTime = Math.ceil(context.getRemainingTimeInMillis() / 1000);
-    console.log('schedule after db connection =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    if (context) {
+      console.log('schedule after db connection =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    }
 
     console.log("TCL: schedule event", event)
     if (event.source === 'serverless-plugin-warmup') {
@@ -30,11 +36,13 @@ module.exports = {
     const RuleModel = shared.RuleModel;
     const StoreModel = shared.StoreModel;
     const UpdateModel = shared.UpdateModel;
-    const ProductModel = shared.ProductModel;
+
 
     // get rule and store
     const ruleDetail = await RuleModel.findById(event.ruleId);
-    console.log('schedule after ruleDetail =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    if (context) {
+      console.log('schedule after ruleDetail =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    }
     console.log("TCL: ruleDetail.store", ruleDetail.store)
     if (ruleDetail === null) {
       console.log(`rule not found for ${event.ruleId}`);
@@ -112,7 +120,9 @@ module.exports = {
         allowedCollections = updates[0].allowedCollections;
       }
     }
-    console.log('schedule after updates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    if (context) {
+      console.log('schedule after updates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    }
     // if no updates are found
     if (updates.length === 0) {
       // if postingCollectionOption is from all collection now check for selected collection.
@@ -133,21 +143,27 @@ module.exports = {
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
     ).sort({ scheduleTime: 1 }).select('_id product variant');
-    console.log('schedule after scheduledUpdates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    if (context) {
+      console.log('schedule after scheduledUpdates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    }
 
     existingScheduleItems = scheduledUpdates.map(update => update.product);
-    const productsToSchedule = await schedulerHelper.getProductsForSchedule(
+    const productsToSchedule = await this.getProductsForSchedule(
       ruleDetail,
       existingScheduleItems,
       postingCollectionOption,
       allowedCollections,
       storeDetail.noOfActiveProducts
     );
-    console.log('schedule after productsToSchedule =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    if (context) {
+      console.log('schedule after productsToSchedule =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    }
 
     // loop on all the profiles of the rule
     await Promise.all(productsToSchedule.map(async (product, productIndex) => {
-      console.log(`after ${productIndex} product =>`, (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+      if (context) {
+        console.log(`after ${productIndex} product =>`, (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+      }
       console.log("TCL: item ID", product._id);
       scheduleUpdate = updates[productIndex];
       // if no update is found, this means all updates are scheduled and return. 
@@ -354,8 +370,6 @@ module.exports = {
 
     }));
     console.log("TCL: bulkUpdate.length", bulkUpdate.length)
-    // console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.filter))
-    // console.log("TCL: bulkUpdate", bulkUpdate.map(update => update.updateOne.update))
     if (!_.isEmpty(bulkUpdate)) {
       const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
     }
@@ -372,15 +386,141 @@ module.exports = {
         }
       }
     })
-    // console.log("TCL: productUpdate", productUpdate)
-    // console.log("TCL: productUpdate", productUpdate.map(product => product.updateOne.filter))
-    // console.log("TCL: productUpdate", productUpdate.map(product => product.updateOne.update.imagesList))
     if (!_.isEmpty(productUpdate)) {
       const productUpdates = await ProductModel.bulkWrite(productUpdate);
     }
-    // console.log("TCL: bulkUpdate.length", bulkUpdate.length)
     if (bulkUpdate.length > 0) {
       await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: postingCollectionOption });
     }
   },
+  getProductsForSchedule: async function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, noOfActiveProducts) {
+    let products;
+    products = await this.getNotSharedProducts(ruleDetail, [], postingCollectionOption, allowedCollections);
+    if (products.length > 0) {
+      return products;
+    }
+    products = await this.getLessSharedProducts(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, noOfActiveProducts);
+    if (products.length === 0) {
+      products = await this.getLessSharedProducts(ruleDetail, [], postingCollectionOption, allowedCollections, noOfActiveProducts);
+    }
+
+    return products;
+
+  },
+
+
+
+  // get all the products that are not shared on this profile. 
+  getNotSharedProducts: async function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections) {
+    console.log("TCL: getNotSharedProducts")
+    const profileId = ruleDetail.profile;
+    let notSharedOnThisProfileCountQuery = this.getProductsQuery(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
+
+    notSharedOnThisProfileCountQuery = notSharedOnThisProfileCountQuery.countDocuments(
+      {
+        $or: [
+          { "shareHistory.profile": { $ne: profileId } },
+          {
+            $and: [
+              { "shareHistory.profile": profileId },
+              { "shareHistory.postType": { $ne: ruleDetail.type } }
+            ]
+          },
+          {
+            $and: [
+              { "shareHistory.profile": profileId },
+              { "shareHistory.postType": ruleDetail.type },
+              { "shareHistory.counter": 0 }
+            ]
+          }
+        ]
+      }
+    );
+    console.log("TCL: getNotSharedProducts notSharedOnThisProfileCountQuery['_conditions']", notSharedOnThisProfileCountQuery['_conditions']);
+    const notSharedProductsForCount = await notSharedOnThisProfileCountQuery;
+    console.log("TCL: getProductsForSchedule notSharedProductsForCount", notSharedProductsForCount)
+    if (notSharedProductsForCount > 0) {
+      let notSharedOnThisProfileLimitQuery = this.getProductsQuery(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
+      if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
+        notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.sort({ partnerCreatedAt: -1 })
+      } else {
+        notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.limit(-1).skip(Math.random() * notSharedProductsForCount.length)
+      }
+
+      notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.find(
+        {
+          $or: [
+            { "shareHistory.profile": { $ne: profileId } },
+            {
+              $and: [
+                { "shareHistory.profile": profileId },
+                { "shareHistory.postType": { $ne: ruleDetail.type } }
+              ]
+            },
+            {
+              $and: [
+                { "shareHistory.profile": profileId },
+                { "shareHistory.postType": ruleDetail.type },
+                { "shareHistory.counter": 0 }
+              ]
+            }
+          ]
+        }
+      );
+
+      notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.limit(8);
+      console.log("TCL: getNotSharedProducts notSharedOnThisProfileLimitQuery['_conditions']", notSharedOnThisProfileLimitQuery['_conditions']);
+      let products = await notSharedOnThisProfileLimitQuery;
+      return products;
+    } else {
+      return [];
+    }
+  },
+
+  getLessSharedProducts: async function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, noOfActiveProducts) {
+    console.log("TCL: lessSharedOnThisProfile")
+    let lessSharedOnThisProfile = this.getProductsQuery(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
+    lessSharedOnThisProfile = lessSharedOnThisProfile.find({ "shareHistory.profile": ruleDetail.profile });
+    if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
+      lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ partnerCreatedAt: -1 })
+    } else {
+      lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.random() * noOfActiveProducts);
+    }
+    lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ "shareHistory.counter": 1 }).limit(8);
+    console.log("TCL: getNotSharedProducts lessSharedOnThisProfile['_conditions']", lessSharedOnThisProfile['_conditions']);
+    let products = await lessSharedOnThisProfile;
+    return products;
+  },
+  getProductsQuery: function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections) {
+    let query;
+    query = ProductModel.find(
+      {
+        store: ruleDetail.store,
+        active: true,
+        postableByPrice: true,
+        postableByImage: true
+      }
+    );
+    if (!_.isEmpty(existingScheduleItems)) {
+      query = query.where({ _id: { $nin: existingScheduleItems } });
+    }
+    // if the rule is of type old than don't schedule new products
+    if (ruleDetail.type == RULE_TYPE_OLD) {
+      query = query.where({ postableIsNew: false })
+    } else if (ruleDetail.type == RULE_TYPE_NEW) {
+      query = query.where({ postableIsNew: true });
+    }
+    // if zero quantity is not allowed than only select in stock products 
+    if (!ruleDetail.allowZeroQuantity) {
+      query = query.where({ postableByQuantity: true })
+    }
+    if (postingCollectionOption === COLLECTION_OPTION_SELECTED && allowedCollections.length > 0) {
+      query = query.where('collections').in(allowedCollections);
+    }
+    if (ruleDetail.disallowedCollections.length > 0) {
+      query = query.where('collections').nin(ruleDetail.disallowedCollections);
+    }
+    // console.log("TCL: getProductsQuery query['_conditions']", query['_conditions'])
+    return query;
+  }
 }

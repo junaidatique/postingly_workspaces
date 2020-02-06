@@ -20,12 +20,10 @@ type Mutation {
   updateProfile(storeId: ID!, input: [updateProfileInput]!): [Profile]
   deleteProfile(profileId: ID!): [Profile]
   manageRule(input: RuleInput!): Rule
-  deleteRule(ruleId: ID!): Rule
+  changeRuleStatus(ruleId: ID!): Rule
   deleteUpdate(updateId: ID!): Update
   editUpdate(updateId: ID!, input: editUpdateInput!): Update
   createUpdate(input: createUpdateInput!): Update
   syncProducts(storeId: ID!): Store
-  syncProfiles(storeId: ID!): Store
-  syncRules(storeId: ID!): Store
 }
 
