@@ -1064,7 +1064,14 @@ module.exports = {
 
       const productFromDB = await ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${partnerId}` }).select(
         '_id title partnerSpecificUrl active minimumPrice postableByImage postableByQuantity postableByPrice postableIsNew variants imagesList');
-
+      if (!productFromDB) {
+        console.log("TCL: productFromDB not found.", productFromDB)
+        return httpHelper.ok(
+          {
+            message: "Recieved"
+          }
+        );
+      }
       const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, null, null);
 
       const productFromDBObject = {
