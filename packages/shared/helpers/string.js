@@ -36,6 +36,7 @@ module.exports = {
     formattedCaption = formattedCaption.split('[product-price]').join(price);
     formattedCaption = formattedCaption.split('[product-url]').join(url);
     formattedCaption = formattedCaption.split('[product-description]').join(description);
+    formattedCaption = formattedCaption.split('[short-description]').join('');
     formattedCaption = formattedCaption.split('[product-currency]').join(currency);
     return formattedCaption;
   },

@@ -59,8 +59,8 @@ exports.productsUpdate = async function (event, context) {
     return 'lambda is warm!';
   }
   if (event.source !== 'serverless-plugin-warmup') {
-    // await dbConnection.createConnection(context);
-    // await partner.productsUpdate(event, context);
+    await dbConnection.createConnection(context);
+    await partner.productsUpdate(event, context);
     console.log("TCL: event.headers['X-Shopify-Shop-Domain']", event.headers['X-Shopify-Shop-Domain']);
     const response = httpHelper.ok(
       { "message": "success" }
