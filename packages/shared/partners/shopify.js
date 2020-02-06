@@ -1060,7 +1060,7 @@ module.exports = {
           }
         );
       }
-      const product = [JSON.parse(event.body)];
+      const product = JSON.parse(event.body);
 
       const productFromDB = await ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${partnerId}` }).select(
         '_id title partnerSpecificUrl active minimumPrice postableByImage postableByQuantity postableByPrice postableIsNew variants imagesList');
@@ -1079,7 +1079,7 @@ module.exports = {
         title: productFromDB.title,
         partnerSpecificUrl: productFromDB.partnerSpecificUrl,
         active: productFromDB.active,
-        minimumPrice: productFromDB.minimumPrice,
+        // minimumPrice: productFromDB.minimumPrice,
         postableByImage: productFromDB.postableByImage,
         postableByQuantity: productFromDB.postableByQuantity,
         postableByPrice: productFromDB.postableByPrice,
@@ -1090,7 +1090,7 @@ module.exports = {
         title: formatedProduct.title,
         partnerSpecificUrl: formatedProduct.partnerSpecificUrl,
         active: formatedProduct.active,
-        minimumPrice: formatedProduct.minimumPrice,
+        // minimumPrice: formatedProduct.minimumPrice,
         postableByImage: formatedProduct.postableByImage,
         postableByQuantity: formatedProduct.postableByQuantity,
         postableByPrice: formatedProduct.postableByPrice,
