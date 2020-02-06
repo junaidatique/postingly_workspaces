@@ -390,7 +390,11 @@ module.exports = {
       const productUpdates = await ProductModel.bulkWrite(productUpdate);
     }
     if (bulkUpdate.length > 0) {
-      await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: postingCollectionOption });
+      if (process.env.IS_OFFLINE === 'false') {
+        await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: postingCollectionOption });
+      } else {
+        this.schedule({ ruleId: event.ruleId, postingCollectionOption: postingCollectionOption }, context)
+      }
     }
   },
   getProductsForSchedule: async function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, noOfActiveProducts) {
@@ -398,6 +402,9 @@ module.exports = {
     products = await this.getNotSharedProducts(ruleDetail, [], postingCollectionOption, allowedCollections);
     if (products.length > 0) {
       return products;
+    }
+    if (ruleDetail.type === RULE_TYPE_NEW) {
+      return products = [];
     }
     products = await this.getLessSharedProducts(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, noOfActiveProducts);
     if (products.length === 0) {
