@@ -1050,7 +1050,7 @@ module.exports = {
       console.log("TCL: partnerId", JSON.parse(event.body).id)
 
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
-      console.log("TCL: storeDetail", storeDetail)
+      console.log("TCL: storeDetail", storeDetail.title)
       // if store is not found. 
       if (_.isNull(storeDetail)) {
         console.log("TCL: storeDetail not found.")
@@ -1064,6 +1064,7 @@ module.exports = {
 
       const productFromDB = await ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${partnerId}` }).select(
         '_id title partnerSpecificUrl active minimumPrice postableByImage postableByQuantity postableByPrice postableIsNew variants imagesList');
+      console.log("TCL: productFromDB", productFromDB)
       if (!productFromDB) {
         console.log("TCL: productFromDB not found.", productFromDB)
         return httpHelper.ok(
