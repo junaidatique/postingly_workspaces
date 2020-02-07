@@ -157,23 +157,28 @@ module.exports = {
       } catch (error) {
         console.log("TCL: error", error)
         console.log("TCL: error.message", error.message)
+        if (error.message.indexOf('E11000') >= 0) {
+          await sqsHelper.addToQueue('CreateUpdates', event);
+        }
       }
       // scheduleState is set seperately because there may be some updates that are updated. so scheduleState is updated for only newly created updates.
-      console.log("TCL: -------------------------")
-      console.log("TCL: updates.result.nUpserted", updates.result.nUpserted)
-      console.log("TCL: -------------------------")
-      if (updates.result.nUpserted > 0) {
-        const bulkUpdate = updates.result.upserted.map(updateTime => {
-          return {
-            updateOne: {
-              filter: { _id: updateTime._id },
-              update: {
-                scheduleState: NOT_SCHEDULED
+      if (result) {
+        console.log("TCL: -------------------------")
+        console.log("TCL: updates.result.nUpserted", updates.result.nUpserted)
+        console.log("TCL: -------------------------")
+        if (updates.result.nUpserted > 0) {
+          const bulkUpdate = updates.result.upserted.map(updateTime => {
+            return {
+              updateOne: {
+                filter: { _id: updateTime._id },
+                update: {
+                  scheduleState: NOT_SCHEDULED
+                }
               }
             }
-          }
-        });
-        const updateUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+          });
+          const updateUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+        }
       }
     }
     console.log("TCL: event.ruleIdForScheduler", event.ruleIdForScheduler)
