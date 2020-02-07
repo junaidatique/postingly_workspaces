@@ -371,7 +371,13 @@ module.exports = {
     }));
     console.log("TCL: bulkUpdate.length", bulkUpdate.length)
     if (!_.isEmpty(bulkUpdate)) {
-      const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+      try {
+        const updatedUpdates = await UpdateModel.bulkWrite(bulkUpdate);
+      } catch (error) {
+        if (error.message.indexOf('E11000') >= 0) {
+          await sqsHelper.addToQueue('ScheduleUpdates', event);
+        }
+      }
     }
 
     const productUpdate = bulkProductUpdate.map(productObject => {
