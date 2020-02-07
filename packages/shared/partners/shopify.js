@@ -1037,6 +1037,8 @@ module.exports = {
   },
   productsUpdate: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
+      console.log("TCL: context", context.getRemainingTimeInMillis())
+      
       const ProductModel = shared.ProductModel;
       const updateClass = require('shared').updateClass;
       let shopDomain, apiProducts;
