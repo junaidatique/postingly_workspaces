@@ -80,7 +80,7 @@ module.exports = {
     const scheduleClass = shared.scheduleClass;
     const ruleDetail = await RuleModel.findById(event.ruleId).populate('profile');
     if (!ruleDetail || !ruleDetail.profile) {
-      throw new Error(`rule or profile not found for ${event.ruleId}`);
+      console.log("TCL: rule or profile not found for ${event.ruleId}")
     }
     const storeDetail = await StoreModel.findById(ruleDetail.store);
     console.log("TCL: ruleDetail.store", storeDetail._id)
