@@ -162,7 +162,7 @@ module.exports = {
         }
       }
       // scheduleState is set seperately because there may be some updates that are updated. so scheduleState is updated for only newly created updates.
-      if (updates) {
+      if (!_.isUndefined(updates)) {
         console.log("TCL: -------------------------")
         console.log("TCL: updates.result.nUpserted", updates.result.nUpserted)
         console.log("TCL: -------------------------")
