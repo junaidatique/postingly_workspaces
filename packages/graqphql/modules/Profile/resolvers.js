@@ -69,9 +69,9 @@ module.exports = {
       }
       query = query.where('isSharePossible').equals(true);
       if ((!_.isUndefined(args.parent) && !_.isNull(args.parent)) && args.service !== TWITTER_SERVICE) {
-        query = query.where('parent').equals(args.parent);
+        query = query.find({ 'parent': args.parent, serviceProfile: { $nin: [BUFFER_FACEBOOK_PROFILE, BUFFER_FACEBOOK_PAGE, BUFFER_TWITTER_PROFILE] } });
       }
-      // console.log("TCL: query", query)
+
       const profiles = await query;
       // console.log("TCL: profiles", profiles);
       return profiles.map(profile => {
@@ -131,94 +131,5 @@ module.exports = {
     }
   },
 
-  createProfile: async function (storeId, profile, parentId) {
-    const ProfileModel = shared.ProfileModel;
-    let profileService = '';
-    let profileServiceProfile = '';
-    let isSharePossible = true;
-    if (profile.service === 'fb') {
-      profileService = FACEBOOK_SERVICE;
-      profileServiceProfile = FACEBOOK_PROFILE;
-      isSharePossible = false;
-    }
-    if (profile.service === 'fb_page') {
-      profileService = FACEBOOK_SERVICE;
-      profileServiceProfile = FACEBOOK_PAGE;
-    }
-    if (profile.service === 'tw') {
-      profileService = TWITTER_SERVICE;
-      profileServiceProfile = TWITTER_PROFILE;
-    }
-    if (profile.service === 'buffer') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_PROFILE;
-      isSharePossible = false;
-    }
-    if (profile.service === 'twitter_profile') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_TWITTER_PROFILE;
-    }
-    if (profile.service === 'facebook_profile') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_FACEBOOK_PROFILE;
-    }
-    if (profile.service === 'facebook_page') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_FACEBOOK_PAGE;
-    }
-    if (profile.service === 'facebook_group') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_FACEBOOK_GROUP;
-    }
-    if (profile.service === 'linkedin_profile') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_LINKEDIN_PROFILE;
-    }
-    if (profile.service === 'linkedin_page') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_LINKEDIN_PAGE;
-    }
-    if (profile.service === 'linkedin_group') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_LINKEDIN_GROUP;
-    }
-    if (profile.service === 'instagram_profile') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_INSTAGRAM_PROFILE;
-    }
-    if (profile.service === 'instagram_business') {
-      profileService = BUFFER_SERVICE;
-      profileServiceProfile = BUFFER_INSTAGRAM_BUSINESS;
-    }
-    const uniqKey = `${profileServiceProfile}-${storeId}-${profile.serviceUserId}`;
-    const dbProfile = {
-      updateOne: {
-        filter: { uniqKey: uniqKey },
-        update: {
-          store: storeId,
-          parent: (!_.isNull(parentId) ? parentId._id : null),
-          name: profile.name,
-          uniqKey: uniqKey,
-          avatarUrl: profile.avatarUrl,
-          serviceUserId: profile.serviceUserId,
-          serviceUsername: profile.serviceUsername,
-          profileURL: profile.profileURL,
-          accessToken: profile.accessToken,
-          accessTokenSecret: profile.accessTokenSecret,
-          service: profileService,
-          serviceProfile: profileServiceProfile,
-          bufferId: profile.bufferId,
-          isConnected: (profile.isConnected === '0') ? false : true,
-          isTokenExpired: (profile.isTokenExpired === '0') ? false : true,
-          isSharePossible: isSharePossible,
-          fbDefaultAlbum: profile.fbDefaultAlbum,
-        },
-        upsert: true
-      }
-    }
-    console.log('===================');
-    console.log("TCL: dbProfile", dbProfile)
-    console.log('===================');
-    return dbProfile;
-  }
+
 }

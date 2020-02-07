@@ -225,7 +225,7 @@ module.exports = {
                   store: storeId,
                   parent: parentId,
                   isSharePossible: true,
-                  isConnected: false
+
                 },
                 upsert: true
               }
