@@ -53,6 +53,7 @@ exports.productsCreate = async function (event, context) {
   }
 };
 exports.productsUpdate = async function (event, context) {
+  console.log("TCL: context", context)
   if (event.source === 'serverless-plugin-warmup') {
     console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));

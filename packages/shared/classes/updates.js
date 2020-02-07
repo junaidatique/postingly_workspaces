@@ -79,8 +79,8 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
     const scheduleClass = shared.scheduleClass;
     const ruleDetail = await RuleModel.findById(event.ruleId).populate('profile');
-    if (ruleDetail === null) {
-      throw new Error(`rule not found for ${event.ruleId}`);
+    if (!ruleDetail || !ruleDetail.profile) {
+      throw new Error(`rule or profile not found for ${event.ruleId}`);
     }
     const storeDetail = await StoreModel.findById(ruleDetail.store);
     console.log("TCL: ruleDetail.store", storeDetail._id)
@@ -123,7 +123,7 @@ module.exports = {
         // console.log("TCL: updateTime", updateTime);
         return {
           updateOne: {
-            filter: { uniqKey: `${ruleDetail.id}-${profile._id}-${updateTime.time}` },
+            filter: { uniqKey: `${ruleDetail.id}-${profile}-${updateTime.time}` },
             update: {
               store: storeDetail._id,
               rule: ruleDetail._id,
