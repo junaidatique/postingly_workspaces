@@ -7,6 +7,7 @@ const formattedStore = (store) => {
     id: store._id,
     partnerCreatedAt: store.partnerCreatedAt,
     createdAt: (store.createdAt !== undefined) ? store.createdAt.toISOString() : null,
+    updatedAt: (store.updatedAt !== undefined) ? store.updatedAt.toISOString() : null,
     partnerUpdatedAt: store.partnerUpdatedAt,
     productsLastUpdated: store.productsLastUpdated,
     chargeDate: store.chargeDate,
