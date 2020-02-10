@@ -124,7 +124,7 @@ module.exports = {
         // console.log("TCL: updateTime", updateTime);
         return {
           updateOne: {
-            filter: { uniqKey: `${ruleDetail.id}-${profile}-${updateTime.time}` },
+            filter: { uniqKey: `${ruleDetail.id}-${profile._id}-${updateTime.time}` },
             update: {
               store: storeDetail._id,
               rule: ruleDetail._id,
@@ -206,9 +206,8 @@ module.exports = {
       let updateItemShareHistory = [];
       const updateProducts = items.map(item => {
         updateItemShareHistory = [];
-        console.log("TCL: item.shareHistory", item.shareHistory)
         updateItemShareHistory = item.shareHistory.map(itemScheduleHistory => {
-          console.log("TCL: itemScheduleHistory", itemScheduleHistory)
+
           if ((ruleDetail.profile.toString() === itemScheduleHistory.profile.toString()) && (ruleDetail.type === itemScheduleHistory.postType)) {
             return {
               profile: itemScheduleHistory.profile,
@@ -220,7 +219,7 @@ module.exports = {
           }
         });
 
-        console.log("TCL: updateItemShareHistory", updateItemShareHistory)
+
         return {
           updateOne: {
             filter: { uniqKey: item.uniqKey },
@@ -230,7 +229,7 @@ module.exports = {
           }
         }
       });
-      console.log("TCL: updateProducts", updateProducts)
+
       if (!_.isEmpty(updateProducts)) {
         const products = await ProductModel.bulkWrite(updateProducts);
       }
