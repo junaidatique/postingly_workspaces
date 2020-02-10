@@ -457,7 +457,7 @@ module.exports = {
       if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
         notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.sort({ partnerCreatedAt: -1 })
       } else {
-        notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.limit(-1).skip(Math.random() * notSharedProductsForCount)
+        notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.limit(-1).skip(Math.floor(Math.random() * notSharedProductsForCount));
       }
 
       notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.find(
@@ -499,7 +499,7 @@ module.exports = {
     if (ruleDetail.postingProductOrder == POSTING_SORTORDER_NEWEST || ruleDetail.type == RULE_TYPE_NEW) {
       lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ partnerCreatedAt: -1 })
     } else {
-      lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.random() * noOfActiveProducts);
+      lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.floor(Math.random() * noOfActiveProducts));
     }
     lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ "shareHistory.counter": 1 }).limit(8);
     console.log("TCL: getNotSharedProducts lessSharedOnThisProfile['_conditions']", lessSharedOnThisProfile['_conditions']);
