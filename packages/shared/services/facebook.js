@@ -225,7 +225,7 @@ module.exports = {
                   store: storeId,
                   parent: parentId,
                   isSharePossible: true,
-
+                  isTokenExpired: false
                 },
                 upsert: true
               }
@@ -286,7 +286,8 @@ module.exports = {
                 serviceProfile: FACEBOOK_GROUP,
                 store: storeId,
                 parent: parentId,
-                isSharePossible: true
+                isSharePossible: true,
+                isTokenExpired: false
               },
               upsert: true
             }
