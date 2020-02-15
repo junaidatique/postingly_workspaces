@@ -2,18 +2,22 @@ const RuleModel = require('shared').RuleModel;
 const storeFunctions = require('../Store/functions');
 const profileFunctions = require('../Profile/functions');
 const collectionFunctions = require('../Collection/functions');
+const productFunctions = require('../Product/functions');
 const formattedRule = async (rule) => {
   return {
     ...rule._doc,
     id: rule._id,
     store: storeFunctions.getStoreByID.bind(this, rule._doc.store),
     profile: profileFunctions.getProfileById.bind(this, rule._doc.profile),
+    selectedProducts: productFunctions.getProducts.bind(this, rule._doc.selectedProducts),
     disallowedCollections: collectionFunctions.getCollections.bind(this, rule._doc.disallowedCollections),
     captions: formatCaptions.bind(this, rule._doc.captions),
     postTimings: formatPostTimings.bind(this, rule._doc.postTimings),
     createdAt: (rule.createdAt !== undefined) ? rule.createdAt.toISOString() : null,
+
   }
 }
+
 const getRuleById = async ruleId => {
   const ruleDetail = await RuleModel.findOne(ruleId);
   if (ruleDetail === null) {

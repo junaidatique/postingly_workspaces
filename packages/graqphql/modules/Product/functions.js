@@ -12,6 +12,14 @@ const formattedProduct = async (product) => {
     minimumPrice: product.minimumPrice.toString()
   }
 }
+const getProducts = async productIds => {
+  products = await ProductModel.find({ _id: { $in: productIds } });
+  return products.map(product => {
+    return formattedProduct(product)
+  }).filter(function (item) {
+    return !_.isUndefined(item);
+  });
+}
 const getProductById = async (productId) => {
   const productDetail = await ProductModel.findOne(productId);
   if (productDetail === null) {
@@ -32,3 +40,4 @@ const formattedVariant = async (variant) => {
 
 exports.formattedProduct = formattedProduct
 exports.getProductById = getProductById
+exports.getProducts = getProducts

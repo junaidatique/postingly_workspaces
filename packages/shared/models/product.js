@@ -20,6 +20,11 @@ const SHARE_HISTORY = {
     ref: 'Profile',
     index: true,
   },
+  rule: {
+    type: Schema.Types.ObjectId,
+    ref: 'Rule',
+    index: true,
+  },
   counter: {
     type: Number,
     index: true

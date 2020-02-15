@@ -9,6 +9,7 @@ const {
   SCHEDULE_TYPE_VARIANT,
   PENDING,
   APPROVED,
+  RULE_TYPE_MANUAL
 } = require('shared/constants');
 module.exports = {
   createUpdatesforThisWeek: async function (event) {
@@ -70,31 +71,18 @@ module.exports = {
       }));
     }
   },
-  createUpdates: async function (event, context) {
-    console.log("TCL: event", event)
+  createUpdatesForRule: function (ruleDetail, scheduleWeek, storeTimezone) {
     let updateTimes = [];
     let startOfWeek, endOfWeek;
-    const RuleModel = shared.RuleModel;
-    const StoreModel = shared.StoreModel;
-    const UpdateModel = shared.UpdateModel;
-    const scheduleClass = shared.scheduleClass;
-    const ruleDetail = await RuleModel.findById(event.ruleId).populate('profile');
-    if (!ruleDetail || !ruleDetail.profile) {
-      console.log("TCL: rule or profile not found for ${event.ruleId}");
-      return;
-    }
-    const storeDetail = await StoreModel.findById(ruleDetail.store);
-    console.log("TCL: ruleDetail.store", storeDetail._id)
-    console.log("TCL: ruleDetail.store.title", storeDetail.title)
-    if (event.scheduleWeek === 'next') {
-      startOfWeek = moment().add(1, 'weeks').tz(storeDetail.timezone).startOf('isoWeek');
-      endOfWeek = moment().add(1, 'weeks').tz(storeDetail.timezone).endOf('isoWeek');
-    } else if (!_.isUndefined(event.scheduleWeek)) {
-      startOfWeek = moment(event.scheduleWeek);
-      endOfWeek = moment(event.scheduleWeek).add(7, 'days');
+    if (scheduleWeek === 'next') {
+      startOfWeek = moment().add(1, 'weeks').tz(storeTimezone).startOf('isoWeek');
+      endOfWeek = moment().add(1, 'weeks').tz(storeTimezone).endOf('isoWeek');
+    } else if (!_.isUndefined(scheduleWeek)) { // this is used for testing purposes. 
+      startOfWeek = moment(scheduleWeek);
+      endOfWeek = moment(scheduleWeek).add(7, 'days');
     } else {
-      startOfWeek = moment().tz(storeDetail.timezone).startOf('isoWeek')
-      endOfWeek = moment().tz(storeDetail.timezone).endOf('isoWeek');
+      startOfWeek = moment().tz(storeTimezone).startOf('isoWeek')
+      endOfWeek = moment().tz(storeTimezone).endOf('isoWeek');
     }
     console.log("TCL: startOfWeek", startOfWeek.toISOString())
     console.log("TCL: endOfWeek", endOfWeek.toISOString())
@@ -114,6 +102,52 @@ module.exports = {
         }
       }
     });
+    return updateTimes;
+  },
+  createUpdatesForManualRule: function (ruleDetail, storeTimezone) {
+    let updateTimes = [];
+    const numberOfProducts = ruleDetail.selectedProducts.length;
+    let startOfDay = moment.tz(storeTimezone).startOf('day');
+    while (updateTimes.length < numberOfProducts) {
+      let updateTime = startOfDay.clone();
+      ruleDetail.postTimings.forEach((postTime) => {
+        hour = updateTime.set({ 'hour': postTime.postingHour, 'minute': postTime.postingMinute });
+        if (hour.isAfter(moment.utc()) && postTime.postingDays.includes(moment.weekdays(updateTime.weekday()))) {
+          updateTimes.push(
+            {
+              time: hour.toISOString(),
+              postingCollectionOption: postTime.postingCollectionOption,
+              allowedCollections: postTime.collections,
+              postTimingId: postTime._id,
+            }
+          );
+        }
+      });
+      startOfDay = startOfDay.add(1, 'day');
+    }
+    return updateTimes;
+  },
+  createUpdates: async function (event, context) {
+    console.log("TCL: event", event)
+    let updateTimes = [];
+    const RuleModel = shared.RuleModel;
+    const StoreModel = shared.StoreModel;
+    const UpdateModel = shared.UpdateModel;
+    const scheduleClass = shared.scheduleClass;
+    const ruleDetail = await RuleModel.findById(event.ruleId).populate('profile');
+    if (!ruleDetail || !ruleDetail.profile) {
+      console.log("TCL: rule or profile not found for ${event.ruleId}");
+      return;
+    }
+
+    const storeDetail = await StoreModel.findById(ruleDetail.store);
+    console.log("TCL: ruleDetail.store", storeDetail._id)
+    console.log("TCL: ruleDetail.store.title", storeDetail.title)
+    if (ruleDetail.type === RULE_TYPE_MANUAL) {
+      updateTimes = this.createUpdatesForManualRule(ruleDetail, storeDetail.timezone);
+    } else {
+      updateTimes = this.createUpdatesForRule(ruleDetail, event.scheduleWeek, storeDetail.timezone)
+    }
 
     console.log("TCL: -------------------------")
     console.log("TCL: updateTimes.length", updateTimes.length)
@@ -121,7 +155,6 @@ module.exports = {
     if (updateTimes.length > 0) {
       const profile = ruleDetail.profile;
       const bulkUpdatesWrite = updateTimes.map(updateTime => {
-        // console.log("TCL: updateTime", updateTime);
         return {
           updateOne: {
             filter: { uniqKey: `${ruleDetail.id}-${profile._id}-${updateTime.time}` },

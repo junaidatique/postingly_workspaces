@@ -12,7 +12,18 @@ const changeCaption = require('functions').changeCaption.update;
 const updateProductUrls = require('functions').updateProductUrls.execute;
 const shareUpdates = require('functions').shareUpdates.share;
 
-const { PARTNERS_SHOPIFY, FACEBOOK_SERVICE, TWITTER_SERVICE, BUFFER_SERVICE, APPROVED, POSTED, FAILED, COLLECTION_OPTION_SELECTED } = require('shared/constants')
+const {
+  PARTNERS_SHOPIFY,
+  FACEBOOK_SERVICE,
+  TWITTER_SERVICE,
+  BUFFER_SERVICE,
+  APPROVED,
+  POSTED,
+  FAILED,
+  COLLECTION_OPTION_SELECTED,
+  RULE_TYPE_MANUAL,
+  RULE_TYPE_NEW,
+  RULE_TYPE_OLD } = require('shared/constants')
 module.exports = {
   execute: async function (event, context) {
     const StoreModel = shared.StoreModel;
@@ -29,14 +40,14 @@ module.exports = {
     await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
 
     const RuleModel = shared.RuleModel;
-    const ruleDetail = await RuleModel.findOne({ store: storeId, type: 'new' }).populate('profiles');
+    const ruleDetail = await RuleModel.findOne({ store: storeId, type: RULE_TYPE_MANUAL }).populate('profiles');
 
     // first iteration.
-    // console.log("TCL: createUpdates ---------------------------------------------------------")
-    // await createUpdates({ ruleId: ruleDetail._id });
+    console.log("TCL: createUpdates ---------------------------------------------------------")
+    await createUpdates({ ruleId: ruleDetail._id }, context);
     // await createUpdates({ ruleId: ruleDetail._id });
     // console.log("TCL: schedule ---------------------------------------------------------")
-    // await schedule({ ruleId: ruleDetail._id }, context);
+    await schedule({ ruleId: ruleDetail._id }, context);
     // await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
     // console.log("TCL: updateProductUrls ---------------------------------------------------------")
     // await updateProductUrls();

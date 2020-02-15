@@ -16,6 +16,7 @@ const {
   COLLECTION_OPTION_SELECTED,
   RULE_TYPE_OLD,
   RULE_TYPE_NEW,
+  RULE_TYPE_MANUAL,
   POSTING_SORTORDER_NEWEST
 } = require('shared/constants');
 
@@ -74,6 +75,7 @@ module.exports = {
     let bulkUpdate = [];
     let bulkProductUpdate = [];
     let existingScheduleItems = [];
+    let productsToSchedule = [];
     let updates = [];
     let dbImages = [];
     let productLimit = 8;
@@ -85,48 +87,62 @@ module.exports = {
     }
     // if postingCollectionOption is from all collection get all the updates that are 
     // supposted to shared from all collections. 
-    if (postingCollectionOption === COLLECTION_OPTION_ALL) {
+    if (ruleDetail.type === RULE_TYPE_MANUAL) {
       updates = await UpdateModel.find(
         {
           rule: ruleDetail._id,
           scheduleState: NOT_SCHEDULED,
-          scheduleTime: { $gt: moment.utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
-          scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
-          postingCollectionOption: COLLECTION_OPTION_ALL
+          scheduleTime: { $gt: moment.utc() },
+          scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] }
         }
       ).sort({ scheduleTime: 1 }).limit(productLimit);
     } else {
-      // get posting timeing id and select updates one by one. 
-      const postTimingIds = await UpdateModel.distinct('postTimingId',
-        {
-          rule: ruleDetail._id,
-          scheduleState: NOT_SCHEDULED,
-          scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(maxNumberOfDays, 'days') },
-          scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
-          postingCollectionOption: COLLECTION_OPTION_SELECTED
-        }
-      );
-      if (postTimingIds.length > 0) {
-        const unScheduledPostTimingId = postTimingIds[0];
+      if (postingCollectionOption === COLLECTION_OPTION_ALL) {
         updates = await UpdateModel.find(
           {
             rule: ruleDetail._id,
             scheduleState: NOT_SCHEDULED,
             scheduleTime: { $gt: moment.utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
             scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
-            postTimingId: unScheduledPostTimingId
+            postingCollectionOption: COLLECTION_OPTION_ALL
           }
         ).sort({ scheduleTime: 1 }).limit(productLimit);
-        allowedCollections = updates[0].allowedCollections;
+      } else {
+        // get posting timeing id and select updates one by one. 
+        const postTimingIds = await UpdateModel.distinct('postTimingId',
+          {
+            rule: ruleDetail._id,
+            scheduleState: NOT_SCHEDULED,
+            scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(maxNumberOfDays, 'days') },
+            scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+            postingCollectionOption: COLLECTION_OPTION_SELECTED
+          }
+        );
+        if (postTimingIds.length > 0) {
+          const unScheduledPostTimingId = postTimingIds[0];
+          updates = await UpdateModel.find(
+            {
+              rule: ruleDetail._id,
+              scheduleState: NOT_SCHEDULED,
+              scheduleTime: { $gt: moment.utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
+              scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+              postTimingId: unScheduledPostTimingId
+            }
+          ).sort({ scheduleTime: 1 }).limit(productLimit);
+          allowedCollections = updates[0].allowedCollections;
+        }
       }
     }
     if (context) {
       console.log('schedule after updates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
     }
+    console.log("TCL: -------------------------")
+    console.log("TCL: updates.length", updates.length)
+    console.log("TCL: -------------------------")
     // if no updates are found
     if (updates.length === 0) {
       // if postingCollectionOption is from all collection now check for selected collection.
-      if (postingCollectionOption === COLLECTION_OPTION_ALL) {
+      if (postingCollectionOption === COLLECTION_OPTION_ALL && ruleDetail.type !== RULE_TYPE_MANUAL) {
         await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: COLLECTION_OPTION_SELECTED });
       }
       return;
@@ -135,29 +151,38 @@ module.exports = {
     const profile = ruleDetail.profile;
     // get all the sceduled products that are shared in one last day and 
     // for next 7 days. 
-    const scheduledUpdates = await UpdateModel.find(
-      {
-        profile: profile,
-        scheduleState: { $ne: NOT_SCHEDULED },
-        scheduleTime: { $gt: moment().add(-1, 'days').utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
-        scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
-      }
-    ).sort({ scheduleTime: 1 }).select('_id product variant');
-    if (context) {
-      console.log('schedule after scheduledUpdates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
-    }
+    if (ruleDetail.type === RULE_TYPE_MANUAL) {
+      productsToSchedule = await ProductModel.find({ _id: { $in: ruleDetail.selectedProducts } })
+    } else {
 
-    existingScheduleItems = scheduledUpdates.map(update => update.product);
-    const productsToSchedule = await this.getProductsForSchedule(
-      ruleDetail,
-      existingScheduleItems,
-      postingCollectionOption,
-      allowedCollections,
-      storeDetail.noOfActiveProducts
-    );
+
+      const scheduledUpdates = await UpdateModel.find(
+        {
+          profile: profile,
+          scheduleState: { $ne: NOT_SCHEDULED },
+          scheduleTime: { $gt: moment().add(-1, 'days').utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
+          scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+        }
+      ).sort({ scheduleTime: 1 }).select('_id product variant');
+      if (context) {
+        console.log('schedule after scheduledUpdates =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+      }
+
+      existingScheduleItems = scheduledUpdates.map(update => update.product);
+      productsToSchedule = await this.getProductsForSchedule(
+        ruleDetail,
+        existingScheduleItems,
+        postingCollectionOption,
+        allowedCollections,
+        storeDetail.noOfActiveProducts
+      );
+    }
     if (context) {
       console.log('schedule after productsToSchedule =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
     }
+    console.log("TCL: -------------------------")
+    console.log("TCL: productsToSchedule.length", productsToSchedule.length)
+    console.log("TCL: -------------------------")
 
     // loop on all the profiles of the rule
     await Promise.all(productsToSchedule.map(async (product, productIndex) => {
@@ -347,19 +372,21 @@ module.exports = {
 
       // profile history for given profile in the item share history
       profileHistory = productUpdateObject.shareHistory.map(history => {
-        if ((history.profile.toString() === profile.toString()) && history.postType === ruleDetail.type) {
-          return history
+        if ((ruleDetail.type === RULE_TYPE_MANUAL && history.rule && ruleDetail._id.toString() === history.rule.toString()) ||
+          ((ruleDetail.type !== RULE_TYPE_MANUAL && history.profile.toString() === profile.toString()) && history.postType === ruleDetail.type)
+        ) {
+          return history;
         } else {
           return undefined;
         }
       }).filter(item => !_.isUndefined(item))[0];
       // if no share history is found counter is set to one. 
       if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory)) {
-        productUpdateObject.shareHistory[productUpdateObject.shareHistory.length] = { profile: profile, counter: 1, postType: ruleDetail.type };
+        productUpdateObject.shareHistory[productUpdateObject.shareHistory.length] = { profile: profile, counter: 1, postType: ruleDetail.type, rule: ruleDetail._id };
       } else {
         // otherwise counter is incremented and history is returned. 
         productUpdateObject.shareHistory = productUpdateObject.shareHistory.map(history => {
-          if (history.profile.toString() === profile.toString()) {
+          if (history._id.toString() === profileHistory._id.toString()) {
             history.counter = history.counter + 1;
           }
           return history;
