@@ -110,6 +110,11 @@ const ruleSchema = new mongoose.Schema({
     index: true
   },
   postTimings: [POST_TIMING], // actual timings. 
+  selectedProducts: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Product',
+    index: true,
+  }],
   postAsOption: {
     type: String,
     enum: POST_AS_OPTION,

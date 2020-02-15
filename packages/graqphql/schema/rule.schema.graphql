@@ -3,6 +3,7 @@ enum RuleTypes {
   old
   new
   sale
+  manual
 }
 
 enum RuleQueueOption {
@@ -43,6 +44,7 @@ type Rule {
   service: Service!
   type: RuleTypes!,
   profile: Profile
+  selectedProducts: [Product]
   postingTimeOption: RulePostingTimeOptions # one of the option from the publish timing option (post between timings or custom timing sections)
   postTimings: [RulePostTimings]
   postAsOption: ProfilePostingOptions
@@ -92,11 +94,10 @@ input RuleInput {
   service: Service!
   type: RuleTypes!,
   profile: ID!
+  selectedProducts: [ID]
   postingTimeOption: RulePostingTimeOptions
   postTimings: [RulePostTimingsInput]
   postAsOption: ProfilePostingOptions
-  # collectionOption: collectionOptions
-  # collections: [ID!]
   disallowedCollections: [ID!]
   allowZeroQuantity: Boolean
   postAsVariants: Boolean
@@ -104,9 +105,9 @@ input RuleInput {
   repeatFrequency: Int
   rotateImages: Boolean
   rotateImageLimit: Int
-  # selectedPostTimes: SelectedPostTimesInput
   captions: [CreateCaptionInput]  
   active: Boolean
+  
 }
 
 input CreateCaptionInput {  
