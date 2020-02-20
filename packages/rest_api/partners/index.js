@@ -20,7 +20,8 @@ module.exports = {
   },
   getChargeURL: async function (req, now) {
     partner_object = this.getPartner(req);
-    const response = await partner_object.getChargeURL(req, now);
+    const json = JSON.parse(req.body);
+    const response = await partner_object.getChargeURL(json, now);
     return response
   },
   activatePayment: async function (req, now) {

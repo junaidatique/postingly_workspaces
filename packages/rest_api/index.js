@@ -38,8 +38,9 @@ exports.getChargeURL = async function (event, context) {
     if (!event.body) {
       return httpHelper.badRequest("body is empty");
     }
-    const json = JSON.parse(event.body);
-    const response = await partner.getChargeURL(json, new Date());
+    
+    const response = await partner.getChargeURL(event, new Date());
+    console.log("TCL: getChargeURL response", response)
     return httpHelper.ok(
       response
     );
