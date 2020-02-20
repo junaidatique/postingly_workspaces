@@ -19,6 +19,7 @@ module.exports = {
     allStorePosting: reportResolvers.allStorePosting,
     dailyUpdateReport: updateResolvers.dailyUpdateReport,
     updateReport: updateResolvers.updateReport,
+    upgradePlan: storeResolvers.upgradePlan,
   },
   Mutation: {
     createStore: storeResolvers.createStore,

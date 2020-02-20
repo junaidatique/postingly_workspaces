@@ -9,11 +9,11 @@ plugins:
 
 custom:
   warmup:
-    enabled: false # should only be enabled for production. 
+    enabled: true # should only be enabled for production. 
     folderName: '_warmup'
     cleanFolder: false
     memorySize: 256
-    name: 'make-them-pop-rest'
+    name: 'make-them-pop-rest-production'
     vpc:
       securityGroupIds:
         - sg-0e0b1c8b49a3919d8
@@ -80,6 +80,13 @@ functions:
     events:
       - http:
           path: /partners/{partner_slug}/callback
+          method: post
+          cors: true
+  payment:
+    handler: index.getChargeURL
+    events:
+      - http:
+          path: /partners/{partner_slug}/payment
           method: post
           cors: true
   payment_return:

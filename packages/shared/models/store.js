@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 const Schema = mongoose.Schema;
 const mongoosePaginate = require('mongoose-paginate');
-const { LINK_SHORTNER_SERVICES, PARTNERS } = require('shared/constants');
+const { LINK_SHORTNER_SERVICES, PARTNERS, PAYMENT_PLANS } = require('shared/constants');
 
 
 
@@ -48,6 +48,10 @@ const storeSchema = new mongoose.Schema({
   },
   partnerPlan: {
     type: String
+  },
+  paymentPlan: {
+    type: String,
+    enum: PAYMENT_PLANS
   },
   partnerSpecificUrl: {
     type: String

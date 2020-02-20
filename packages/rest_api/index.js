@@ -27,6 +27,24 @@ exports.callback = async function (event, context) {
     return await partner.verifyCallback(event, new Date());
   }
 };
+exports.getChargeURL = async function (event, context) {
+  if (event.source === 'serverless-plugin-warmup') {
+    console.log('WarmUP - Lambda is warm!')
+    await new Promise(r => setTimeout(r, 25));
+    return 'lambda is warm!';
+  }
+  if (event.source !== 'serverless-plugin-warmup') {
+    await dbConnection.createConnection(context);
+    if (!event.body) {
+      return httpHelper.badRequest("body is empty");
+    }
+    const json = JSON.parse(event.body);
+    const response = await partner.getChargeURL(json, new Date());
+    return httpHelper.ok(
+      response
+    );
+  }
+};
 exports.activatePayment = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
     console.log('WarmUP - Lambda is warm!')
