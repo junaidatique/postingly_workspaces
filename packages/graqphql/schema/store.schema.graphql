@@ -8,6 +8,7 @@ type Store {
   partner: Partner
   partnerId: String!
   partnerPlan: String
+  paymentPlan: String
   partnerSpecificUrl: String
   partnerCreatedAt: String
   partnerUpdatedAt: String
@@ -132,4 +133,7 @@ enum ModelStoreSortInput {
 type ListStoreResponse {
   totalRecords: Int,
   stores: [Store]
+}
+type upgradeChargeURL {
+  chargeURL: String
 }

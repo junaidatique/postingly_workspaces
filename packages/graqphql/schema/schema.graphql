@@ -10,6 +10,7 @@ type Query {
   allStorePosting(filter: storeReportInput): [storeReport]
   dailyUpdateReport(filter: dailyUpdateReportInput): [dailyUpdateReportResposne]
   updateReport(filter: updateReportInput, limit: Int, skip: Int): ListUpdateResponse
+  upgradePlan(storeId: ID!): upgradeChargeURL
 }
 
 

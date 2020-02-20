@@ -82,6 +82,13 @@ functions:
           path: /partners/{partner_slug}/callback
           method: post
           cors: true
+  payment:
+    handler: index.getChargeURL
+    events:
+      - http:
+          path: /partners/{partner_slug}/payment
+          method: post
+          cors: true
   payment_return:
     handler: index.activatePayment
     events:

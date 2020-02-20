@@ -8,7 +8,8 @@ const {
   PARTNERS_SHOPIFY, FACEBOOK_DEFAULT_TEXT,
   LINK_SHORTNER_SERVICES_POOOST,
   WEBHOOKS, PENDING, APPROVED,
-  RULE_TYPE_NEW
+  RULE_TYPE_NEW, PAYMENT_PLANS,
+  BASIC_PLAN, PRO_PLAN
 } = require('shared/constants');
 
 const stringHelper = require('shared').stringHelper;
@@ -178,16 +179,12 @@ module.exports = {
         store.partnerToken = accessToken;
         await StoreModel.updateOne({ _id: store._id }, shopUpdateParams);
       }
-      let chargeAuthorizationUrl = null
-      if (!isCharged) {
-        chargeAuthorizationUrl = await this.createCharge(shop.myshopify_domain, accessToken);
-      }
-      console.log("chargeAuthorizationUrl:", chargeAuthorizationUrl)
+
       nonce = stringHelper.getRandomString(32);
       console.log("-----------------------------verifyCallback Completed-----------------------------");
       console.groupEnd();
       return httpHelper.ok({
-        chargeURL: chargeAuthorizationUrl,
+        isCharged: isCharged,
         userName: cognitoUser,
         storePartnerId: storeKey,
         token: jwt.createJWT(cognitoUser, nonce, now, 600),
@@ -196,6 +193,30 @@ module.exports = {
       console.log("-----------------------------verifyCallback Error-----------------------------", error);
       return httpHelper.internalError();
     }
+
+  },
+  getChargeURL: async function (event, now) {
+    console.log("TCL: event", event)
+    const { storePartnerId, planName } = event;
+    if (!storePartnerId) {
+      return httpHelper.badRequest("storePartnerId is missing");
+    }
+    if (!planName || !PAYMENT_PLANS.includes(planName)) {
+      return httpHelper.badRequest("planName is missing or invalid");
+    }
+    const storeKey = `${storePartnerId}`;
+    console.log("activatePayment storeKey", storeKey);
+    const store = await StoreModel.findOne({ uniqKey: storeKey });
+    console.log("TCL: store", store)
+    let price = process.env.PLAN_AMOUNT_BASIC;
+    if (planName === PRO_PLAN) {
+      price = process.env.PLAN_AMOUNT_PRO;
+    }
+    console.log("TCL: price", price)
+    chargeAuthorizationUrl = await this.createCharge(store.partnerSpecificUrl, store.partnerToken, planName, price);
+    return {
+      chargeURL: chargeAuthorizationUrl
+    };
 
   },
 
@@ -261,17 +282,18 @@ module.exports = {
 
   },
 
-  createCharge: async function (shop, accessToken) {
+  createCharge: async function (shop, accessToken, planName, price) {
     console.log("createCharge shop", shop);
     const body = JSON.stringify({
       recurring_application_charge: {
-        name: `${process.env.APP_TITLE}`,
-        price: process.env.SHOPIFY_CAPPED_AMOUNT,
+        name: `${process.env.APP_TITLE} - ${planName}`,
+        price: price,
         return_url: `${process.env.FRONTEND_URL}${process.env.SHOPIFY_PAYMENT_REUTRN}?shop=${shop}`,
         test: (process.env.STAGE === 'production' && shop !== 'march2019teststore1.myshopify.com') ? false : true,
         trial_days: process.env.SHOPIFY_TRAIL_DAYS,
       }
     });
+    console.log("TCL: createCharge body", body)
     const url = `https://${shop}/admin/api/${process.env.SHOPIFY_API_VERSION}/recurring_application_charges.json`;
     const { json, res, error } = await this.shopifyAPICall(url, body, 'post', accessToken);
     console.log("createCharge json", json);
@@ -340,7 +362,7 @@ module.exports = {
     const json = JSON.parse(event.body);
     const { token, params } = json;
     if (!token) {
-      return httpHelper.badRequest("'token' is missing");
+      // return httpHelper.badRequest("'token' is missing");
     }
     if (!params) {
       return httpHelper.badRequest("'params' is missing");
@@ -354,7 +376,7 @@ module.exports = {
     console.log("activatePayment storeKey", storeKey);
     const store = await StoreModel.findOne({ uniqKey: storeKey });
     // let store = await query.getItem(process.env.STORES_TABLE, { storeKey: storeKey });
-    console.log("activatePayment store", store);
+    // console.log("activatePayment store", store);
     const accessToken = store.partnerToken;
     console.log("activatePayment accessToken", accessToken);
     let chargeResponse;
@@ -364,12 +386,18 @@ module.exports = {
       console.log("get charge error", err);
       return httpHelper.badRequest("charge not found.");
     }
-
+    console.log("TCL: chargeResponse", chargeResponse)
+    let activateResponse;
     try {
-      const activateResponse = await this.activateCharge(shop, chargeResponse, accessToken);
+      activateResponse = await this.activateCharge(shop, chargeResponse, accessToken);
     } catch (err) {
       console.log("activate charge erro", err);
       return httpHelper.badRequest("charge not activated.");
+    }
+    if (activateResponse && activateResponse.name.indexOf(BASIC_PLAN) >= 0) {
+      store.paymentPlan = BASIC_PLAN;
+    } else if (activateResponse && activateResponse.name.indexOf(PRO_PLAN) >= 0) {
+      store.paymentPlan = PRO_PLAN;
     }
     store.isCharged = true;
     store.chargedMethod = 'shopify';
@@ -1038,7 +1066,7 @@ module.exports = {
   productsUpdate: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
       console.log("TCL: context", context.getRemainingTimeInMillis())
-      
+
       const ProductModel = shared.ProductModel;
       const updateClass = require('shared').updateClass;
       let shopDomain, apiProducts;

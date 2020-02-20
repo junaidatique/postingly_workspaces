@@ -2,6 +2,7 @@ const shared = require('shared');
 const formattedStore = require('./functions').formattedStore
 const getStoreByID = require('./functions').getStoreByID
 const _ = require('lodash')
+const { PRO_PLAN } = require('shared/constants');
 let conn;
 const query = require('shared').query
 module.exports = {
@@ -91,7 +92,21 @@ module.exports = {
     } catch (error) {
       throw error;
     }
-  }
+  },
+  upgradePlan: async (obj, args, context, info) => {
+    console.log("TCL: args", args)
+    try {
+      const StoreModel = shared.StoreModel;
+      const PartnerShopify = shared.PartnerShopify;
+      const storeDetail = await StoreModel.findById(args.storeId);
+      console.log("TCL: storeDetail", storeDetail)
+      const response = await PartnerShopify.getChargeURL({ storePartnerId: storeDetail.uniqKey, planName: PRO_PLAN }, new Date())
+      console.log("TCL: response", response)
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
 
 
 }
