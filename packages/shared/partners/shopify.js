@@ -360,17 +360,15 @@ module.exports = {
       return httpHelper.badRequest("body is empty");
     }
     const json = JSON.parse(event.body);
-    const { token, params } = json;
-    if (!token) {
-      // return httpHelper.badRequest("'token' is missing");
-    }
+    const { params } = json;
+
     if (!params) {
       return httpHelper.badRequest("'params' is missing");
     }
     console.log("activatePayment params", params);
-    const { charge_id, shop, storePartnerId } = params;
-    if (!this.validateShopDomain(shop)) {
-      return httpHelper.badRequest("Invalid 'shop'");
+    const { charge_id, storePartnerId } = params;
+    if (!charge_id) {
+      return httpHelper.badRequest("'charge' is missing");
     }
     const storeKey = `${storePartnerId}`;
     console.log("activatePayment storeKey", storeKey);
