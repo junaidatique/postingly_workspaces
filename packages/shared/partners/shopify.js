@@ -366,15 +366,14 @@ module.exports = {
       return httpHelper.badRequest("'params' is missing");
     }
     console.log("activatePayment params", params);
-    const { charge_id, storePartnerId } = params;
+    const { charge_id, shop, storePartnerId } = params;
     if (!charge_id) {
       return httpHelper.badRequest("'charge' is missing");
     }
     const storeKey = `${storePartnerId}`;
     console.log("activatePayment storeKey", storeKey);
-    const store = await StoreModel.findOne({ uniqKey: storeKey });
-    // let store = await query.getItem(process.env.STORES_TABLE, { storeKey: storeKey });
-    // console.log("activatePayment store", store);
+    const store = await StoreModel.findOne({ partnerSpecificUrl: shop });
+    console.log("TCL: store", store)
     const accessToken = store.partnerToken;
     console.log("activatePayment accessToken", accessToken);
     let chargeResponse;
