@@ -14,7 +14,8 @@ module.exports = {
       if (!_.isUndefined(args.filter)) {
         if (!_.isEmpty(args.filter.userId)) {
           // searchQuery.userId = new RegExp(, "i");
-          searchQuery.userId = args.filter.userId;
+          // searchQuery.userId = args.filter.userId;
+          searchQuery.email = new RegExp(args.filter.userId, "i");
         }
         if (!_.isEmpty(args.filter.partner)) {
           searchQuery.partner = args.filter.partner;
