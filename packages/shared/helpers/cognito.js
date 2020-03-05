@@ -39,13 +39,47 @@ module.exports = {
     } catch (err) {
       console.log("TCL: err", err)
       console.log("TCL: err", err.message)
-      if (err.code === "UsernameExistsException") {
+      if (err.code === "UsernameExistsException" && err.message.indexOf('RESEND') < 0) {
         const user = await identityProvider.adminGetUser({
           UserPoolId: userPoolId,
           Username: username,
         }).promise();
         console.log("createUser adminGetUser User", user);
         return user.Username;
+      }
+      if (err.code === "UsernameExistsException" && err.message.indexOf('RESEND') >= 0) {
+        const userParams = {
+          MessageAction: "RESEND",
+          TemporaryPassword: "Abc@1234",
+          UserAttributes: [
+            { Name: "email", Value: email },
+            { Name: "name", Value: shopDomain },
+
+          ],
+          UserPoolId: userPoolId,
+          Username: username,
+        };
+        console.log("createUser userParams", userParams);
+        try {
+          const result = await identityProvider.adminCreateUser(userParams).promise();
+          console.log("createUser identityProvider User", result.User);
+          if (result.User && result.User.Username) {
+            return result.User.Username;
+          }
+          throw Error("No username!!");
+        } catch (err) {
+          console.log("TCL: err", err)
+          console.log("TCL: err", err.message)
+          if (err.code === "UsernameExistsException" && err.message.indexOf('RESEND') < 0) {
+            const user = await identityProvider.adminGetUser({
+              UserPoolId: userPoolId,
+              Username: username,
+            }).promise();
+            console.log("createUser adminGetUser User", user);
+            return user.Username;
+          }
+          throw err;
+        }
       }
       throw err;
     }
