@@ -36,6 +36,7 @@ input updateReportInput {
   storeIdsExcluded: String
   service: String
   rule: String
+  profile: String
   serviceProfile: String
   postType: String
   postAsOption: String
