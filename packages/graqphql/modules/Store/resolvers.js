@@ -16,7 +16,7 @@ module.exports = {
           searchQuery.userId = args.filter.userId;
         }
         if (!_.isEmpty(args.filter.email)) {
-          searchQuery.email = new RegExp(args.filter.userId, "i");
+          searchQuery.email = new RegExp(args.filter.email, "i");
         }
         if (!_.isEmpty(args.filter.partner)) {
           searchQuery.partner = args.filter.partner;
