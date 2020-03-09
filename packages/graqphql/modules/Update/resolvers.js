@@ -17,13 +17,13 @@ module.exports = {
         store: args.filter.storeId,
         profile: args.filter.profile,
         scheduleState: args.filter.scheduleState,
-        scheduleTime: { "$gte": moment().utc() },
+        // scheduleTime: { "$gte": moment().utc() },
       }
       if (!_.isUndefined(args.filter.product)) {
         searchQuery.product = args.filter.product;
       }
       searchOptions = {
-        sort: { scheduleTime: 1 },
+        sort: { scheduleTime: args.sort },
         offset: args.skip,
         limit: args.limit
       }

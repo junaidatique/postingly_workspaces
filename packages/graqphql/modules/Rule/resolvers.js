@@ -70,7 +70,10 @@ module.exports = {
   listRules: async (obj, args, context, info) => {
     console.log("TCL: args", args)
     try {
-      let searchQuery = RuleModel.find({ store: args.filter.storeId, type: args.filter.type });
+      let searchQuery = RuleModel.find({ store: args.filter.storeId });
+      if (!_.isEmpty(args.filter.type)) {
+        searchQuery = searchQuery.find({ type: args.filter.type });
+      }
       if (!_.isUndefined(args.filter.profile)) {
         searchQuery = searchQuery.find({ profile: args.filter.profile });
       }

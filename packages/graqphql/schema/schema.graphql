@@ -6,7 +6,7 @@ type Query {
   getRule(storeId: ID!, ruleId: ID!): Rule
   listProducts(filter: ModelProductFilterInput!, limit: Int, skip: Int, sort: ModelProductSortInput): ListProductResponse
   listCollections(filter: ModelCollectionFilterInput!, limit: Int, skip: Int): [Collection]
-  listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int): ListUpdateResponse
+  listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int, sort: Int): ListUpdateResponse
   allStorePosting(filter: storeReportInput): [storeReport]
   dailyUpdateReport(filter: dailyUpdateReportInput): [dailyUpdateReportResposne]
   updateReport(filter: updateReportInput, limit: Int, skip: Int): ListUpdateResponse

@@ -30,7 +30,7 @@ module.exports = {
     // console.log("TCL: StoreModel", StoreModel)
     const ProductModel = shared.ProductModel;
     // const storeDetail = await StoreModel.findOne()
-    const storeDetail = await StoreModel.findOne({ _id: '5de8fdb17382b630f4f32c3b' })
+    const storeDetail = await StoreModel.findOne({ _id: '5dc439c89a44ab02a5ace9bf' })
     // console.log("TCL: storeDetail", storeDetail)
 
     const UpdateModel = shared.UpdateModel;
@@ -40,7 +40,7 @@ module.exports = {
     await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
 
     const RuleModel = shared.RuleModel;
-    const ruleDetail = await RuleModel.findOne({ store: storeId, type: RULE_TYPE_MANUAL }).populate('profiles');
+    const ruleDetail = await RuleModel.findOne({ store: storeId, type: RULE_TYPE_OLD }).populate('profiles');
 
     // first iteration.
     console.log("TCL: createUpdates ---------------------------------------------------------")
@@ -49,19 +49,20 @@ module.exports = {
     // console.log("TCL: schedule ---------------------------------------------------------")
     await schedule({ ruleId: ruleDetail._id }, context);
     // await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
-    // console.log("TCL: updateProductUrls ---------------------------------------------------------")
-    // await updateProductUrls();
-    // console.log("TCL: changeCaption ---------------------------------------------------------")
-    // await changeCaption({ rule: ruleDetail._id, storeId: null });
-    // console.log("TCL: Postupdates ---------------------------------------------------------")
-    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: "This one failed." })
+    console.log("TCL: updateProductUrls ---------------------------------------------------------")
+    await updateProductUrls();
+    console.log("TCL: changeCaption ---------------------------------------------------------")
+    await changeCaption({ rule: ruleDetail._id, storeId: null });
+    console.log("TCL: Postupdates ---------------------------------------------------------")
+    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: `You've filled the queue for your <b>Zxeus Showcase</b> LinkedIn Page account, nice work! Upgrading to any paid plan will unlock more space. <a class="embedded-cta-link" href="https://buffer.com/pro" target="_blank">See Paid Plans</a>` })
+    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
 
     // // second iteration.
     // const lastUpdate = await UpdateModel.findOne({ store: storeId }).sort({ scheduleTime: -1 });
     // await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
     // await schedule({ ruleId: ruleDetail._id });
     // await changeCaption({ rule: ruleDetail._id, storeId: null });
-    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+
 
     // // third iteration
     // await schedule({ ruleId: ruleDetail._id });
