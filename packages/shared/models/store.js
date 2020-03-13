@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 const Schema = mongoose.Schema;
 const mongoosePaginate = require('mongoose-paginate');
-const { LINK_SHORTNER_SERVICES, PARTNERS, PAYMENT_PLANS } = require('shared/constants');
+const { LINK_SHORTENER_SERVICES, PARTNERS, PAYMENT_PLANS } = require('shared/constants');
 
 
 
@@ -129,7 +129,7 @@ const storeSchema = new mongoose.Schema({
   },
   shortLinkService: {
     type: String,
-    enum: LINK_SHORTNER_SERVICES
+    enum: LINK_SHORTENER_SERVICES
   },
   autoApproveUpdates: {
     type: Boolean,
@@ -154,6 +154,10 @@ const storeSchema = new mongoose.Schema({
   dBUpdated: {
     type: Boolean,
     default: false,
+    index: true
+  },
+  activeCampaignId: {
+    type: Number,
     index: true
   }
 });

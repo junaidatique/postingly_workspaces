@@ -6,7 +6,7 @@ const Intercom = require('intercom-client');
 
 const {
   PARTNERS_SHOPIFY, FACEBOOK_DEFAULT_TEXT,
-  LINK_SHORTNER_SERVICES_POOOST,
+  LINK_SHORTENER_SERVICES_POOOST,
   WEBHOOKS, PENDING, APPROVED,
   RULE_TYPE_NEW, PAYMENT_PLANS,
   BASIC_PLAN, PRO_PLAN
@@ -157,7 +157,7 @@ module.exports = {
           moneyFormat: shop.money_format,
           moneyWithCurrencyFormat: shop.money_with_currency_format,
           isCharged: false,
-          shortLinkService: LINK_SHORTNER_SERVICES_POOOST,
+          shortLinkService: LINK_SHORTENER_SERVICES_POOOST,
           // chargedMethod: '',
           // chargeId: '',
           isUninstalled: false,
