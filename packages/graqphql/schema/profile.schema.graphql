@@ -29,7 +29,40 @@ input connectProfileInput {
   oauthRequestTokenSecret: String
 }
 
-input updateProfileInput {
+input updateConnectProfileInput {
   id: String!  
   isConnected: Boolean!
+}
+input updateProfileInput {  
+  isTokenExpired: Boolean
+  isConnected: Boolean
+}
+enum BufferUpdateStatus{
+  pending
+  sent
+}
+
+type bufferUpdateObject {
+  total: Int
+  updates: [bufferUpdates]
+}
+
+type bufferUpdates {
+  id: String  
+  day: String  
+  dueTime: String
+  status: String
+  textFormatted: String 
+  error: String
+  media: bufferUpdateImage
+}
+type bufferUpdateImage {
+  link: String
+  description: String
+  title: String
+  thumbnail: String  
+}
+
+type updateDeleteResponse {
+  success: String
 }

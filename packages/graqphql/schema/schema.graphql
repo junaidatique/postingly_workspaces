@@ -11,6 +11,7 @@ type Query {
   dailyUpdateReport(filter: dailyUpdateReportInput): [dailyUpdateReportResposne]
   updateReport(filter: updateReportInput, limit: Int, skip: Int): ListUpdateResponse
   upgradePlan(storeId: ID!): upgradeChargeURL
+  getBufferUpdates(profileId: ID!, status: BufferUpdateStatus!): bufferUpdateObject  
 }
 
 
@@ -18,7 +19,8 @@ type Mutation {
   createStore(input: CreateStoreInput!): Store
   updateStore(input: UpdateStoreInput!): Store
   connectProfile(input: connectProfileInput!): Profile
-  updateProfile(storeId: ID!, input: [updateProfileInput]!): [Profile]
+  updateConnectProfile(storeId: ID!, input: [updateConnectProfileInput]!): [Profile]
+  updateProfile(profileId: ID!, input: updateProfileInput!): Profile
   deleteProfile(profileId: ID!): [Profile]
   manageRule(input: RuleInput!): Rule
   changeRuleStatus(ruleId: ID!): Rule
@@ -26,5 +28,6 @@ type Mutation {
   editUpdate(updateId: ID!, input: editUpdateInput!): Update
   createUpdate(input: createUpdateInput!): Update
   syncProducts(storeId: ID!): Store
+  deleteBufferUpdate(profileId: ID!, updateId: String): updateDeleteResponse
 }
 
