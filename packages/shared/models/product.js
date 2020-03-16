@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const VARIANT_SCHEMA = require('./variant')
 const mongoosePaginate = require('mongoose-paginate');
-const { LINK_SHORTNER_SERVICES, PARTNERS, RULE_TYPE } = require('shared/constants');
+const { LINK_SHORTENER_SERVICES, PARTNERS, RULE_TYPE } = require('shared/constants');
 
 const SHORT_LINK = {
   service: {
     type: String,
-    enum: LINK_SHORTNER_SERVICES
+    enum: LINK_SHORTENER_SERVICES
   },
   url: {
     type: String,

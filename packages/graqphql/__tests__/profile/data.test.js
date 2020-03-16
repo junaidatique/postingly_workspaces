@@ -70,7 +70,7 @@ describe('Profile Model', () => {
       id: 'List Not Connected Profiles',
       query: `
       mutation {
-        updateProfile(input: ${updatedProfileParams}) {
+        updateConnectProfile(input: ${updatedProfileParams}) {
           id
 
         }
@@ -78,10 +78,10 @@ describe('Profile Model', () => {
     `,
       variables: {},
       context: {},
-      expected: { data: { updateProfile: [profilesExpected] } }
+      expected: { data: { updateConnectProfile: [profilesExpected] } }
     };
     const result = await graphql(schema, updateNotConnectedProfilesTestCase.query, null, updateNotConnectedProfilesTestCase.context, updateNotConnectedProfilesTestCase.variables);
-    expect(result.data.updateProfile.length).toBe(4);
+    expect(result.data.updateConnectProfile.length).toBe(4);
   }, 30000);
 
 

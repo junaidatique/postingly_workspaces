@@ -20,11 +20,13 @@ module.exports = {
     dailyUpdateReport: updateResolvers.dailyUpdateReport,
     updateReport: updateResolvers.updateReport,
     upgradePlan: storeResolvers.upgradePlan,
+    getBufferUpdates: profileResolvers.getBufferUpdates,
   },
   Mutation: {
     createStore: storeResolvers.createStore,
     updateStore: storeResolvers.updateStore,
     connectProfile: profileResolvers.connectProfile,
+    updateConnectProfile: profileResolvers.updateConnectProfile,
     updateProfile: profileResolvers.updateProfile,
     deleteProfile: profileResolvers.deleteProfile,
     manageRule: ruleResolvers.manageRule,
@@ -33,7 +35,7 @@ module.exports = {
     editUpdate: updateResolvers.editUpdate,
     createUpdate: updateResolvers.createUpdate,
     syncProducts: productResolvers.syncProducts,
-
+    deleteBufferUpdate: profileResolvers.deleteBufferUpdate,
 
   },
 }

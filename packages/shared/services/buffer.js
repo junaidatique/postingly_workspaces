@@ -203,5 +203,42 @@ module.exports = {
       console.log(" -- Buffer sharePosts Error -- ");
       throw new Error(error.message);
     }
+  },
+  getUpdates: async function (profileId, status) {
+    const profileDetail = await ProfileModel.findById(profileId);
+    try {
+      const url = `${BUFFER_API_URL}profiles/${profileDetail.bufferId}/updates/${status}.json?count=20&access_token=${profileDetail.accessToken}`;
+      const profileUpdates = await fetch(url).then(response => response.json());
+      console.log("profileUpdates", profileUpdates)
+      const response = {
+        total: profileUpdates.total,
+        updates: profileUpdates.updates.map(update => {
+          return {
+            id: update.id,
+            day: update.day,
+            dueTime: update.due_time,
+            status: update.status,
+            error: update.error,
+            textFormatted: update.text,
+            media: {
+              link: update.media.link,
+              description: update.media.description,
+              title: update.media.title,
+              thumbnail: update.media.thumbnail
+            }
+          }
+        })
+      }
+      return response;
+    } catch (error) {
+      console.log(" -- Buffer getPendingUpdates Error -- ");
+      throw new Error(error.message);
+    }
+  },
+  deleteUpdate: async function (profileId, updateId) {
+    const profileDetail = await ProfileModel.findById(profileId);
+    const url = `${BUFFER_API_URL}updates/${updateId}/destroy.json?access_token=${profileDetail.accessToken}`;
+    const updateResponse = await fetch(url).then(response => response.json());
+    return updateResponse;
   }
 }

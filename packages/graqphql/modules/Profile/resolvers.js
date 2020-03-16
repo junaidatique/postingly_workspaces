@@ -4,25 +4,20 @@ const FacebookService = require('shared').FacebookService;
 const TwitterService = require('shared').TwitterService;
 const BufferService = require('shared').BufferService;
 const moment = require('moment')
+const updateClass = require('shared').updateClass;
 const {
   FACEBOOK_SERVICE, TEST, TWITTER_SERVICE, BUFFER_SERVICE,
-  PARTNERS_SHOPIFY,
-  LINK_SHORTNER_SERVICES_POOOST,
-  FACEBOOK_PROFILE,
-  FACEBOOK_PAGE,
-  TWITTER_PROFILE,
   BUFFER_FACEBOOK_PROFILE,
   BUFFER_FACEBOOK_PAGE,
-  BUFFER_FACEBOOK_GROUP,
   BUFFER_TWITTER_PROFILE,
-  BUFFER_LINKEDIN_PROFILE,
-  BUFFER_LINKEDIN_PAGE,
-  BUFFER_LINKEDIN_GROUP,
-  BUFFER_INSTAGRAM_PROFILE,
-  BUFFER_INSTAGRAM_BUSINESS,
+  RULE_TYPE_NEW,
+  RULE_TYPE_OLD,
+  RULE_TYPE_MANUAL
+
 } = require('shared/constants');
 const formattedProfile = require('./functions').formattedProfile;
 const ProfileModel = require('shared').ProfileModel;
+const RuleModel = require('shared').RuleModel;
 const StoreModel = require('shared').StoreModel;
 const _ = require('lodash')
 const profileFns = require('shared').profileFns;
@@ -81,18 +76,18 @@ module.exports = {
       throw error;
     }
   },
-  updateProfile: async (obj, args, context, info) => {
+  updateConnectProfile: async (obj, args, context, info) => {
     try {
       let res;
-      console.log("TCL: updateProfile args", args)
+      console.log("TCL: updateConnectProfile args", args)
       if (!_.isEmpty(args)) {
-        console.log("TCL: updateProfile args.input", args.input)
+        console.log("TCL: updateConnectProfile args.input", args.input)
         await Promise.all(args.input.map(async value => {
           // _.each(args.input, async (value, key) => {
           if (value.isConnected) {
-            console.log("TCL: updateProfile value", value)
+            console.log("TCL: updateConnectProfile value", value)
             res = await ProfileModel.updateOne({ _id: value.id }, { isConnected: value.isConnected });
-            console.log("TCL: updateProfile res", res)
+            console.log("TCL: updateConnectProfile res", res)
           }
         }));
       }
@@ -116,6 +111,34 @@ module.exports = {
       throw error;
     }
   },
+  updateProfile: async (obj, args, context, info) => {
+    try {
+      console.log("TCL: updateProfile args", args)
+      let updateData = {}
+      if (!_.isUndefined(args.input.isTokenExpired)) {
+        updateData['isTokenExpired'] = args.input.isTokenExpired;
+      }
+      if (!_.isUndefined(args.input.isConnected)) {
+        updateData['isConnected'] = args.input.isConnected;
+      }
+      if (!_.isEmpty(updateData)) {
+        await ProfileModel.updateOne({ _id: args.profileId }, updateData);
+      }
+      const profileDetail = await ProfileModel.findById(args.profileId);
+      if (profileDetail.isTokenExpired) {
+        await RuleModel.update({ profile: args.profileId }, { active: false });
+        const oldProductRule = await RuleModel.findOne({ profile: args.profileId, type: RULE_TYPE_OLD });
+        await updateClass.deleteScheduledUpdates(oldProductRule._id)
+        const newProductRule = await RuleModel.findOne({ profile: args.profileId, type: RULE_TYPE_NEW });
+        await updateClass.deleteScheduledUpdates(newProductRule._id)
+        const manualProductRule = await RuleModel.findOne({ profile: args.profileId, type: RULE_TYPE_MANUAL });
+        await updateClass.deleteScheduledUpdates(manualProductRule._id)
+      }
+      return formattedProfile(profileDetail);
+    } catch (error) {
+      throw error;
+    }
+  },
   deleteProfile: async (obj, args, context, info) => {
     console.log("TCL: deleteProfile args", args)
     try {
@@ -130,6 +153,25 @@ module.exports = {
       throw error;
     }
   },
+  getBufferUpdates: async (obj, args, context, info) => {
+    console.log("args", args)
+    try {
+      const response = await BufferService.getUpdates(args.profileId, args.status);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+  deleteBufferUpdate: async (obj, args, context, info) => {
+    console.log("args", args)
+    try {
+      const response = await BufferService.deleteUpdate(args.profileId, args.updateId);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
 
 
 }
