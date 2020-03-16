@@ -9,7 +9,7 @@
   ],
   "devDependencies": {
     "@babel/core": "^7.4.4",
-    "aws-lambda": "^0.1.2",
+    "aws-lambda": "^1.0.5",
     "babel-loader": "^8.0.5",
     "dotenv": "^8.0.0",
     "graphql-playground-middleware-express": "^1.7.12",
