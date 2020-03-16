@@ -44,11 +44,12 @@ module.exports = {
     if (context) {
       console.log('schedule after ruleDetail =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
     }
-    console.log("TCL: ruleDetail.store", ruleDetail.store)
-    if (ruleDetail === null) {
+    if (_.isNull(ruleDetail) || _.isUndefined(ruleDetail)) {
       console.log(`rule not found for ${event.ruleId}`);
       return;
     }
+
+    console.log("TCL: ruleDetail.store", ruleDetail.store)
     const storeDetail = await StoreModel.findById(ruleDetail.store);
     const defaultShortLinkService = storeDetail.shortLinkService;
 
