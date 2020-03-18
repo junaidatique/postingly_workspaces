@@ -197,18 +197,7 @@ module.exports = {
 
 
 
-          // create intercom user
-          const intercomClient = new Intercom.Client({ token: process.env.INTERCOM_API_TOKEN });
-          user = await intercomClient.users.create({
-            user_id: store.uniqKey, email: shop.email,
-            custom_attributes: {
-              storeTitle: store.title,
-              partner: store.partner
-            }
-          });
-          console.log("TCL: user", user.body)
-          store.intercomId = user.body.id;
-          await store.save();
+
         } catch (err) {
           console.log("TCL: err", err.message)
           console.log("activatePayment: Store can't be saved");
@@ -225,6 +214,20 @@ module.exports = {
         store.userId = cognitoUser;
         store.partnerToken = accessToken;
         await StoreModel.updateOne({ _id: store._id }, shopUpdateParams);
+      }
+      if (!store.intercomId) {
+        // create intercom user
+        const intercomClient = new Intercom.Client({ token: process.env.INTERCOM_API_TOKEN });
+        user = await intercomClient.users.create({
+          user_id: store.uniqKey, email: shop.email,
+          custom_attributes: {
+            storeTitle: store.title,
+            partner: store.partner
+          }
+        });
+        console.log("TCL: user", user.body)
+        store.intercomId = user.body.id;
+        await store.save();
       }
 
       nonce = stringHelper.getRandomString(32);
@@ -1425,6 +1428,8 @@ module.exports = {
         storeDetail.isUninstalled = true;
         storeDetail.uninstalledDate = new Date().toISOString();
         storeDetail.isCharged = false;
+        storeDetail.paymentPlan = FREE_PLAN;
+        storeDetail.intercomId = "";
         await storeDetail.save();
 
         intercomDeleteBody = JSON.stringify({ intercom_user_id: storeDetail.intercomId });
