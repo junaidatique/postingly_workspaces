@@ -41,6 +41,7 @@ type Store {
   variants(productId: String!): [Variant]
   rules(filter: ModelRuleFilterInput, limit: Int, skip: Int): [Rule]
   updates(limit: Int, skip: Int): [Update]
+  chargeURL: String
 }
 
 enum ShortLinkServices {

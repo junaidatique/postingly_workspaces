@@ -9,7 +9,7 @@ const {
   LINK_SHORTENER_SERVICES_POOOST,
   WEBHOOKS, PENDING, APPROVED,
   RULE_TYPE_NEW, PAYMENT_PLANS,
-  BASIC_PLAN, PRO_PLAN
+  BASIC_PLAN, PRO_PLAN, FREE_PLAN
 } = require('shared/constants');
 
 const stringHelper = require('shared').stringHelper;
@@ -158,15 +158,62 @@ module.exports = {
           moneyWithCurrencyFormat: shop.money_with_currency_format,
           isCharged: false,
           shortLinkService: LINK_SHORTENER_SERVICES_POOOST,
-          // chargedMethod: '',
-          // chargeId: '',
+          paymentPlan: FREE_PLAN,
           isUninstalled: false,
         };
         const storeInstance = new StoreModel(shopParams);
         store = await storeInstance.save();
         console.log("TCL: store", store);
-      } else {
+        try {
+          const storePayload = {
+            "storeId": store._id,
+            "partnerStore": PARTNERS_SHOPIFY,
+            "collectionId": null
+          }
+          if (process.env.IS_OFFLINE === 'false') {
+            await sqsHelper.addToQueue('SyncStoreData', storePayload);
+          } else {
+            this.syncStoreData(storePayload);
+          }
 
+          const webhooksAPIUrl = `https://${shop.myshopify_domain}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
+          const webhookRequestBody = JSON.stringify({
+            webhook: {
+              "topic": 'app/uninstalled',
+              "address": `${process.env.REST_API_URL}partners/${PARTNERS_SHOPIFY}/appUninstalled`,
+              "format": "json"
+            }
+          });
+          console.log("TCL: createWebhooks webhookRequestBody", webhookRequestBody)
+
+          const { json, res, error } = await this.shopifyAPICall(webhooksAPIUrl, webhookRequestBody, 'post', accessToken);
+          console.log("TCL: createWebhooks json", json)
+          if (_.isNull(json)) {
+            if (!_.isNull(error)) {
+              throw new Error(error);
+            }
+            return;
+          }
+
+
+
+          // create intercom user
+          const intercomClient = new Intercom.Client({ token: process.env.INTERCOM_API_TOKEN });
+          user = await intercomClient.users.create({
+            user_id: store.uniqKey, email: shop.email,
+            custom_attributes: {
+              storeTitle: store.title,
+              partner: store.partner
+            }
+          });
+          console.log("TCL: user", user.body)
+          store.intercomId = user.body.id;
+          await store.save();
+        } catch (err) {
+          console.log("TCL: err", err.message)
+          console.log("activatePayment: Store can't be saved");
+        }
+      } else {
         isCharged = store.isCharged;
         const shopUpdateParams = {
           userId: cognitoUser,
@@ -284,13 +331,14 @@ module.exports = {
 
   createCharge: async function (shop, accessToken, planName, price) {
     console.log("createCharge shop", shop);
+    console.log("createCharge process.env.SHOPIFY_TRAIL_DAYS", process.env.SHOPIFY_TRAIL_DAYS);
     const body = JSON.stringify({
       recurring_application_charge: {
         name: `${process.env.APP_TITLE} - ${planName}`,
         price: price,
         return_url: `${process.env.FRONTEND_URL}${process.env.SHOPIFY_PAYMENT_REUTRN}?shop=${shop}`,
-        test: (process.env.STAGE === 'production' && shop !== 'march2019teststore1.myshopify.com') ? false : true,
         trial_days: process.env.SHOPIFY_TRAIL_DAYS,
+        test: (process.env.STAGE === 'production' && shop !== 'march2019teststore1.myshopify.com') ? false : true,
       }
     });
     console.log("TCL: createCharge body", body)
@@ -400,47 +448,8 @@ module.exports = {
     store.chargedMethod = 'shopify';
     store.chargeId = charge_id;
     store.chargeDate = (new Date()).toISOString();;
-    try {
-      await store.save();
-      const storePayload = {
-        "storeId": store._id,
-        "partnerStore": PARTNERS_SHOPIFY,
-        "collectionId": null
-      }
-      if (process.env.IS_OFFLINE === 'false') {
-        await sqsHelper.addToQueue('SyncStoreData', storePayload);
-      } else {
-        this.syncStoreData(storePayload);
-      }
-      const webhookPayload = {
-        partnerStore: PARTNERS_SHOPIFY,
-        shopURL: store.partnerSpecificUrl,
-        accessToken: store.partnerToken,
-        storeId: store._id
-      }
-      if (process.env.IS_OFFLINE === 'false') {
-        await sqsHelper.addToQueue('GetWebhooks', webhookPayload);
+    await store.save();
 
-      } else {
-        // this.getWebhooks(webhookPayload);
-      }
-
-      // create intercom user
-      const intercomClient = new Intercom.Client({ token: process.env.INTERCOM_API_TOKEN });
-      user = await intercomClient.users.create({
-        user_id: store.uniqKey, email: shop.email,
-        custom_attributes: {
-          storeTitle: store.title,
-          partner: store.partner
-        }
-      });
-      console.log("TCL: user", user.body)
-      store.intercomId = user.body.id;
-      await store.save();
-    } catch (err) {
-      console.log("TCL: err", err.message)
-      console.log("activatePayment: Store can't be saved");
-    }
     console.log("-----------------------------activatePayment Completed-----------------------------");
 
     return httpHelper.ok({
