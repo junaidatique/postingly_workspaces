@@ -102,7 +102,7 @@ module.exports = {
       const PartnerShopify = shared.PartnerShopify;
       const storeDetail = await StoreModel.findById(args.storeId);
       console.log("TCL: storeDetail", storeDetail)
-      const response = await PartnerShopify.getChargeURL({ storePartnerId: storeDetail.uniqKey, planName: PRO_PLAN }, new Date())
+      const response = await PartnerShopify.getChargeURL({ storePartnerId: storeDetail.uniqKey, planName: args.plan }, new Date())
       console.log("TCL: response", response)
       return response;
     } catch (error) {

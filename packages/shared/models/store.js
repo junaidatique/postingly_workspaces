@@ -5,8 +5,6 @@ const Schema = mongoose.Schema;
 const mongoosePaginate = require('mongoose-paginate');
 const { LINK_SHORTENER_SERVICES, PARTNERS, PAYMENT_PLANS } = require('shared/constants');
 
-
-
 const storeSchema = new mongoose.Schema({
   profiles: [
     {
