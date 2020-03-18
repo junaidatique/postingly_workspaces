@@ -1425,8 +1425,10 @@ module.exports = {
         storeDetail.isUninstalled = true;
         storeDetail.uninstalledDate = new Date().toISOString();
         storeDetail.isCharged = false;
+        storeDetail.paymentPlan = FREE_PLAN;
+        storeDetail.intercomId = "";
         await storeDetail.save();
-
+        
         intercomDeleteBody = JSON.stringify({ intercom_user_id: storeDetail.intercomId });
         const res = await fetch("https://api.intercom.io/user_delete_requests", {
           body: intercomDeleteBody,
