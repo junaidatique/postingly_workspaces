@@ -108,6 +108,9 @@ module.exports = {
         if (!_.isUndefined(args.filter.profile) && !_.isEmpty(args.filter.profile)) {
           searchQuery.profile = args.filter.profile;
         }
+        if (!_.isUndefined(args.filter.profileIdsExcluded) && !_.isEmpty(args.filter.profileIdsExcluded)) {
+          searchQuery.profile = { $nin: args.filter.profileIdsExcluded.split(',').map(profileId => profileId.trim()) }
+        }
         if (!_.isUndefined(args.filter.service) && !_.isEmpty(args.filter.service)) {
           searchQuery.service = args.filter.service;
         }
