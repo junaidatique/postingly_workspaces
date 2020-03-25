@@ -452,7 +452,25 @@ module.exports = {
     store.chargeId = charge_id;
     store.chargeDate = (new Date()).toISOString();;
     await store.save();
+    try {
+      const webhookPayload = {
+        partnerStore: PARTNERS_SHOPIFY,
+        shopURL: store.partnerSpecificUrl,
+        accessToken: store.partnerToken,
+        storeId: store._id
+      }
+      if (process.env.IS_OFFLINE === 'false') {
+        await sqsHelper.addToQueue('GetWebhooks', webhookPayload);
 
+      } else {
+        // this.getWebhooks(webhookPayload);
+      }
+
+     
+    } catch (err) {
+      console.log("TCL: err", err.message)
+      console.log("activatePayment: Store can't be saved");
+    }
     console.log("-----------------------------activatePayment Completed-----------------------------");
 
     return httpHelper.ok({
