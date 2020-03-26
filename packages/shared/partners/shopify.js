@@ -466,7 +466,7 @@ module.exports = {
         // this.getWebhooks(webhookPayload);
       }
 
-     
+
     } catch (err) {
       console.log("TCL: err", err.message)
       console.log("activatePayment: Store can't be saved");
@@ -1077,12 +1077,14 @@ module.exports = {
       console.log("TCL: syncEvent", syncEvent)
       await this.syncProducts(syncEvent, apiProducts, storeDetail, true, context);
       await this.syncProductCount(syncEvent);
-      // if (process.env.IS_OFFLINE === 'false') {
-      //   const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
-      //   await Promise.all(rules.map(async rule => {
-      //     await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: rule._id });
-      //   }));
-      // }
+      const productFromDBObject = await shared.ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${apiProducts[0].id}` })
+      if (process.env.IS_OFFLINE === 'false' && productFromDBObject.postableIsNew && productFromDBObject.active) {
+        const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
+        await Promise.all(rules.map(async rule => {
+          await updateClass.deleteScheduledUpdates(rule._id)
+          await sqsHelper.addToQueue('CreateUpdates', { ruleId: rule._id, ruleIdForScheduler: rule._id });
+        }));
+      }
       return httpHelper.ok(
         {
           message: "Recieved"
