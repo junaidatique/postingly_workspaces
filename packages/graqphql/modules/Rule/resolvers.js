@@ -69,48 +69,38 @@ module.exports = {
   },
   listRules: async (obj, args, context, info) => {
     console.log("TCL: args", args)
-    try {
-      let searchQuery = RuleModel.find({ store: args.filter.storeId });
-      if (!_.isEmpty(args.filter.type)) {
-        searchQuery = searchQuery.find({ type: args.filter.type });
-      }
-      if (!_.isUndefined(args.filter.profile)) {
-        searchQuery = searchQuery.find({ profile: args.filter.profile });
-      }
-      const rules = await searchQuery;
-      return rules.map(rule => {
-        return formattedRule(rule);
-      })
-    } catch (error) {
-      throw error;
+    let searchQuery = RuleModel.find({ store: args.filter.storeId });
+    if (!_.isEmpty(args.filter.type)) {
+      searchQuery = searchQuery.find({ type: args.filter.type });
     }
+    if (!_.isUndefined(args.filter.profile)) {
+      searchQuery = searchQuery.find({ profile: args.filter.profile });
+    }
+    console.log("searchQuery", searchQuery)
+    const rules = await searchQuery;
+    return rules.map(rule => {
+      return formattedRule(rule);
+    })
   },
   changeRuleStatus: async (obj, args, context, info) => {
-    try {
-      const ruleDetail = await RuleModel.findOne({ _id: args.ruleId });
-      await RuleModel.updateOne({ _id: args.ruleId }, { active: !ruleDetail.active });
-      if (ruleDetail.active) {
-        // const updatesDeleted = await UpdateModel.deleteMany({ rule: args.ruleId, scheduleState: { $nin: [POSTED, FAILED] } });
-        await updateClass.deleteScheduledUpdates(args.ruleId)
+    console.log("args", args)
+    const ruleDetail = await RuleModel.findOne({ _id: args.ruleId });
+    await RuleModel.updateOne({ _id: args.ruleId }, { active: !ruleDetail.active });
+    if (ruleDetail.active) {
+      await updateClass.deleteScheduledUpdates(args.ruleId)
+    } else {
+      if (process.env.IS_OFFLINE === 'false') {
+        await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id });
       } else {
-        if (process.env.IS_OFFLINE === 'false') {
-          await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id });
-        } else {
-          await updateClass.createUpdates({ ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id }, context.context)
-        }
+        await updateClass.createUpdates({ ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id }, context.context)
       }
-      return formattedRule(ruleDetail);
-    } catch (error) {
-      throw error;
     }
+    return formattedRule(ruleDetail);
   },
   getRule: async (obj, args, context, info) => {
-    try {
-      const ruleDetail = await RuleModel.findOne({ _id: args.ruleId, store: args.storeId });
-      return formattedRule(ruleDetail);
-    } catch (error) {
-      throw error;
-    }
+    console.log("args", args)
+    const ruleDetail = await RuleModel.findOne({ _id: args.ruleId, store: args.storeId });
+    return formattedRule(ruleDetail);
   },
 
 
