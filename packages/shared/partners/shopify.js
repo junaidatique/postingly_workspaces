@@ -1056,6 +1056,7 @@ module.exports = {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
+      const updateClass = require('shared').updateClass;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       if (_.isNull(storeDetail)) {
         return httpHelper.ok(
