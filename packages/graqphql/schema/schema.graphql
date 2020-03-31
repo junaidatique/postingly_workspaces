@@ -9,8 +9,7 @@ type Query {
   listUpdates(filter: ModelUpdateFilterInput!, limit: Int, skip: Int, sort: Int): ListUpdateResponse
   allStorePosting(filter: storeReportInput): [storeReport]
   dailyUpdateReport(filter: dailyUpdateReportInput): [dailyUpdateReportResposne]
-  updateReport(filter: updateReportInput, limit: Int, skip: Int): ListUpdateResponse
-  upgradePlan(storeId: ID!, plan: String): upgradeChargeURL
+  updateReport(filter: updateReportInput, limit: Int, skip: Int): ListUpdateResponse  
   getBufferUpdates(profileId: ID!, status: BufferUpdateStatus!): bufferUpdateObject  
 }
 
@@ -29,5 +28,6 @@ type Mutation {
   createUpdate(input: createUpdateInput!): Update
   syncProducts(storeId: ID!): Store
   deleteBufferUpdate(profileId: ID!, updateId: String): updateDeleteResponse
+  upgradePlan(storeId: ID!, plan: String): upgradeChargeURL
 }
 
