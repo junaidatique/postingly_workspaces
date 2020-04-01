@@ -19,7 +19,6 @@ module.exports = {
     allStorePosting: reportResolvers.allStorePosting,
     dailyUpdateReport: updateResolvers.dailyUpdateReport,
     updateReport: updateResolvers.updateReport,
-    upgradePlan: storeResolvers.upgradePlan,
     getBufferUpdates: profileResolvers.getBufferUpdates,
   },
   Mutation: {
@@ -36,6 +35,6 @@ module.exports = {
     createUpdate: updateResolvers.createUpdate,
     syncProducts: productResolvers.syncProducts,
     deleteBufferUpdate: profileResolvers.deleteBufferUpdate,
-
+    upgradePlan: storeResolvers.upgradePlan,
   },
 }

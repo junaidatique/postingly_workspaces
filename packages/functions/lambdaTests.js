@@ -30,7 +30,7 @@ module.exports = {
     // console.log("TCL: StoreModel", StoreModel)
     const ProductModel = shared.ProductModel;
     // const storeDetail = await StoreModel.findOne()
-    const storeDetail = await StoreModel.findOne({ _id: '5dc439c89a44ab02a5ace9bf' })
+    const storeDetail = await StoreModel.findOne({ _id: '5e82f4342ddeb80008ad062d' })
     // console.log("TCL: storeDetail", storeDetail)
 
     const UpdateModel = shared.UpdateModel;
@@ -54,8 +54,8 @@ module.exports = {
     console.log("TCL: changeCaption ---------------------------------------------------------")
     await changeCaption({ rule: ruleDetail._id, storeId: null });
     console.log("TCL: Postupdates ---------------------------------------------------------")
-    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: `You've filled the queue for your <b>Zxeus Showcase</b> LinkedIn Page account, nice work! Upgrading to any paid plan will unlock more space. <a class="embedded-cta-link" href="https://buffer.com/pro" target="_blank">See Paid Plans</a>` })
-    await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: `` })
+    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
 
     // // second iteration.
     // const lastUpdate = await UpdateModel.findOne({ store: storeId }).sort({ scheduleTime: -1 });
