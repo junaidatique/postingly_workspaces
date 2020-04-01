@@ -7,20 +7,21 @@ module.exports = {
   deleteProfile: async function (profileDetail) {
     try {
       const deletedUpdates = await UpdateModel.deleteMany({ profile: profileDetail._id });
-      const rules = await RuleModel.find({ store: profileDetail.store, service: profileDetail.service });
-      if (rules.length > 0) {
-        await Promise.all(rules.map(async rule => {
-          const ruleProfiles = rule.profiles.map(profile => {
-            if (profile !== profileDetail._id) {
-              return profile;
-            }
-          }).filter(function (item) {
-            return !_.isUndefined(item);
-          });
-          rule.profiles = ruleProfiles;
-          await rule.save();
-        }));
-      }
+      const deletedRules = await RuleModel.deleteMany({ profile: profileDetail._id });
+      // const rules = await RuleModel.find({ store: profileDetail.store, service: profileDetail.service });
+      // if (rules.length > 0) {
+      //   await Promise.all(rules.map(async rule => {
+      //     const ruleProfiles = rule.profiles.map(profile => {
+      //       if (profile !== profileDetail._id) {
+      //         return profile;
+      //       }
+      //     }).filter(function (item) {
+      //       return !_.isUndefined(item);
+      //     });
+      //     rule.profiles = ruleProfiles;
+      //     await rule.save();
+      //   }));
+      // }
       const connectedProfiles = await ProfileModel.where('store').equals(profiles[0].store).where('isConnected').equals(true);
 
       res = await ProfileModel.updateOne({ _id: profileDetail._id }, { isConnected: false });
