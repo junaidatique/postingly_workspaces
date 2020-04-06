@@ -138,6 +138,7 @@ module.exports = {
         createUserEmail = email;
       }
       const cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
+      let syncProducts = false;
       if (store === null) {
         console.log("verifyCallback new signup");
         const shopParams = {
@@ -164,6 +165,24 @@ module.exports = {
         const storeInstance = new StoreModel(shopParams);
         store = await storeInstance.save();
         console.log("TCL: store", store);
+        syncProducts = true;
+      } else {
+        if (store.isUninstalled) {
+          syncProducts = true;
+        }
+        isCharged = store.isCharged;
+        const shopUpdateParams = {
+          userId: cognitoUser,
+          partnerToken: accessToken,
+          isUninstalled: false,
+        };
+        console.log("TCL: shopUpdateParams", shopUpdateParams)
+        store.isUninstalled = false;
+        store.userId = cognitoUser;
+        store.partnerToken = accessToken;
+        await StoreModel.updateOne({ _id: store._id }, shopUpdateParams);
+      }
+      if (syncProducts) {
         try {
           const storePayload = {
             "storeId": store._id,
@@ -202,18 +221,6 @@ module.exports = {
           console.log("TCL: err", err.message)
           console.log("activatePayment: Store can't be saved");
         }
-      } else {
-        isCharged = store.isCharged;
-        const shopUpdateParams = {
-          userId: cognitoUser,
-          partnerToken: accessToken,
-          isUninstalled: false,
-        };
-        console.log("TCL: shopUpdateParams", shopUpdateParams)
-        store.isUninstalled = false;
-        store.userId = cognitoUser;
-        store.partnerToken = accessToken;
-        await StoreModel.updateOne({ _id: store._id }, shopUpdateParams);
       }
       if (!store.intercomId) {
         // create intercom user
