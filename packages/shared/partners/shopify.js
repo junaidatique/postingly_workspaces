@@ -1447,12 +1447,12 @@ module.exports = {
         console.log("TCL: collectionDelete", collectionDelete)
         const productDelete = await shared.ProductModel.deleteMany({ store: storeDetail._id });
         console.log("TCL: productDelete", productDelete)
-        const profileDelete = await shared.ProfileModel.deleteMany({ store: storeDetail._id });
-        console.log("TCL: profileDelete", profileDelete)
-        const ruleDelete = await shared.RuleModel.deleteMany({ store: storeDetail._id });
-        console.log("TCL: ruleDelete", ruleDelete)
-        const updateDelete = await shared.UpdateModel.deleteMany({ store: storeDetail._id });
-        console.log("TCL: updateDelete", updateDelete)
+        // const profileDelete = await shared.ProfileModel.deleteMany({ store: storeDetail._id });
+        // console.log("TCL: profileDelete", profileDelete)
+        // const ruleDelete = await shared.RuleModel.deleteMany({ store: storeDetail._id });
+        // console.log("TCL: ruleDelete", ruleDelete)
+        // const updateDelete = await shared.UpdateModel.deleteMany({ store: storeDetail._id });
+        // console.log("TCL: updateDelete", updateDelete)
         storeDetail.isUninstalled = true;
         storeDetail.uninstalledDate = new Date().toISOString();
         storeDetail.isCharged = false;
