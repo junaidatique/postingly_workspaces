@@ -10,7 +10,6 @@ module.exports = {
     if (!_.isEmpty(args.filter.title)) {
       searchQuery = searchQuery.where('title', new RegExp(args.filter.title, "i"));
     }
-    console.log("searchQuery", searchQuery)
     const collections = await searchQuery;
     return collections.map(collection => {
       return formattedCollection(collection);
