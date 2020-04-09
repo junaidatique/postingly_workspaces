@@ -3,6 +3,7 @@ const storeFunctions = require('../Store/functions');
 const profileFunctions = require('../Profile/functions');
 const collectionFunctions = require('../Collection/functions');
 const productFunctions = require('../Product/functions');
+const _ = 'lodash'
 const formattedRule = async (rule) => {
   return {
     ...rule._doc,

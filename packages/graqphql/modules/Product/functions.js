@@ -1,6 +1,7 @@
 const storeFunctions = require('../Store/functions');
 const imageFunctions = require('../Image/functions');
 const ProductModel = require('shared').ProductModel;
+const _ = require('lodash');
 const formattedProduct = async (product) => {
   return {
     ...product._doc,
@@ -14,11 +15,13 @@ const formattedProduct = async (product) => {
 }
 const getProducts = async productIds => {
   products = await ProductModel.find({ _id: { $in: productIds } });
-  return products.map(product => {
+  console.log("getProducts products", products.map(p => p.title))
+  const response = products.map((product) => {
     return formattedProduct(product)
   }).filter(function (item) {
     return !_.isUndefined(item);
   });
+  return response;
 }
 const getProductById = async (productId) => {
   const productDetail = await ProductModel.findOne(productId);

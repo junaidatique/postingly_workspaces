@@ -68,7 +68,7 @@ module.exports = {
     return ruleResult;
   },
   listRules: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
+    console.log("TCL: listRules args", args)
     let searchQuery = RuleModel.find({ store: args.filter.storeId });
     if (!_.isEmpty(args.filter.type)) {
       searchQuery = searchQuery.find({ type: args.filter.type });
@@ -76,7 +76,6 @@ module.exports = {
     if (!_.isUndefined(args.filter.profile)) {
       searchQuery = searchQuery.find({ profile: args.filter.profile });
     }
-    console.log("searchQuery", searchQuery)
     const rules = await searchQuery;
     return rules.map(rule => {
       return formattedRule(rule);
@@ -100,7 +99,10 @@ module.exports = {
   getRule: async (obj, args, context, info) => {
     console.log("args", args)
     const ruleDetail = await RuleModel.findOne({ _id: args.ruleId, store: args.storeId });
-    return formattedRule(ruleDetail);
+    console.log("getRule ruleDetail.createdAt", ruleDetail.createdAt)
+    const response = formattedRule(ruleDetail);
+    console.log("getRule response", response.selectedProducts)
+    return response;
   },
 
 
