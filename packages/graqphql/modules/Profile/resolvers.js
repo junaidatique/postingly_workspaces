@@ -115,7 +115,7 @@ module.exports = {
     }
     const profileDetail = await ProfileModel.findById(args.profileId);
     if (profileDetail.isTokenExpired) {
-      const ruleUpdate = await RuleModel.update({ profile: args.profileId }, { active: false });
+      const ruleUpdate = await RuleModel.updateMany({ profile: args.profileId }, { active: false });
       console.log("ruleUpdate", ruleUpdate)
       const oldProductRule = await RuleModel.findOne({ profile: args.profileId, type: RULE_TYPE_OLD });
       if (oldProductRule) {
