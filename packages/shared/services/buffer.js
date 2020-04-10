@@ -3,6 +3,7 @@ const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
 const ProductModel = require('shared').ProductModel;
 const querystring = require('qs');
+const moment = require('moment');
 const {
   BUFFER_SERVICE, BUFFER_API_URL, POSTED, FAILED, BUFFER_PROFILE,
   BUFFER_TWITTER_PROFILE, BUFFER_FACEBOOK_PAGE, BUFFER_FACEBOOK_GROUP,
@@ -170,7 +171,7 @@ module.exports = {
           photo: update.images[0].url,
           thumbnail: update.images[0].thumbnailUrl
         },
-        scheduled_at: update.scheduleTime
+        scheduled_at: moment(update.scheduleTime).add(5, 'minutes').toISOString()
       })
       console.log("TCL: requestBody", requestBody)
       const bufferIRL = `${BUFFER_API_URL}updates/create.json?access_token=${profile.accessToken}`;
