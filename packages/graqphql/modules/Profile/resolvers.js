@@ -117,11 +117,17 @@ module.exports = {
     if (profileDetail.isTokenExpired) {
       await RuleModel.update({ profile: args.profileId }, { active: false });
       const oldProductRule = await RuleModel.findOne({ profile: args.profileId, type: RULE_TYPE_OLD });
-      await updateClass.deleteScheduledUpdates(oldProductRule._id)
+      if (oldProductRule) {
+        await updateClass.deleteScheduledUpdates(oldProductRule._id)
+      }
       const newProductRule = await RuleModel.findOne({ profile: args.profileId, type: RULE_TYPE_NEW });
-      await updateClass.deleteScheduledUpdates(newProductRule._id)
+      if (newProductRule) {
+        await updateClass.deleteScheduledUpdates(newProductRule._id)
+      }
       const manualProductRule = await RuleModel.findOne({ profile: args.profileId, type: RULE_TYPE_MANUAL });
-      await updateClass.deleteScheduledUpdates(manualProductRule._id)
+      if (manualProductRule) {
+        await updateClass.deleteScheduledUpdates(manualProductRule._id)
+      }
     }
     return formattedProfile(profileDetail);
   },
