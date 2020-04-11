@@ -73,10 +73,12 @@ module.exports = {
     }
     if (!_.isUndefined(response)) {
       update.scheduleState = response.scheduleState;
-      if (!response.failedMessage) {
+      if (response.failedMessage) {
         update.failedMessage = response.failedMessage;
       } else {
-        update.failedMessage = "Something went wrong.";
+        if (response.scheduleState === FAILED) {
+          update.failedMessage = "Something went wrong.";
+        }
       }
       update.response = response.response;
       update.postingTime = moment().toISOString();
