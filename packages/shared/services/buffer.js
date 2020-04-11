@@ -155,18 +155,13 @@ module.exports = {
     try {
       const profile = await ProfileModel.findById(update.profile);
       console.log("TCL: profile", profile)
-      let productId;
-
-      productId = update.product;
-      const productDetail = await ProductModel.findById(productId);
-
       const requestBody = querystring.stringify({
         profile_ids: profile.bufferId,
         text: update.text,
         media: {
-          link: productDetail.partnerSpecificUrl,
+          link: update.productExternalURL,
           picture: update.images[0].url,
-          title: productDetail.title,
+          title: update.titleForCaption,
           description: update.text,
           photo: update.images[0].url,
           thumbnail: update.images[0].thumbnailUrl
