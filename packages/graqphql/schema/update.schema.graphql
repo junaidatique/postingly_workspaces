@@ -58,6 +58,7 @@ input ModelUpdateFilterInput {
   profile: ID
   product: ID
   variant: ID
+  rule: ID
   type: ModelStringFilterInput
   postType: ModelStringFilterInput
   scheduleType: ScheduleType

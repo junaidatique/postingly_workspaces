@@ -20,6 +20,9 @@ module.exports = {
     if (!_.isUndefined(args.filter.product)) {
       searchQuery.product = args.filter.product;
     }
+    if (!_.isUndefined(args.filter.rule)) {
+      searchQuery.rule = args.filter.rule;
+    }
     searchOptions = {
       sort: { scheduleTime: args.sort },
       offset: args.skip,

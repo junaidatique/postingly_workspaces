@@ -27,7 +27,8 @@ const {
   POSTING_SORTORDER_RANDOM,
   POSTING_SORTORDER_NEWEST,
   COLLECTION_OPTION_ALL,
-  COLLECTION_OPTION_SELECTED
+  COLLECTION_OPTION_SELECTED,
+  RULE_TYPE_MANUAL
 } = require('shared/constants');
 
 const { TEST, POSTED, FAILED, NOT_SCHEDULED, PENDING, APPROVED, SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT } = require('shared/constants');
@@ -87,6 +88,9 @@ module.exports = {
     await RuleModel.updateOne({ _id: args.ruleId }, { active: !ruleDetail.active });
     if (ruleDetail.active) {
       await updateClass.deleteScheduledUpdates(args.ruleId)
+      if (ruleDetail.type === RULE_TYPE_MANUAL) {
+        await RuleModel.deleteOne({ _id: ruleDetail._id })
+      }
     } else {
       if (process.env.IS_OFFLINE === 'false') {
         await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id });

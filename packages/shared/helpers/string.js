@@ -33,13 +33,11 @@ module.exports = {
       return '';
     }
     formattedCaption = formattedCaption.split('[product-title]').join(title);
-    console.log("formattedCaption", formattedCaption)
     formattedCaption = formattedCaption.split('[product-price]').join(price);
     formattedCaption = formattedCaption.split('[product-url]').join(url);
     formattedCaption = formattedCaption.split('[product-description]').join(description);
     formattedCaption = formattedCaption.split('[short-description]').join('');
     formattedCaption = formattedCaption.split('[product-currency]').join(currency);
-    console.log("formattedCaption", formattedCaption)
     return formattedCaption;
   },
   getShopifyPageInfo: function (link) {
