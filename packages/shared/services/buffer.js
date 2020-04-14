@@ -154,16 +154,17 @@ module.exports = {
   shareProductPosts: async function (update) {
     try {
       const profile = await ProfileModel.findById(update.profile);
-      console.log("TCL: profile", profile)
+      console.log("TCL: profile", profile);
+      const imageUrl = `${productImage.src.slice(0, productImage.src.lastIndexOf('.'))}_1080x1080.${productImage.src.slice(productImage.src.lastIndexOf('.') + 1)}`;
       const requestBody = querystring.stringify({
         profile_ids: profile.bufferId,
         text: update.text,
         media: {
           link: update.productExternalURL,
-          picture: update.images[0].url,
+          picture: imageUrl,
           title: update.titleForCaption,
           description: update.text,
-          photo: update.images[0].url,
+          photo: imageUrl,
           thumbnail: update.images[0].thumbnailUrl
         },
         scheduled_at: moment(update.scheduleTime).add(5, 'minutes').toISOString()

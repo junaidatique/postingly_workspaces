@@ -78,6 +78,10 @@ const CAPTION = {
 }
 
 const ruleSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+  },
   store: {
     type: Schema.Types.ObjectId,
     ref: 'Store',
@@ -103,7 +107,6 @@ const ruleSchema = new mongoose.Schema({
     ref: 'Profile',
     index: true,
   },
-
   postingTimeOption: {
     type: String,
     enum: POSTING_TIME_OPTIONS, // POST_IMMEDIATELY, POST_BETWEEN_WITH_INTERVAL, CUSTOM_TIMINGS

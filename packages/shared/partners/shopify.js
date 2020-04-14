@@ -9,7 +9,7 @@ const {
   LINK_SHORTENER_SERVICES_POOOST,
   WEBHOOKS, PENDING, APPROVED,
   RULE_TYPE_NEW, PAYMENT_PLANS,
-  BASIC_PLAN, PRO_PLAN, FREE_PLAN
+  BASIC_PLAN, PRO_PLAN, FREE_PLAN, PAUSED
 } = require('shared/constants');
 
 const stringHelper = require('shared').stringHelper;
@@ -138,7 +138,7 @@ module.exports = {
         createUserEmail = email;
       }
       const cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
-      let syncProducts = false;
+      let syncStoreProducts = false;
       if (store === null) {
         console.log("verifyCallback new signup");
         const shopParams = {
@@ -165,10 +165,10 @@ module.exports = {
         const storeInstance = new StoreModel(shopParams);
         store = await storeInstance.save();
         console.log("TCL: store", store);
-        syncProducts = true;
+        syncStoreProducts = true;
       } else {
         if (store.isUninstalled) {
-          syncProducts = true;
+          syncStoreProducts = true;
         }
         isCharged = store.isCharged;
         const shopUpdateParams = {
@@ -182,7 +182,13 @@ module.exports = {
         store.partnerToken = accessToken;
         await StoreModel.updateOne({ _id: store._id }, shopUpdateParams);
       }
-      if (syncProducts) {
+      if (syncStoreProducts) {
+        const profileDelete = await shared.ProfileModel.deleteMany({ store: store._id });
+        console.log("TCL: profileDelete", profileDelete)
+        const ruleDelete = await shared.RuleModel.deleteMany({ store: store._id });
+        console.log("TCL: ruleDelete", ruleDelete)
+        const updateDelete = await shared.UpdateModel.deleteMany({ store: store._id });
+        console.log("TCL: updateDelete", updateDelete)
         try {
           const storePayload = {
             "storeId": store._id,
@@ -1058,44 +1064,46 @@ module.exports = {
       return;
     }
   },
+  createProductFromWebhook: async function (storeDetail, apiProducts, context) {
+    console.log("TCL: apiProducts", apiProducts)
+    const updateClass = require('shared').updateClass;
+    const syncEvent = {
+      "storeId": storeDetail._id,
+      "partnerStore": PARTNERS_SHOPIFY,
+      "collectionId": null
+    }
+    console.log("TCL: syncEvent", syncEvent)
+    await this.syncProducts(syncEvent, apiProducts, storeDetail, true, context);
+    await this.syncProductCount(syncEvent);
+    const productFromDBObject = await shared.ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${apiProducts[0].id}` })
+    if (process.env.IS_OFFLINE === 'false' && productFromDBObject.postableIsNew && productFromDBObject.active) {
+      const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
+      await Promise.all(rules.map(async rule => {
+        await updateClass.deleteScheduledUpdates(rule._id)
+        await sqsHelper.addToQueue('CreateUpdates', { ruleId: rule._id, ruleIdForScheduler: rule._id });
+      }));
+    }
+  },
   productsCreate: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
-      const updateClass = require('shared').updateClass;
+
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       if (_.isNull(storeDetail)) {
         return httpHelper.ok(
           {
-            message: "Recieved"
+            message: "Received"
           }
         );
       }
-      console.log("TCL: storeDetail", storeDetail);
 
       apiProducts = [JSON.parse(event.body)];
-      console.log("TCL: apiProducts", apiProducts)
-
-      const syncEvent = {
-        "storeId": storeDetail._id,
-        "partnerStore": PARTNERS_SHOPIFY,
-        "collectionId": null
-      }
-      console.log("TCL: syncEvent", syncEvent)
-      await this.syncProducts(syncEvent, apiProducts, storeDetail, true, context);
-      await this.syncProductCount(syncEvent);
-      const productFromDBObject = await shared.ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${apiProducts[0].id}` })
-      if (process.env.IS_OFFLINE === 'false' && productFromDBObject.postableIsNew && productFromDBObject.active) {
-        const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
-        await Promise.all(rules.map(async rule => {
-          await updateClass.deleteScheduledUpdates(rule._id)
-          await sqsHelper.addToQueue('CreateUpdates', { ruleId: rule._id, ruleIdForScheduler: rule._id });
-        }));
-      }
+      await this.createProductFromWebhook(storeDetail, apiProducts, context)
       return httpHelper.ok(
         {
-          message: "Recieved"
+          message: "Received"
         }
       );
     }
@@ -1103,38 +1111,29 @@ module.exports = {
   productsUpdate: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
       console.log("TCL: context", context.getRemainingTimeInMillis())
-
       const ProductModel = shared.ProductModel;
       const updateClass = require('shared').updateClass;
-      let shopDomain, apiProducts;
-      if (!_.isUndefined(event.shopDomain)) {
-        shopDomain = event.shopDomain;
-      } else {
-        shopDomain = event.headers['X-Shopify-Shop-Domain'];
-      }
+      const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const partnerId = JSON.parse(event.body).id;
       console.log("TCL: partnerId", JSON.parse(event.body).id)
-
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
-      console.log("TCL: storeDetail", storeDetail.title)
       // if store is not found. 
       if (_.isNull(storeDetail)) {
         console.log("TCL: storeDetail not found.")
         return httpHelper.ok(
           {
-            message: "Recieved"
+            message: "Received"
           }
         );
       }
       const product = JSON.parse(event.body);
-
       const productFromDB = await ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${partnerId}` }).select(
         '_id title partnerSpecificUrl active minimumPrice postableByImage postableByQuantity postableByPrice postableIsNew variants imagesList');
-      console.log("TCL: productFromDB", productFromDB)
+
       if (!productFromDB) {
-        console.log("TCL: productFromDB not found.", productFromDB)
+        await this.createProductFromWebhook(storeDetail, [product], context)
         return httpHelper.ok(
           {
             message: "Recieved"
@@ -1143,33 +1142,32 @@ module.exports = {
       }
       const currencyFormat = stringHelper.stripTags(storeDetail.moneyWithCurrencyFormat);
       const currency = currencyFormat.substr(currencyFormat.length - 3);
+      // the following function basically change the format of the product from shopify 
+      // and convert it into the data structure that is used by the app. 
       const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, productFromDB.postableIsNew);
 
+      // this is the object by the product found in db. 
       const productFromDBObject = {
         title: productFromDB.title,
         partnerSpecificUrl: productFromDB.partnerSpecificUrl,
         active: productFromDB.active,
-        // minimumPrice: productFromDB.minimumPrice,
         postableByImage: productFromDB.postableByImage,
         postableByQuantity: productFromDB.postableByQuantity,
         postableByPrice: productFromDB.postableByPrice,
         postableIsNew: productFromDB.postableIsNew
       }
-
+      // this is the object that we got from shopify
       const formatedProductObject = {
         title: formatedProduct.title,
         partnerSpecificUrl: formatedProduct.partnerSpecificUrl,
         active: formatedProduct.active,
-        // minimumPrice: formatedProduct.minimumPrice,
         postableByImage: formatedProduct.postableByImage,
         postableByQuantity: formatedProduct.postableByQuantity,
         postableByPrice: formatedProduct.postableByPrice,
         postableIsNew: formatedProduct.postableIsNew
       }
+      // now we compare both object. if both objects are same we don't update the product. 
       if (!_.isEqual(productFromDBObject, formatedProductObject)) {
-        console.log("TCL: formatedProductObject", formatedProductObject)
-        console.log("TCL: productFromDBObject", productFromDBObject)
-        console.log("TCL: formatedProduct", formatedProduct)
         const bulkProductInsert = [{
           updateOne: {
             filter: { uniqKey: `${PARTNERS_SHOPIFY}-${product.id}` },
@@ -1449,10 +1447,10 @@ module.exports = {
         console.log("TCL: productDelete", productDelete)
         // const profileDelete = await shared.ProfileModel.deleteMany({ store: storeDetail._id });
         // console.log("TCL: profileDelete", profileDelete)
-        // const ruleDelete = await shared.RuleModel.deleteMany({ store: storeDetail._id });
-        // console.log("TCL: ruleDelete", ruleDelete)
-        // const updateDelete = await shared.UpdateModel.deleteMany({ store: storeDetail._id });
-        // console.log("TCL: updateDelete", updateDelete)
+        const ruleDelete = await shared.RuleModel.updateMany({ store: storeDetail._id }, { active: false });
+        console.log("TCL: ruleDelete", ruleDelete)
+        const updateDelete = await shared.UpdateModel.updateMany({ store: storeDetail._id }, { scheduleState: PAUSED });
+        console.log("TCL: updateDelete", updateDelete)
         storeDetail.isUninstalled = true;
         storeDetail.uninstalledDate = new Date().toISOString();
         storeDetail.isCharged = false;

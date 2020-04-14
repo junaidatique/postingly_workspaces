@@ -40,6 +40,7 @@ enum ProfilePostingOptions {
 # Type
 type Rule {
   id: ID!
+  title: String
   store: Store!
   service: Service!
   type: RuleTypes!,
@@ -90,6 +91,7 @@ type RulePostTimings {
 
 input RuleInput {
   id: ID
+  title: String
   store: ID!
   service: Service!
   type: RuleTypes!,
