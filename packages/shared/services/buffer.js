@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
-const ProductModel = require('shared').ProductModel;
 const querystring = require('qs');
 const moment = require('moment');
 const {

@@ -2,7 +2,6 @@ const fetch = require("node-fetch");
 const querystring = require('querystring')
 const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
-const ProductModel = require('shared').ProductModel;
 
 const _ = require('lodash')
 const { FACEBOOK_SERVICE, FACEBOOK_GRPAHAPI_URL, FACEBOOK_PROFILE, FACEBOOK_PAGE, FACEBOOK_GROUP, FAILED, POSTED, FB_DEFAULT_ALBUM } = require('shared/constants');
@@ -317,10 +316,7 @@ module.exports = {
     if (profile.serviceProfile === FACEBOOK_GROUP) {
       return this.shareFacebookPostAsPhoto(update);
     }
-    let albumTitle, updateItem;
-    updateItem = await ProductModel.findById(update.product);
-
-    albumTitle = updateItem.title;
+    const albumTitle = update.titleForCaption;
     const albumResponse = await this.createAlbum(profile.serviceUserId, albumTitle, update.text, profile.accessToken);
     const albumCreateResponse = albumResponse.albumCreateResponse;
     const albumCreateResponseJson = albumResponse.albumCreateResponseJson;
@@ -349,10 +345,7 @@ module.exports = {
   },
   shareFacebookPostAsLink: async function (update) {
     const profile = await ProfileModel.findById(update.profile);
-    let itemLink, updateItem;
-    updateItem = await ProductModel.findById(update.product);
-    itemLink = updateItem.partnerSpecificUrl;
-
+    const itemLink = update.productExternalURL;
     const image = `https://posting.ly/image?url=${update.images[0].url}`
 
     const requestBody = {
