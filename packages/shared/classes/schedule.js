@@ -499,11 +499,11 @@ module.exports = {
               ]
             },
             {
-              $and: [
-                { "shareHistory.profile": profileId },
-                { "shareHistory.postType": ruleDetail.type },
-                { "shareHistory.counter": 0 }
-              ]
+              shareHistory: {
+                profile: profileId,
+                postType: ruleDetail.type,
+                counter: 0
+              }
             }
           ]
         }
