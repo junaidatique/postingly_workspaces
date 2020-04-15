@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
-const ProductModel = require('shared').ProductModel;
 const querystring = require('qs');
 const moment = require('moment');
 const {
@@ -155,7 +154,7 @@ module.exports = {
     try {
       const profile = await ProfileModel.findById(update.profile);
       console.log("TCL: profile", profile);
-      const imageUrl = `${productImage.src.slice(0, productImage.src.lastIndexOf('.'))}_1080x1080.${productImage.src.slice(productImage.src.lastIndexOf('.') + 1)}`;
+      const imageUrl = `${update.images[0].url.slice(0, update.images[0].url.lastIndexOf('.'))}_1080x1080.${update.images[0].url.slice(update.images[0].url.lastIndexOf('.') + 1)}`;
       const requestBody = querystring.stringify({
         profile_ids: profile.bufferId,
         text: update.text,
