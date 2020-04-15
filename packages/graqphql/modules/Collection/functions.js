@@ -10,7 +10,7 @@ const formattedCollection = async (rule) => {
 const getCollectionById = async collectionId => {
   const collectionDetail = await CollectionModel.findOne(collectionId);
   if (collectionDetail === null) {
-    throw new UserInputError('collection not found.');
+    // throw new UserInputError('collection not found.');
   }
   return formattedCollection(collectionDetail)
 }

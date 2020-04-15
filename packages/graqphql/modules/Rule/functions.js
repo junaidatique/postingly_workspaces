@@ -22,7 +22,7 @@ const formattedRule = async (rule) => {
 const getRuleById = async ruleId => {
   const ruleDetail = await RuleModel.findOne(ruleId);
   if (ruleDetail === null) {
-    throw new UserInputError('Rule not found.');
+    // throw new UserInputError('Rule not found.');
   }
   return formattedRule(ruleDetail)
 }

@@ -3,7 +3,7 @@ const _ = require('lodash');
 const moment = require('moment')
 const {
   FACEBOOK_SERVICE, POST_AS_OPTION_FB_ALBUM, POST_AS_OPTION_FB_LINK, POST_AS_OPTION_FB_PHOTO,
-  TWITTER_SERVICE, TWITTER_PROFILE, BUFFER_SERVICE, POSTED, COLLECTION_OPTION_ALL, FAILED
+  TWITTER_SERVICE, TWITTER_PROFILE, BUFFER_SERVICE, POSTED, COLLECTION_OPTION_ALL, FAILED, APPROVED
 } = require('shared/constants');
 const FacebookService = require('shared').FacebookService;
 const TwitterService = require('shared').TwitterService;
@@ -28,7 +28,7 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
     const update = await UpdateModel.findById(event.updateId);
     console.log("TCL: update", update)
-    if (_.isNull(update) || _.isUndefined(update)) {
+    if (_.isNull(update) || _.isUndefined(update) || update.scheduleState !== APPROVED) {
       return;
     }
 

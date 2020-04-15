@@ -26,7 +26,7 @@ const getProducts = async productIds => {
 const getProductById = async (productId) => {
   const productDetail = await ProductModel.findOne(productId);
   if (productDetail === null) {
-    throw new UserInputError('product not found.');
+    // throw new UserInputError('product not found.');
   }
   return formattedProduct(productDetail)
 }
