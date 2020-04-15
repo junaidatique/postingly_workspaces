@@ -18,6 +18,7 @@ const {
 const formattedProfile = require('./functions').formattedProfile;
 const ProfileModel = require('shared').ProfileModel;
 const RuleModel = require('shared').RuleModel;
+const UpdateModel = require('shared').UpdateModel;
 const StoreModel = require('shared').StoreModel;
 const _ = require('lodash')
 const profileFns = require('shared').profileFns;
@@ -129,6 +130,7 @@ module.exports = {
       if (manualProductRule) {
         await updateClass.deleteScheduledUpdates(manualProductRule._id)
       }
+      const updatesDeleted = await UpdateModel.deleteMany({ profile: args.profileId })
     }
     return formattedProfile(profileDetail);
   },
