@@ -81,7 +81,7 @@ module.exports = {
 
     if (!_.isUndefined(response)) {
 
-      if (response.scheduleState === FAILED) {
+      if (response.scheduleState === FAILED && !_.isUndefined(update.failedMessage)) {
         if (update.failedMessage.indexOf('type unrecognized') >= 0 ||
           update.failedMessage.indexOf('Missing or invalid') >= 0 ||
           update.failedMessage.indexOf('provided image') >= 0
