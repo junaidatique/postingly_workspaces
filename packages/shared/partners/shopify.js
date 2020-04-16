@@ -781,7 +781,12 @@ module.exports = {
       if (!_.isNull(pageInfo)) {
         if (process.env.IS_OFFLINE === 'false') {
           // syncing products
-          const pageInfoProductPayload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
+          const pageInfoProductPayload = {
+            storeId: event.storeId,
+            partnerStore: PARTNERS_SHOPIFY,
+            collectionId: event.collectionId,
+            pageInfo: pageInfo
+          };
           await sqsHelper.addToQueue('SyncProductPage', pageInfoProductPayload);
         } else {
           const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: event.collectionId, pageInfo: pageInfo };
@@ -792,7 +797,34 @@ module.exports = {
         console.log('syncProductPage event after sqs', (context.getRemainingTimeInMillis() / 1000));
       }
     }
-    console.log("TCL: Sync Prdouct completed for this api call. ")
+    console.log("TCL: Sync Product completed for this api call. ")
+  },
+
+  getSingleProduct: async function (event, context) {
+    console.log('getSingleProduct event', event);
+    const StoreModel = shared.StoreModel;
+    const ProductModel = shared.ProductModel;
+    const productDetail = await ProductModel.findById(event.productId)
+    const storeDetail = await StoreModel.findById(event.storeId);
+    if (storeDetail.isUninstalled) {
+      console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
+      return false;
+    }
+    let collectionQuery = '';
+    let pageInfoQuery = '';
+
+    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${productDetail.partnerId}.json`;
+    console.log("TCL: getSingleProduct url", url)
+    const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
+    console.log("json", json)
+    if (_.isNull(json)) {
+      return;
+    }
+    const apiProducts = [json.product];
+    console.log("TCL: apiProducts.length", apiProducts);
+    if (apiProducts.length > 0) {
+      await this.syncProducts(event, apiProducts, storeDetail, null, context);
+    }
   },
 
   uniqueArray1: function (ar) {

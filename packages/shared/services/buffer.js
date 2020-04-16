@@ -168,7 +168,6 @@ module.exports = {
         },
         scheduled_at: moment(update.scheduleTime).add(5, 'minutes').toISOString()
       })
-      console.log("TCL: requestBody", requestBody)
       const bufferIRL = `${BUFFER_API_URL}updates/create.json?access_token=${profile.accessToken}`;
       console.log("TCL: bufferIRL", bufferIRL)
       const updateResponse = await fetch(bufferIRL, {
