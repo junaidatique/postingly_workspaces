@@ -28,5 +28,6 @@ module.exports = {
     } else {
       console.log("TCL: cronThisWeekRulesForUpdates event", event)
     }
+    await UpdateModel.updateMany({ "scheduleState": { $exists: false } }, { scheduleState: NOT_SCHEDULED })
   },
 }
