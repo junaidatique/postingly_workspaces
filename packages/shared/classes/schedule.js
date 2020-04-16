@@ -456,19 +456,8 @@ module.exports = {
       {
         $or: [
           { "shareHistory.profile": { $ne: profileId } },
-          {
-            $and: [
-              { "shareHistory.profile": profileId },
-              { "shareHistory.postType": { $ne: ruleDetail.type } }
-            ]
-          },
-          {
-            shareHistory: {
-              profile: profileId,
-              postType: ruleDetail.type,
-              counter: 0
-            }
-          }
+          { "shareHistory.profile": profileId, "shareHistory.postType": { $ne: ruleDetail.type } },
+          { "shareHistory.profile": profileId, "shareHistory.postType": ruleDetail.type, "shareHistory.counter": { $lte: 0 } },
         ]
       }
     );
@@ -487,19 +476,8 @@ module.exports = {
         {
           $or: [
             { "shareHistory.profile": { $ne: profileId } },
-            {
-              $and: [
-                { "shareHistory.profile": profileId },
-                { "shareHistory.postType": { $ne: ruleDetail.type } }
-              ]
-            },
-            {
-              shareHistory: {
-                profile: profileId,
-                postType: ruleDetail.type,
-                counter: 0
-              }
-            }
+            { "shareHistory.profile": profileId, "shareHistory.postType": { $ne: ruleDetail.type } },
+            { "shareHistory.profile": profileId, "shareHistory.postType": ruleDetail.type, "shareHistory.counter": { $lte: 0 } },
           ]
         }
       );
