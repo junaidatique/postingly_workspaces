@@ -38,7 +38,7 @@ exports.getChargeURL = async function (event, context) {
     if (!event.body) {
       return httpHelper.badRequest("body is empty");
     }
-    
+
     const response = await partner.getChargeURL(event, new Date());
     console.log("TCL: getChargeURL response", response)
     return httpHelper.ok(
@@ -85,7 +85,6 @@ exports.productsUpdate = async function (event, context) {
     const response = httpHelper.ok(
       { "message": "success" }
     );
-    console.log("TCL: response", response)
     return response;
   }
 };

@@ -30,30 +30,29 @@ module.exports = {
     // console.log("TCL: StoreModel", StoreModel)
     const ProductModel = shared.ProductModel;
     // const storeDetail = await StoreModel.findOne()
-    const storeDetail = await StoreModel.findOne({ _id: '5e82f4342ddeb80008ad062d' })
+    const storeDetail = await StoreModel.findOne({ _id: '5e9721e2d317bb22f149abef' })
     // console.log("TCL: storeDetail", storeDetail)
 
     const UpdateModel = shared.UpdateModel;
-    const storeId = storeDetail._id;
-    const PartnerShopify = shared.PartnerShopify;
+    // const storeId = storeDetail._id;
+    // const PartnerShopify = shared.PartnerShopify;
 
-    await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+    // await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
 
-    const RuleModel = shared.RuleModel;
-    const ruleDetail = await RuleModel.findOne({ store: storeId, type: RULE_TYPE_OLD }).populate('profiles');
+    // const RuleModel = shared.RuleModel;
+    // const ruleDetail = await RuleModel.findOne({ store: storeId, type: RULE_TYPE_OLD }).populate('profiles');
 
     // first iteration.
-    console.log("TCL: createUpdates ---------------------------------------------------------")
-    await createUpdates({ ruleId: ruleDetail._id }, context);
-    // await createUpdates({ ruleId: ruleDetail._id });
+    // console.log("TCL: createUpdates ---------------------------------------------------------")
+    // await createUpdates({ ruleId: ruleDetail._id }, context);    
     // console.log("TCL: schedule ---------------------------------------------------------")
-    await schedule({ ruleId: ruleDetail._id }, context);
+    // await schedule({ ruleId: ruleDetail._id }, context);
     // await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
-    console.log("TCL: updateProductUrls ---------------------------------------------------------")
-    await updateProductUrls();
-    console.log("TCL: changeCaption ---------------------------------------------------------")
-    await changeCaption({ rule: ruleDetail._id, storeId: null });
-    console.log("TCL: Postupdates ---------------------------------------------------------")
+    // console.log("TCL: updateProductUrls ---------------------------------------------------------")
+    // await updateProductUrls();
+    // console.log("TCL: changeCaption ---------------------------------------------------------")
+    // await changeCaption({ rule: ruleDetail._id, storeId: null });
+    // console.log("TCL: Postupdates ---------------------------------------------------------")
     // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: `` })
     // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
 
@@ -83,9 +82,10 @@ module.exports = {
     // await changeCaption({ rule: ruleDetail._id, storeId: null });
     // // // await cronPostUpdates();
     // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
-    // // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
-    // // console.log("TCL: updates", updates)
-    // // await shareUpdates({ updateId: updates._id });
+    // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
+    updates = await UpdateModel.findOne();
+    // console.log("TCL: updates", updates)
+    await shareUpdates({ updateId: updates._id });
 
 
   }
