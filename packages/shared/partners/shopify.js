@@ -1109,7 +1109,7 @@ module.exports = {
     await this.syncProductCount(syncEvent);
     const productFromDBObject = await shared.ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${apiProducts[0].id}` })
     if (process.env.IS_OFFLINE === 'false' && productFromDBObject.postableIsNew && productFromDBObject.active) {
-      const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
+      const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW, active: true })
       await Promise.all(rules.map(async rule => {
         await updateClass.deleteScheduledUpdates(rule._id)
         await sqsHelper.addToQueue('CreateUpdates', { ruleId: rule._id, ruleIdForScheduler: rule._id });
@@ -1209,7 +1209,7 @@ module.exports = {
         }];
         const products = await ProductModel.bulkWrite(bulkProductInsert);
         if (process.env.IS_OFFLINE === 'false' && productFromDBObject.postableIsNew) {
-          const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW })
+          const rules = await shared.RuleModel.find({ store: storeDetail._id, type: RULE_TYPE_NEW, active: true })
           await Promise.all(rules.map(async rule => {
             await updateClass.deleteScheduledUpdates(rule._id)
             await sqsHelper.addToQueue('CreateUpdates', { ruleId: rule._id, ruleIdForScheduler: rule._id });
