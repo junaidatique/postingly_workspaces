@@ -99,7 +99,6 @@ module.exports = {
         }
       }
 
-      return;
       update.scheduleState = response.scheduleState;
       if (response.failedMessage) {
         update.failedMessage = response.failedMessage;
@@ -114,6 +113,7 @@ module.exports = {
       update.scheduleState = FAILED;
       update.failedMessage = "undefined.";
     }
+    console.log("update", update)
     await update.save();
   },
 
