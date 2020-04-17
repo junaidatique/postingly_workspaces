@@ -60,10 +60,18 @@ module.exports = {
           "Content-Type": "application/json",
         }
       });
-      console.log("TCL: createAlbum albumCreateResponse", getPermissionResponse)
+
       const getPermissionResponseJson = await getPermissionResponse.json();
+      console.log("getPermission getPermissionResponseJson", getPermissionResponseJson)
+
       const permissionDeclinedCount = getPermissionResponseJson.data.map(permission => {
-        if (permission.permission === "publish_to_groups" && permission.status === 'declined') {
+        if (permission.permission === "email" && permission.status === 'declined') {
+          return permission;
+        }
+        if (permission.permission === "manage_pages" && permission.status === 'declined') {
+          return permission;
+        }
+        if (permission.permission === "publish_pages" && permission.status === 'declined') {
           return permission;
         }
       }).filter(function (item) {
