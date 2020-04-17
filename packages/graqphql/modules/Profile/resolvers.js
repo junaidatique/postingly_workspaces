@@ -31,7 +31,6 @@ module.exports = {
         response = await FacebookService.getProfile(args.input.storeId, args.input.code, args.input.serviceProfile);
       } else {
         response = await FacebookService.login(args.input.storeId, args.input.code, args.input.serviceProfile);
-
       }
     } else if (args.input.service === TWITTER_SERVICE && !_.isNull(args.input.oauthToken)) {
       response = await TwitterService.getProfile(args.input.storeId, args.input.oauthToken, args.input.oauthRequestTokenSecret, args.input.oauthVerifier);
@@ -63,7 +62,6 @@ module.exports = {
     if ((!_.isUndefined(args.parent) && !_.isNull(args.parent)) && args.service !== TWITTER_SERVICE) {
       query = query.find({ 'parent': args.parent, serviceProfile: { $nin: [BUFFER_FACEBOOK_PROFILE, BUFFER_FACEBOOK_PAGE, BUFFER_TWITTER_PROFILE] } });
     }
-    console.log("query", query)
     const profiles = await query;
     // console.log("TCL: profiles", profiles);
     return profiles.map(profile => {
