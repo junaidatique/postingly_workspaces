@@ -245,7 +245,7 @@ module.exports = {
             return {
               profile: itemScheduleHistory.profile,
               postType: itemScheduleHistory.postType,
-              counter: itemScheduleHistory.counter - 1
+              counter: (itemScheduleHistory.counter) > 0 ? itemScheduleHistory.counter - 1 : 0
             }
           } else {
             return itemScheduleHistory
