@@ -32,7 +32,7 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
     const update = await UpdateModel.findById(event.updateId);
 
-    console.log("update.scheduleState", update.scheduleState);
+    // console.log("update.scheduleState", update.scheduleState);
     if (_.isNull(update) || _.isUndefined(update) || update.scheduleState !== APPROVED) {
       return;
     }
