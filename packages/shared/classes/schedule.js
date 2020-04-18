@@ -212,6 +212,8 @@ module.exports = {
         return undefined;
       }
     }).filter(item => !_.isUndefined(item))[0];
+
+
     // if no share history is found counter is set to one. 
     if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory)) {
       productUpdateObject.shareHistory[productUpdateObject.shareHistory.length] = { profile: profile, counter: 1, postType: ruleDetail.type, rule: ruleDetail._id };
@@ -223,6 +225,7 @@ module.exports = {
         }
         return history;
       });
+
     }
     return { bulkUpdateObject, productUpdateObject };
   },
@@ -457,7 +460,13 @@ module.exports = {
         $or: [
           { "shareHistory.profile": { $ne: profileId } },
           { "shareHistory.profile": profileId, "shareHistory.postType": { $ne: ruleDetail.type } },
-          { "shareHistory.profile": profileId, "shareHistory.postType": ruleDetail.type, "shareHistory.counter": { $lte: 0 } },
+          {
+            "shareHistory": {
+              "profile": profileId,
+              "postType": ruleDetail.type,
+              "counter": 0
+            }
+          },
         ]
       }
     );
@@ -477,7 +486,13 @@ module.exports = {
           $or: [
             { "shareHistory.profile": { $ne: profileId } },
             { "shareHistory.profile": profileId, "shareHistory.postType": { $ne: ruleDetail.type } },
-            { "shareHistory.profile": profileId, "shareHistory.postType": ruleDetail.type, "shareHistory.counter": { $lte: 0 } },
+            {
+              "shareHistory": {
+                "profile": profileId,
+                "postType": ruleDetail.type,
+                "counter": 0
+              }
+            },
           ]
         }
       );

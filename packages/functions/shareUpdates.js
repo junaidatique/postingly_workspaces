@@ -80,7 +80,9 @@ module.exports = {
     }
 
     if (!_.isUndefined(response)) {
-
+      console.log("!_.isUndefined(update.failedMessage)", !_.isUndefined(update.failedMessage))
+      console.log("response.scheduleState", response.scheduleState)
+      console.log("update.failedMessage", update.failedMessage)
       if (response.scheduleState === FAILED && !_.isUndefined(update.failedMessage)) {
         if (update.failedMessage.indexOf('type unrecognized') >= 0 ||
           update.failedMessage.indexOf('Missing or invalid') >= 0 ||
@@ -113,7 +115,7 @@ module.exports = {
       update.scheduleState = FAILED;
       update.failedMessage = "undefined.";
     }
-    console.log("update", update)
+    console.log("update.scheduleState", update.scheduleState)
     await update.save();
   },
 
