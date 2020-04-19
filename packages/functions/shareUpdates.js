@@ -1,6 +1,8 @@
 const shared = require('shared');
 const _ = require('lodash');
 const moment = require('moment')
+const updateClass = require('shared').updateClass;
+const sqsHelper = require('shared').sqsHelper;
 const {
   FACEBOOK_SERVICE, POST_AS_OPTION_FB_ALBUM, POST_AS_OPTION_FB_LINK, POST_AS_OPTION_FB_PHOTO,
   TWITTER_SERVICE, TWITTER_PROFILE, BUFFER_SERVICE, POSTED, COLLECTION_OPTION_ALL, FAILED, APPROVED,
@@ -30,6 +32,7 @@ module.exports = {
     // function starts here. 
     await dbConnection.createConnection(context);
     const UpdateModel = shared.UpdateModel;
+    const RuleModel = shared.RuleModel;
     const update = await UpdateModel.findById(event.updateId);
 
     // console.log("update.scheduleState", update.scheduleState);
@@ -80,15 +83,15 @@ module.exports = {
     }
 
     if (!_.isUndefined(response)) {
-      console.log("!_.isUndefined(update.failedMessage)", !_.isUndefined(update.failedMessage))
+      console.log("!_.isUndefined(response.failedMessage)", !_.isUndefined(response.failedMessage))
       console.log("response.scheduleState", response.scheduleState)
-      console.log("update.failedMessage", update.failedMessage)
-      if (response.scheduleState === FAILED && !_.isUndefined(update.failedMessage)) {
-        if (update.failedMessage.indexOf('type unrecognized') >= 0 ||
-          update.failedMessage.indexOf('Missing or invalid') >= 0 ||
-          update.failedMessage.indexOf('provided image') >= 0
+      console.log("response.failedMessage", response.failedMessage)
+      if (response.scheduleState === FAILED && !_.isUndefined(response.failedMessage)) {
+        if (response.failedMessage.indexOf('type unrecognized') >= 0 ||
+          response.failedMessage.indexOf('Missing or invalid') >= 0 ||
+          response.failedMessage.indexOf('provided image') >= 0
         ) {
-          console.log("update.failedMessage", update.failedMessage)
+          console.log("response.failedMessage", response.failedMessage)
           if (update.images[0].url.indexOf(PARTNERS_SHOPIFY) >= 0) {
             await PartnerShopify.getSingleProduct({ productId: update.product, storeId: update.store }, context)
             const scheduleResponse = await scheduleClass.reScheduleProduct(update.product, context)
@@ -99,6 +102,21 @@ module.exports = {
             // reschedule the product if images are greater than the product
           }
         }
+        if (response.failedMessage.indexOf('time in the future') >= 0) {
+          update.scheduleTime = moment(update.scheduleTime).add(15, 'minutes');
+          await update.save();
+          return;
+        }
+        if (response.failedMessage.indexOf('Only owners of the URL') >= 0 && update.rule) {
+          const updateRule = await RuleModel.findById(update.rule);
+          if (updateRule) {
+            updateRule.postAsOption = POST_AS_OPTION_FB_PHOTO;
+            await updateRule.save();
+            await updateClass.deleteScheduledUpdates(update.rule);
+            await sqsHelper.addToQueue('CreateUpdates', { ruleId: update.rule, ruleIdForScheduler: update.rule });
+          }
+        }
+
       }
 
       update.scheduleState = response.scheduleState;
