@@ -460,13 +460,13 @@ module.exports = {
         $or: [
           { "shareHistory.profile": { $ne: profileId } },
           { "shareHistory.profile": profileId, "shareHistory.postType": { $ne: ruleDetail.type } },
-          {
-            "shareHistory": {
-              "profile": profileId,
-              "postType": ruleDetail.type,
-              "counter": 0
-            }
-          },
+          // {
+          //   "shareHistory": {
+          //     "profile": profileId,
+          //     "postType": ruleDetail.type,
+          //     "counter": 0
+          //   }
+          // },
         ]
       }
     );
@@ -486,13 +486,13 @@ module.exports = {
           $or: [
             { "shareHistory.profile": { $ne: profileId } },
             { "shareHistory.profile": profileId, "shareHistory.postType": { $ne: ruleDetail.type } },
-            {
-              "shareHistory": {
-                "profile": profileId,
-                "postType": ruleDetail.type,
-                "counter": 0
-              }
-            },
+            // {
+            //   "shareHistory": {
+            //     "profile": profileId,
+            //     "postType": ruleDetail.type,
+            //     "counter": 0
+            //   }
+            // },
           ]
         }
       );

@@ -9,7 +9,8 @@ const {
   SCHEDULE_TYPE_VARIANT,
   PENDING,
   APPROVED,
-  RULE_TYPE_MANUAL
+  RULE_TYPE_MANUAL,
+  RULE_TYPE_NEW
 } = require('shared/constants');
 module.exports = {
   createUpdatesforThisWeek: async function (event) {
@@ -240,17 +241,20 @@ module.exports = {
       const updateProducts = items.map(item => {
         updateItemShareHistory = [];
         updateItemShareHistory = item.shareHistory.map(itemScheduleHistory => {
-
           if ((ruleDetail.profile.toString() === itemScheduleHistory.profile.toString()) && (ruleDetail.type === itemScheduleHistory.postType)) {
-            return {
-              profile: itemScheduleHistory.profile,
-              postType: itemScheduleHistory.postType,
-              counter: (itemScheduleHistory.counter) > 0 ? itemScheduleHistory.counter - 1 : 0
+            if (itemScheduleHistory.counter === 1) {
+              return undefined
+            } else {
+              return {
+                profile: itemScheduleHistory.profile,
+                postType: itemScheduleHistory.postType,
+                counter: (itemScheduleHistory.counter) > 0 ? itemScheduleHistory.counter - 1 : 0
+              }
             }
           } else {
             return itemScheduleHistory
           }
-        });
+        }).filter(item => !_.isUndefined(item));
 
 
         return {
