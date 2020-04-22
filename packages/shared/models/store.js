@@ -158,9 +158,13 @@ const storeSchema = new mongoose.Schema({
     type: Number,
     index: true
   },
+  noOfTrialDays: {
+    type: Number,
+    default: process.env.SHOPIFY_TRAIL_DAYS
+  },
   active: {
     type: Boolean,
-    default: false    
+    default: false
   },
 });
 
