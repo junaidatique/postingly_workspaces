@@ -128,6 +128,7 @@ module.exports = {
       console.log("TCL: storeKey", storeKey)
       let store = await StoreModel.findOne({ uniqKey: storeKey });
       console.log("TCL: store", store)
+      console.log("TCL: store.noOfTrialDays", store.noOfTrialDays)
       let isCharged = false;
       let createUserUsername = shop.email;
       let createUserEmail = shop.email;
@@ -279,7 +280,7 @@ module.exports = {
       price = process.env.PLAN_AMOUNT_PRO;
     }
     console.log("TCL: price", price)
-    chargeAuthorizationUrl = await this.createCharge(store.partnerSpecificUrl, store.partnerToken, planName, price);
+    chargeAuthorizationUrl = await this.createCharge(store.partnerSpecificUrl, store.partnerToken, planName, price, store.noOfTrialDays);
     return {
       chargeURL: chargeAuthorizationUrl
     };
@@ -348,7 +349,7 @@ module.exports = {
 
   },
 
-  createCharge: async function (shop, accessToken, planName, price) {
+  createCharge: async function (shop, accessToken, planName, price, noOfTrialDays) {
     console.log("createCharge shop", shop);
     console.log("createCharge process.env.SHOPIFY_TRAIL_DAYS", process.env.SHOPIFY_TRAIL_DAYS);
     const body = JSON.stringify({
@@ -356,7 +357,7 @@ module.exports = {
         name: `${process.env.APP_TITLE} - ${planName}`,
         price: price,
         return_url: `${process.env.FRONTEND_URL}${process.env.SHOPIFY_PAYMENT_REUTRN}?shop=${shop}`,
-        trial_days: process.env.SHOPIFY_TRAIL_DAYS,
+        trial_days: noOfTrialDays || process.env.SHOPIFY_TRAIL_DAYS,
         test: (process.env.STAGE === 'production' && shop !== 'march2019teststore1.myshopify.com') ? false : true,
       }
     });
