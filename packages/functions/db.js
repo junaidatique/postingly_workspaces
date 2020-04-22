@@ -19,7 +19,7 @@ module.exports = {
             autoReconnect: true,
             connectTimeoutMS: 360000
           });
-          console.log("TCL: conn", conn)
+          // console.log("TCL: conn", conn)
 
         } catch (error) {
           console.log("TCL: error", error)
