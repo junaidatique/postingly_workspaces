@@ -157,7 +157,11 @@ const storeSchema = new mongoose.Schema({
   activeCampaignId: {
     type: Number,
     index: true
-  }
+  },
+  active: {
+    type: Boolean,
+    default: false    
+  },
 });
 
 storeSchema.set('timestamps', true);

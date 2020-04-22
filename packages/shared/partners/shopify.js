@@ -167,6 +167,9 @@ module.exports = {
         console.log("TCL: store", store);
         syncStoreProducts = true;
       } else {
+        if (!store.active) {
+          return httpHelper.badRequest("Please contact administrator.");
+        }
         if (store.isUninstalled) {
           syncStoreProducts = true;
         }
