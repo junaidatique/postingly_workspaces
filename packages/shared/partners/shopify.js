@@ -128,7 +128,7 @@ module.exports = {
       console.log("TCL: storeKey", storeKey)
       let store = await StoreModel.findOne({ uniqKey: storeKey });
       console.log("TCL: store", store)
-      console.log("TCL: store.noOfTrialDays", store.noOfTrialDays)
+      // console.log("TCL: store.noOfTrialDays", store.noOfTrialDays)
       let isCharged = false;
       let createUserUsername = shop.email;
       let createUserEmail = shop.email;
