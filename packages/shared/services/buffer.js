@@ -153,8 +153,7 @@ module.exports = {
   shareProductPosts: async function (update) {
     try {
       const profile = await ProfileModel.findById(update.profile);
-      console.log("TCL: profile", profile);
-      const imageUrl = `${update.images[0].url.slice(0, update.images[0].url.lastIndexOf('.'))}_1080x1080.${update.images[0].url.slice(update.images[0].url.lastIndexOf('.') + 1)}`;
+      const imageUrl = `https://posting.ly/buffer_image?url=${update.images[0].url}`;
       const requestBody = querystring.stringify({
         profile_ids: profile.bufferId,
         text: update.text,
