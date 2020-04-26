@@ -1083,7 +1083,7 @@ module.exports = {
       const StoreModel = shared.StoreModel;
 
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
-      if (_.isNull(storeDetail)) {
+      if (!storeDetail || !storeDetail.active) {
         return httpHelper.ok(
           {
             message: "Received"
@@ -1112,8 +1112,7 @@ module.exports = {
       console.log("TCL: partnerId", JSON.parse(event.body).id)
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       // if store is not found. 
-      if (_.isNull(storeDetail)) {
-        console.log("TCL: storeDetail not found.")
+      if (!storeDetail || !storeDetail.active) {
         return httpHelper.ok(
           {
             message: "Received"
@@ -1128,7 +1127,7 @@ module.exports = {
         await this.createProductFromWebhook(storeDetail, [product], context)
         return httpHelper.ok(
           {
-            message: "Recieved"
+            message: "Received"
           }
         );
       }
@@ -1179,7 +1178,7 @@ module.exports = {
 
       return httpHelper.ok(
         {
-          message: "Recieved"
+          message: "Received"
         }
       );
     }
@@ -1230,7 +1229,7 @@ module.exports = {
       }
       return httpHelper.ok(
         {
-          message: "Recieved"
+          message: "Received"
         }
       );
     }
@@ -1240,10 +1239,10 @@ module.exports = {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
-      if (_.isNull(storeDetail)) {
+      if (!storeDetail || !storeDetail.active) {
         return httpHelper.ok(
           {
-            message: "Recieved"
+            message: "Received"
           }
         );
       }
@@ -1251,7 +1250,7 @@ module.exports = {
       await this.syncCollections(storeDetail._id, apiCollections);
       return httpHelper.ok(
         {
-          message: "Recieved"
+          message: "Received"
         }
       );
     }
@@ -1261,10 +1260,10 @@ module.exports = {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
-      if (_.isNull(storeDetail)) {
+      if (!storeDetail || !storeDetail.active) {
         return httpHelper.ok(
           {
-            message: "Recieved"
+            message: "Received"
           }
         );
       }
@@ -1272,7 +1271,7 @@ module.exports = {
       await this.syncCollections(storeDetail._id, apiCollections);
       return httpHelper.ok(
         {
-          message: "Recieved"
+          message: "Received"
         }
       );
     }
@@ -1285,7 +1284,7 @@ module.exports = {
       }
       return httpHelper.ok(
         {
-          message: "Recieved"
+          message: "Received"
         }
       );
     }
@@ -1300,7 +1299,7 @@ module.exports = {
       }
       return httpHelper.ok(
         {
-          message: "Recieved"
+          message: "Received"
         }
       );
     }
@@ -1310,20 +1309,14 @@ module.exports = {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
-      if (_.isNull(storeDetail)) {
+      if (!storeDetail || !storeDetail.active) {
         return httpHelper.ok(
           {
-            message: "Recieved"
+            message: "Received"
           }
         );
       }
-      if (!storeDetail.active) {
-        return httpHelper.ok(
-          {
-            message: "Recieved"
-          }
-        );
-      }
+
       const shop = JSON.parse(event.body);
       const shopUpdate = {
         partnerPlan: shop.plan_name,
@@ -1339,7 +1332,7 @@ module.exports = {
       // const update = await StoreModel.updateOne({ _id: storeDetail._id }, shopUpdate);
       return httpHelper.ok(
         {
-          message: "Recieved"
+          message: "Received"
         }
       );
     }
