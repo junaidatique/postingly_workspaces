@@ -32,7 +32,6 @@ module.exports = {
       }
       searchQuery.isUninstalled = (_.isUndefined(args.filter.isUninstalled)) ? false : args.filter.isUninstalled;
     }
-    console.log("TCL: searchQuery", searchQuery)
     const searchOptions = {
       sort: { createdAt: -1 },
       populate: 'profiles',
@@ -53,7 +52,6 @@ module.exports = {
   },
 
   createStore: async (obj, args, context, info) => {
-    console.log("args", args)
     const StoreModel = shared.StoreModel;
     storeKey = `${args.input.partner}-${args.input.partnerId}`;
     let shopParams = {};
@@ -68,7 +66,6 @@ module.exports = {
     return storeResult;
   },
   updateStore: async (obj, args, context, info) => {
-    console.log("args", args)
     const StoreModel = shared.StoreModel;
     storeKey = args.input.id;
     let shopParams = {};
@@ -82,13 +79,11 @@ module.exports = {
     return formattedStore(storeDetail);
   },
   upgradePlan: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
+    console.log("TCL: upgradePlan args", args)
     const StoreModel = shared.StoreModel;
     const PartnerShopify = shared.PartnerShopify;
     const storeDetail = await StoreModel.findById(args.storeId);
-    console.log("TCL: storeDetail", storeDetail)
     const response = await PartnerShopify.getChargeURL({ storePartnerId: storeDetail.uniqKey, planName: args.plan }, new Date())
-    console.log("TCL: response", response)
     return response;
 
   },

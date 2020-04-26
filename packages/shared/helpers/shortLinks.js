@@ -17,7 +17,6 @@ const shortLink = {
       if (_.isEmpty(url)) {
         if (defaultShortLinkService === LINK_SHORTENER_SERVICES_POOOST) {
           url = await shortLink.pooostURL(partnerSpecificUrl);
-          console.log("shortLinks getItemShortLink url", url)
         }
       }
     }

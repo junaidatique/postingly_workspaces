@@ -39,17 +39,14 @@ module.exports = {
     if (_.isNull(update) || _.isUndefined(update) || update.scheduleState !== APPROVED) {
       return;
     }
-    console.log("update.postingCollectionOption", update.postingCollectionOption)
     if (_.isNull(update.postingCollectionOption) || update.postingCollectionOption === null) {
       update.postingCollectionOption = COLLECTION_OPTION_ALL;
       update.scheduleState = FAILED;
       update.failedMessage = "Duplicate Post";
-      console.log("TCL: update 1 postingCollectionOption", update._id);
       await update.save();
       return;
     }
     let response;
-    console.log("TCL: process.env.ENABLE_POSTING", process.env.ENABLE_POSTING)
     if (process.env.ENABLE_POSTING === 'true') {
       console.log("update.service", update.service)
       if (update.service === FACEBOOK_SERVICE) {
@@ -83,15 +80,11 @@ module.exports = {
     }
 
     if (!_.isUndefined(response)) {
-      console.log("!_.isUndefined(response.failedMessage)", !_.isUndefined(response.failedMessage))
-      console.log("response.scheduleState", response.scheduleState)
-      console.log("response.failedMessage", response.failedMessage)
       if (response.scheduleState === FAILED && !_.isUndefined(response.failedMessage)) {
         if (response.failedMessage.indexOf('type unrecognized') >= 0 ||
           response.failedMessage.indexOf('Missing or invalid') >= 0 ||
           response.failedMessage.indexOf('provided image') >= 0
         ) {
-          console.log("response.failedMessage", response.failedMessage)
           if (update.images[0].url.indexOf(PARTNERS_SHOPIFY) >= 0) {
             await PartnerShopify.getSingleProduct({ productId: update.product, storeId: update.store }, context)
             const scheduleResponse = await scheduleClass.reScheduleProduct(update.product, context)
@@ -133,7 +126,6 @@ module.exports = {
       update.scheduleState = FAILED;
       update.failedMessage = "undefined.";
     }
-    console.log("update.scheduleState", update.scheduleState)
     await update.save();
   },
 

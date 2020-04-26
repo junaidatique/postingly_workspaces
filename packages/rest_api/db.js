@@ -21,7 +21,7 @@ module.exports = {
           });
 
         } catch (error) {
-          console.log("TCL: error", error)
+          // console.log("TCL: error", error)
         }
       }
     }

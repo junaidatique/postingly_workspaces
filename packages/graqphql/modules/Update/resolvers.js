@@ -38,7 +38,7 @@ module.exports = {
     }
   },
   deleteUpdate: async (obj, args, context, info) => {
-    console.log("args", args)
+    console.log("deleteUpdate args", args)
     const updateDetail = await UpdateModel.findById(args.updateId);
     const updateDeleted = await UpdateModel.findByIdAndDelete(args.updateId);
     return formattedUpdate(updateDetail);
@@ -81,7 +81,7 @@ module.exports = {
     const updateUpdates = await UpdateModel.bulkWrite(bulkUpdate);
   },
   updateReport: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
+    console.log("TCL: updateReport args", args)
     let searchQuery = {}
     if (!_.isUndefined(args.filter)) {
       if (!_.isUndefined(args.filter.storeId) && !_.isEmpty(args.filter.storeId)) {
@@ -127,14 +127,12 @@ module.exports = {
         searchQuery.failedMessage = new RegExp(args.filter.failedMessage, "i");
       }
     }
-    console.log("TCL: updateReport searchQuery", searchQuery)
 
     searchOptions = {
       sort: { scheduleTime: 1 },
       offset: args.skip,
       limit: args.limit
     }
-    console.log("searchOptions", searchOptions)
     const updates = await UpdateModel.paginate(searchQuery, searchOptions);
     const updatesList = updates.docs.map(update => {
       return formattedUpdate(update)
@@ -146,7 +144,7 @@ module.exports = {
 
   },
   dailyUpdateReport: async (obj, args, context, info) => {
-    console.log("args", args)
+    console.log("dailyUpdateReport args", args)
     let matchFilter = {};
     let updateReport = [];
     let date;
@@ -190,7 +188,6 @@ module.exports = {
   dailyUpdateReportAggregate: async function (dayCounter, matchFilter) {
     date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
     matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
-    // console.log("TCL: matchFilter", matchFilter)
     res = await UpdateModel.aggregate([{
       "$match": matchFilter
     },

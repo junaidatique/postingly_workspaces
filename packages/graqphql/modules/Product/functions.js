@@ -15,7 +15,6 @@ const formattedProduct = async (product) => {
 }
 const getProducts = async productIds => {
   products = await ProductModel.find({ _id: { $in: productIds } });
-  console.log("getProducts products", products.map(p => p.title))
   const response = products.map((product) => {
     return formattedProduct(product)
   }).filter(function (item) {

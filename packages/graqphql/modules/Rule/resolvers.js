@@ -69,7 +69,6 @@ module.exports = {
     return ruleResult;
   },
   listRules: async (obj, args, context, info) => {
-    console.log("TCL: listRules args", args)
     let searchQuery = RuleModel.find({ store: args.filter.storeId });
     if (!_.isEmpty(args.filter.type)) {
       searchQuery = searchQuery.find({ type: args.filter.type });
@@ -83,7 +82,6 @@ module.exports = {
     })
   },
   changeRuleStatus: async (obj, args, context, info) => {
-    console.log("args", args)
     const ruleDetail = await RuleModel.findOne({ _id: args.ruleId });
     await RuleModel.updateOne({ _id: args.ruleId }, { active: !ruleDetail.active });
     if (ruleDetail.active) {
@@ -101,11 +99,8 @@ module.exports = {
     return formattedRule(ruleDetail);
   },
   getRule: async (obj, args, context, info) => {
-    console.log("args", args)
     const ruleDetail = await RuleModel.findOne({ _id: args.ruleId, store: args.storeId });
-    console.log("getRule ruleDetail.createdAt", ruleDetail.createdAt)
     const response = formattedRule(ruleDetail);
-    console.log("getRule response", response.selectedProducts)
     return response;
   },
 

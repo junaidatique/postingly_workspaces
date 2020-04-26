@@ -26,7 +26,6 @@ const jsonwebtoken = require('jsonwebtoken');
 module.exports = {
   getAuthURL: async function (event, now) {
     try {
-      console.log("-----------------------------getAuthURL Start-----------------------------");
       const shopifyApiKey = process.env.SHOPIFY_API_KEY;
       const shopifyScope = process.env.SHOPIFY_SCOPE;
 
@@ -39,9 +38,7 @@ module.exports = {
       }
 
       if (!event.queryStringParameters) {
-        console.log("TCL: event.queryStringParameters", event.queryStringParameters)
         const response = httpHelper.badRequest("No query string paramters found");
-        console.log("TCL: response", response)
         return response;
       }
 
@@ -66,8 +63,6 @@ module.exports = {
       const eCallbackUrl = querystring.escape(callbackUrl);
       const option = perUser === "true" ? "&option=per-user" : "";
       const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${eClientId}&scope=${eScope}&redirect_uri=${eCallbackUrl}&state=${eNonce}${option}`;
-
-      console.log("-----------------------------getAuthURL Completed-----------------------------")
       // Return the authURL
       return httpHelper.ok(
         {
@@ -77,7 +72,6 @@ module.exports = {
       );
 
     } catch (e) {
-      console.log("-----------------------------getAuthURL Error-----------------------------", e);
       return httpHelper.internalError();
     }
   },
@@ -85,7 +79,6 @@ module.exports = {
   verifyCallback: async function (event, now) {
     try {
       console.group('verifyCallback');
-      console.log("-----------------------------verifyCallback Start-----------------------------");
       console.log("TCL: event.body", event.body)
       if (!event.body) {
         return httpHelper.badRequest("body is empty");
@@ -98,9 +91,6 @@ module.exports = {
       if (!params) {
         return httpHelper.badRequest("'params' is missing");
       }
-      console.log("verifyCallback params", params);
-      console.log("verifyCallback username", username);
-      console.log("verifyCallback email", email);
       const { code, shop: shopDomain } = params;
       if (!this.validateNonce(token, params)
         || !this.validateShopDomain(shopDomain)
@@ -111,24 +101,20 @@ module.exports = {
       try {
         response = await this.exchangeToken(shopDomain, code);
       } catch (err) {
-        console.log("TCL: verifyCallback exchangeToken err", err.message)
         return httpHelper.badRequest("autherization code is already used.");
       }
 
       const accessToken = response.access_token;
       if (accessToken === undefined) {
-        console.log("verifyCallback response[\"access_token\"] is undefined");
+        console.error("verifyCallback response[\"access_token\"] is undefined");
         throw new Error("response[\"access_token\"] is undefined");
       }
       const shop = await this.getShop(shopDomain, accessToken);
-      console.log("TCL: accessToken", accessToken)
 
 
       const storeKey = `shopify-${shop.id}`;
       console.log("TCL: storeKey", storeKey)
       let store = await StoreModel.findOne({ uniqKey: storeKey });
-      console.log("TCL: store", store)
-      // console.log("TCL: store.noOfTrialDays", store.noOfTrialDays)
       let isCharged = false;
       let createUserUsername = shop.email;
       let createUserEmail = shop.email;
@@ -165,7 +151,6 @@ module.exports = {
         };
         const storeInstance = new StoreModel(shopParams);
         store = await storeInstance.save();
-        console.log("TCL: store", store);
         syncStoreProducts = true;
       } else {
         if (!store.active) {
@@ -188,11 +173,8 @@ module.exports = {
       }
       if (syncStoreProducts) {
         const profileDelete = await shared.ProfileModel.deleteMany({ store: store._id });
-        console.log("TCL: profileDelete", profileDelete)
         const ruleDelete = await shared.RuleModel.deleteMany({ store: store._id });
-        console.log("TCL: ruleDelete", ruleDelete)
         const updateDelete = await shared.UpdateModel.deleteMany({ store: store._id });
-        console.log("TCL: updateDelete", updateDelete)
         try {
           const storePayload = {
             "storeId": store._id,
@@ -213,20 +195,14 @@ module.exports = {
               "format": "json"
             }
           });
-          console.log("TCL: createWebhooks webhookRequestBody", webhookRequestBody)
 
           const { json, res, error } = await this.shopifyAPICall(webhooksAPIUrl, webhookRequestBody, 'post', accessToken);
-          console.log("TCL: createWebhooks json", json)
           if (_.isNull(json)) {
             if (!_.isNull(error)) {
               throw new Error(error);
             }
             return;
           }
-
-
-
-
         } catch (err) {
           console.log("TCL: err", err.message)
           console.log("activatePayment: Store can't be saved");
@@ -242,13 +218,12 @@ module.exports = {
             partner: store.partner
           }
         });
-        console.log("TCL: user", user.body)
         store.intercomId = user.body.id;
         await store.save();
       }
 
       nonce = stringHelper.getRandomString(32);
-      console.log("-----------------------------verifyCallback Completed-----------------------------");
+      console.log("verifyCallback Completed");
       console.groupEnd();
       return httpHelper.ok({
         isCharged: isCharged,
@@ -257,13 +232,13 @@ module.exports = {
         token: jwt.createJWT(cognitoUser, nonce, now, 600),
       });
     } catch (error) {
-      console.log("-----------------------------verifyCallback Error-----------------------------", error);
+      console.error("verifyCallback Error", error);
       return httpHelper.internalError();
     }
 
   },
   getChargeURL: async function (event, now) {
-    console.log("TCL: event", event)
+    console.log("TCL: getChargeURL event", event)
     const { storePartnerId, planName } = event;
     if (!storePartnerId) {
       return httpHelper.badRequest("storePartnerId is missing");
@@ -274,7 +249,6 @@ module.exports = {
     const storeKey = `${storePartnerId}`;
     console.log("activatePayment storeKey", storeKey);
     const store = await StoreModel.findOne({ uniqKey: storeKey });
-    console.log("TCL: store", store)
     let price = process.env.PLAN_AMOUNT_BASIC;
     if (planName === PRO_PLAN) {
       price = process.env.PLAN_AMOUNT_PRO;
@@ -351,7 +325,6 @@ module.exports = {
 
   createCharge: async function (shop, accessToken, planName, price, noOfTrialDays) {
     console.log("createCharge shop", shop);
-    console.log("createCharge process.env.SHOPIFY_TRAIL_DAYS", process.env.SHOPIFY_TRAIL_DAYS);
     const body = JSON.stringify({
       recurring_application_charge: {
         name: `${process.env.APP_TITLE} - ${planName}`,
@@ -361,10 +334,8 @@ module.exports = {
         test: (process.env.STAGE === 'production' && shop !== 'march2019teststore1.myshopify.com') ? false : true,
       }
     });
-    console.log("TCL: createCharge body", body)
     const url = `https://${shop}/admin/api/${process.env.SHOPIFY_API_VERSION}/recurring_application_charges.json`;
     const { json, res, error } = await this.shopifyAPICall(url, body, 'post', accessToken);
-    console.log("createCharge json", json);
     if (_.isNull(json)) {
       if (!_.isNull(error)) {
         throw new Error(error);
@@ -423,7 +394,7 @@ module.exports = {
   },
 
   activatePayment: async function (event) {
-    console.log("-----------------------------activatePayment Start-----------------------------");
+    console.log("activatePayment Start");
     if (!event.body) {
       return httpHelper.badRequest("body is empty");
     }
@@ -441,7 +412,6 @@ module.exports = {
     const storeKey = `${storePartnerId}`;
     console.log("activatePayment storeKey", storeKey);
     const store = await StoreModel.findOne({ partnerSpecificUrl: shop });
-    console.log("TCL: store", store)
     const accessToken = store.partnerToken;
     console.log("activatePayment accessToken", accessToken);
     let chargeResponse;
@@ -488,7 +458,7 @@ module.exports = {
       console.log("TCL: err", err.message)
       console.log("activatePayment: Store can't be saved");
     }
-    console.log("-----------------------------activatePayment Completed-----------------------------");
+    console.log("activatePayment Completed");
 
     return httpHelper.ok({
       message: "Done",
@@ -640,7 +610,6 @@ module.exports = {
     if (json[event.collectionType].length > 0) {
       collectionUniqKeys = await this.syncCollections(storeDetail._id, json[event.collectionType]);
     }
-    console.log("TCL: syncCollectionPage collectionUniqKeys", collectionUniqKeys)
 
     if (!_.isNull(event.productId)) {
       return collectionUniqKeys;
@@ -658,7 +627,6 @@ module.exports = {
       }
       if (!_.isUndefined(collectionUniqKeys)) {
         const dbCollections = await CollectionModel.where('uniqKey').in(collectionUniqKeys.map(collection => collection)).select('_id');
-        console.log("TCL: syncCollectionPage dbCollections", dbCollections);
         await Promise.all(dbCollections.map(async collection => {
           if (process.env.IS_OFFLINE === 'false') {
             // syncing products for this collection
@@ -820,7 +788,6 @@ module.exports = {
     const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${productDetail.partnerId}.json`;
     console.log("TCL: getSingleProduct url", url)
     const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
-    console.log("json", json)
     if (_.isNull(json)) {
       return;
     }
@@ -1020,7 +987,6 @@ module.exports = {
     }
     const webhooksAPIUrl = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks.json`;
     const { json, res, error } = await this.shopifyAPICall(webhooksAPIUrl, null, 'get', event.accessToken);
-    console.log("TCL: json", json)
     if (_.isNull(json)) {
       if (!_.isNull(error)) {
         throw new Error(error);
@@ -1050,10 +1016,7 @@ module.exports = {
           "format": "json"
         }
       });
-      console.log("TCL: createWebhooks body", body)
-
       const { json, res, error } = await this.shopifyAPICall(webhooksAPIUrl, body, 'post', event.accessToken);
-      console.log("TCL: createWebhooks json", json)
       if (_.isNull(json)) {
         if (!_.isNull(error)) {
           throw new Error(error);
@@ -1082,17 +1045,12 @@ module.exports = {
     if (json.webhooks.length > 0) {
       await Promise.all(json.webhooks.map(async item => {
         await this.deleteSingleWebhook({ shopURL: event.shopURL, itemId: item.id, accessToken: event.accessToken });
-        // if (item.address.indexOf('REST_API_URL') >= 0) {
-        //   console.log("TCL: item", item)
-
-        // }
       }));
     }
   },
   deleteSingleWebhook: async function (event) {
     deleteWebhookURL = `https://${event.shopURL}/admin/api/${process.env.SHOPIFY_API_VERSION}/webhooks/${event.itemId}.json`;
     const { json, res, error } = await this.shopifyAPICall(deleteWebhookURL, null, 'delete', event.accessToken);
-    console.log("TCL: deleteWebhooks deleteWebhookURL json", json)
     if (_.isNull(json)) {
       if (!_.isNull(error)) {
         throw new Error(error);
@@ -1101,14 +1059,12 @@ module.exports = {
     }
   },
   createProductFromWebhook: async function (storeDetail, apiProducts, context) {
-    console.log("TCL: apiProducts", apiProducts)
     const updateClass = require('shared').updateClass;
     const syncEvent = {
       "storeId": storeDetail._id,
       "partnerStore": PARTNERS_SHOPIFY,
       "collectionId": null
     }
-    console.log("TCL: syncEvent", syncEvent)
     await this.syncProducts(syncEvent, apiProducts, storeDetail, true, context);
     await this.syncProductCount(syncEvent);
     const productFromDBObject = await shared.ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${apiProducts[0].id}` })
@@ -1267,16 +1223,10 @@ module.exports = {
   },
   productsDelete: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
-      console.log("TCL: productDelete Start", JSON.parse(event.body).id)
       const productDetail = await shared.ProductModel.findOne({ partnerId: JSON.parse(event.body).id });
-      console.log("TCL: productDelete after productDetail")
       if (!_.isNull(productDetail)) {
-        console.log("TCL: productDelete after deleteing images")
         const updateDelete = await shared.UpdateModel.deleteMany({ product: productDetail._id, scheduleState: { $in: [PENDING, APPROVED] }, });
-        console.log("TCL: productDelete after deleteing updates")
         const productDelete = await shared.ProductModel.deleteOne({ _id: productDetail._id });
-        console.log("TCL: productDelete after deleteing product")
-        console.log("TCL: productDelete", productDelete)
       }
       return httpHelper.ok(
         {
@@ -1329,22 +1279,8 @@ module.exports = {
   },
   collectionsDelete: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
-      console.log("TCL: JSON.parse(event.body)", JSON.parse(event.body))
       const collectionDetail = await shared.CollectionModel.findOne({ partnerId: JSON.parse(event.body).id })
-      console.log("TCL: collectionDetail", collectionDetail)
       if (!_.isNull(collectionDetail)) {
-        // const rules = await shared.RuleModel.where('collections').in(collectionDetail._id);
-        // console.log("TCL: collectionDetail._id", collectionDetail._id)
-        // if (rules.length > 0) {
-        //   console.log("TCL: rules", rules)
-        //   await Promise.all(rules.map(async rule => {
-        //     console.log("TCL: rule.collections", rule.collections)
-        //     collections = rule.collections.filter(item => item === collectionDetail._id);
-        //     console.log("TCL: collections", collections)
-        //     rule.collections = collections;
-        //     await rule.save();
-        //   }));
-        // }
         const collectionDelete = await shared.CollectionModel.deleteOne({ partnerId: JSON.parse(event.body).id });
       }
       return httpHelper.ok(
@@ -1372,7 +1308,6 @@ module.exports = {
   shopUpdate: async function (event) {
     if (!_.isNull(event.body) && !_.isUndefined(event.body)) {
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
-      console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findOne({ partnerSpecificUrl: shopDomain });
       if (_.isNull(storeDetail)) {
@@ -1382,8 +1317,14 @@ module.exports = {
           }
         );
       }
+      if (!storeDetail.active) {
+        return httpHelper.ok(
+          {
+            message: "Recieved"
+          }
+        );
+      }
       const shop = JSON.parse(event.body);
-      console.log("TCL: shopUpdate shop", shop)
       const shopUpdate = {
         partnerPlan: shop.plan_name,
         title: shop.name,
@@ -1395,8 +1336,7 @@ module.exports = {
         moneyFormat: shop.money_format,
         moneyWithCurrencyFormat: shop.money_with_currency_format,
       }
-      console.log("TCL: shopUpdate", shopUpdate)
-      const update = await StoreModel.updateOne({ _id: storeDetail._id }, shopUpdate);
+      // const update = await StoreModel.updateOne({ _id: storeDetail._id }, shopUpdate);
       return httpHelper.ok(
         {
           message: "Recieved"
@@ -1429,10 +1369,6 @@ module.exports = {
     if ("error_description" in json || "error" in json || "errors" in json) {
       console.log("TCL: error json", json)
       console.error("TCL: shopifyAPICall error url", url)
-      console.error(json.error_description || json.error || json.errors);
-      console.log("TCL: json.errors", json.errors)
-      console.log("TCL: json.error", json.error)
-      console.log("TCL: json.error_description", json.error_description)
       let errorResponse;
       if (!_.isUndefined(json.error_description)) {
         errorResponse = JSON.stringify(json.error_description);
@@ -1442,15 +1378,10 @@ module.exports = {
         errorResponse = JSON.stringify(json.error);
       }
       const shopUrl = url.split('/admin')[0].replace('https://', '');;
-      console.log("TCL: shopUrl", shopUrl);
       console.log("TCL: errorResponse", errorResponse)
       if (errorResponse.indexOf('[API] Invalid API') >= 0) {
-        // const StoreModel = shared.StoreModel;
-        // const storeDetail = await StoreModel.findOne({ $or: [{ "partnerSpecificUrl": shopUrl }, { "url": shopUrl }] })
-        // await this.confirmUninstalled(storeDetail._id);
         return { json: null, res: res, error: null };
       } else if (errorResponse.indexOf('Not Found') >= 0) {
-
         return { json: null, res: res, error: null };
       } else if (errorResponse.indexOf('for this topic has already been taken') >= 0) {
       } else if (errorResponse.indexOf('page_info') >= 0 && errorResponse.indexOf('Invalid value') >= 0) {
@@ -1475,18 +1406,11 @@ module.exports = {
       console.log("TCL: confirmUninstalled storeId", storeId)
       const StoreModel = shared.StoreModel;
       const storeDetail = await StoreModel.findById(storeId);
-      console.log("TCL: confirmUninstalled storeDetail", storeDetail)
       if (!_.isNull(storeDetail)) {
         const collectionDelete = await shared.CollectionModel.deleteMany({ store: storeDetail._id });
-        console.log("TCL: collectionDelete", collectionDelete)
         const productDelete = await shared.ProductModel.deleteMany({ store: storeDetail._id });
-        console.log("TCL: productDelete", productDelete)
-        // const profileDelete = await shared.ProfileModel.deleteMany({ store: storeDetail._id });
-        // console.log("TCL: profileDelete", profileDelete)
         const ruleDelete = await shared.RuleModel.updateMany({ store: storeDetail._id }, { active: false });
-        console.log("TCL: ruleDelete", ruleDelete)
         const updateDelete = await shared.UpdateModel.updateMany({ store: storeDetail._id }, { scheduleState: PAUSED });
-        console.log("TCL: updateDelete", updateDelete)
         storeDetail.isUninstalled = true;
         storeDetail.uninstalledDate = new Date().toISOString();
         storeDetail.isCharged = false;
