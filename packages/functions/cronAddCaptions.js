@@ -24,7 +24,6 @@ module.exports = {
         captionsUpdated: false,
       }
     );
-    console.log("TCL: rules", rules)
     if (process.env.IS_OFFLINE === 'false') {
       await Promise.all(rules.map(async rule => {
         if (!_.isEmpty(event) && !_.isUndefined(event) && !_.isNull(event.storeId)) {

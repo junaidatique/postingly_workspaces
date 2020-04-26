@@ -21,7 +21,6 @@ module.exports = {
   // event = { ruleId: ID }
   schedule: async function (eventSQS, context) {
     const totalTime = Math.ceil(context.getRemainingTimeInMillis() / 1000);
-    console.log("TCL: totalTime", totalTime)
     await dbConnection.createConnection(context);
     let event;
     if (_.isUndefined(eventSQS.Records)) {

@@ -19,7 +19,6 @@ module.exports = {
     const UpdateModel = shared.UpdateModel;
     const ProductModel = shared.ProductModel;
     const activeRules = await RuleModel.find({ active: true });
-    console.log("TCL: activeRules.length", activeRules.length)
     const scheduleWeekRules = await UpdateModel.distinct('rule',
       {
         scheduleTime: { $gt: moment.utc() },
@@ -27,10 +26,8 @@ module.exports = {
         rule: { $exists: true },
       }
     );
-    console.log("TCL: scheduleWeekRules.length", scheduleWeekRules.length)
     const scheduleWeekRuleId = scheduleWeekRules.map(ruleId => ruleId.toString());
     const rules = activeRules.filter(x => !scheduleWeekRuleId.includes(x._id.toString()));
-    console.log("TCL: rules", rules)
     if (process.env.IS_OFFLINE === 'false') {
       await Promise.all(rules.map(async ruleDetail => {
         await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id });
@@ -44,13 +41,11 @@ module.exports = {
       { postableIsNew: true, partnerCreatedAt: { $lt: moment().subtract(14, 'day') } },
       { postableIsNew: false }
     );
-    console.log("TCL: dbCollectionsUpdate", dbCollectionsUpdate)
   },
   createUpdatesforNextWeek: async function (event, context) {
     const RuleModel = shared.RuleModel;
     const UpdateModel = shared.UpdateModel;
     const activeRules = await RuleModel.find({ active: true }).select('_id');
-    console.log("TCL: activeRules", activeRules)
     const scheduleWeekRules = await UpdateModel.distinct('rule',
       {
         scheduleTime: { $gt: moment().add(1, 'weeks').startOf('isoWeek') },
@@ -58,10 +53,8 @@ module.exports = {
         rule: { $exists: true },
       }
     );
-    console.log("TCL: scheduleWeekRules", scheduleWeekRules)
     const scheduleWeekRuleId = scheduleWeekRules.map(ruleId => ruleId.toString());
     const rules = activeRules.filter(x => !scheduleWeekRuleId.includes(x._id.toString()));
-    console.log("TCL: rules", rules)
     if (process.env.IS_OFFLINE === 'false') {
       await Promise.all(rules.map(async ruleDetail => {
         await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id, scheduleWeek: 'next' });
@@ -85,8 +78,6 @@ module.exports = {
       startOfWeek = moment().tz(storeTimezone).startOf('isoWeek')
       endOfWeek = moment().tz(storeTimezone).endOf('isoWeek');
     }
-    console.log("TCL: startOfWeek", startOfWeek.toISOString())
-    console.log("TCL: endOfWeek", endOfWeek.toISOString())
 
     ruleDetail.postTimings.forEach((postTime) => {
       for (let loopTime = startOfWeek.clone(); loopTime.isBefore(endOfWeek); loopTime = loopTime.add(1, 'day')) {
@@ -129,7 +120,7 @@ module.exports = {
     return updateTimes;
   },
   createUpdates: async function (event, context) {
-    console.log("TCL: event", event)
+    console.log("TCL: createUpdates event", event)
     let updateTimes = [];
     const RuleModel = shared.RuleModel;
     const StoreModel = shared.StoreModel;
@@ -143,16 +134,13 @@ module.exports = {
 
     const storeDetail = await StoreModel.findById(ruleDetail.store);
     console.log("TCL: ruleDetail.store", storeDetail._id)
-    console.log("TCL: ruleDetail.store.title", storeDetail.title)
     if (ruleDetail.type === RULE_TYPE_MANUAL) {
       updateTimes = this.createUpdatesForManualRule(ruleDetail, storeDetail.timezone);
     } else {
       updateTimes = this.createUpdatesForRule(ruleDetail, event.scheduleWeek, storeDetail.timezone)
     }
 
-    console.log("TCL: -------------------------")
     console.log("TCL: updateTimes.length", updateTimes.length)
-    console.log("TCL: -------------------------")
     if (updateTimes.length > 0) {
       const profile = ruleDetail.profile;
       const bulkUpdatesWrite = updateTimes.map(updateTime => {
@@ -190,7 +178,6 @@ module.exports = {
       try {
         updates = await UpdateModel.bulkWrite([].concat.apply([], bulkUpdatesWrite));
       } catch (error) {
-        console.log("TCL: error", error)
         console.log("TCL: error.message", error.message)
         if (error.message.indexOf('E11000') >= 0) {
           await sqsHelper.addToQueue('CreateUpdates', event);
@@ -198,9 +185,7 @@ module.exports = {
       }
       // scheduleState is set seperately because there may be some updates that are updated. so scheduleState is updated for only newly created updates.
       if (!_.isUndefined(updates)) {
-        console.log("TCL: -------------------------")
         console.log("TCL: updates.result.nUpserted", updates.result.nUpserted)
-        console.log("TCL: -------------------------")
         if (updates.result.nUpserted > 0) {
           const bulkUpdate = updates.result.upserted.map(updateTime => {
             return {
@@ -216,7 +201,6 @@ module.exports = {
         }
       }
     }
-    console.log("TCL: event.ruleIdForScheduler", event.ruleIdForScheduler)
     if (event.ruleIdForScheduler) {
       if (process.env.IS_OFFLINE === 'false') {
         await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleIdForScheduler });
@@ -230,7 +214,6 @@ module.exports = {
     const ProductModel = shared.ProductModel;
     const RuleModel = shared.RuleModel;
     const ruleDetail = await RuleModel.findOne({ _id: ruleId });
-    console.log("TCL: ruleDetail", ruleDetail.profile)
     const ruleUpdates = await UpdateModel.find({ rule: ruleId, scheduleState: { $in: [PENDING, APPROVED] } }).select('product');
 
 

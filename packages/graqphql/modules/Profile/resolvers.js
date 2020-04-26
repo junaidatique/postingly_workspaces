@@ -25,7 +25,7 @@ const profileFns = require('shared').profileFns;
 const formattedStore = require('../Store/functions').formattedStore
 module.exports = {
   connectProfile: async (obj, args, context, info) => {
-    console.log("args", args)
+    console.log("connectProfile args", args)
     if (args.input.service === FACEBOOK_SERVICE) {
       if (process.env.STAGE == TEST) {
         response = await FacebookService.getProfile(args.input.storeId, args.input.code, args.input.serviceProfile);
@@ -40,7 +40,7 @@ module.exports = {
     return response;
   },
   listProfiles: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
+    console.log("TCL: listProfiles args", args)
 
     let query = ProfileModel.find({ store: args.storeId, service: args.service });
     if (args.isConnected === true) {
@@ -63,7 +63,6 @@ module.exports = {
       query = query.find({ 'parent': args.parent, serviceProfile: { $nin: [BUFFER_FACEBOOK_PROFILE, BUFFER_FACEBOOK_PAGE, BUFFER_TWITTER_PROFILE] } });
     }
     const profiles = await query;
-    // console.log("TCL: profiles", profiles);
     return profiles.map(profile => {
       return formattedProfile(profile);
     })
@@ -74,13 +73,10 @@ module.exports = {
     let res;
     console.log("TCL: updateConnectProfile args", args)
     if (!_.isEmpty(args)) {
-      console.log("TCL: updateConnectProfile args.input", args.input)
       await Promise.all(args.input.map(async value => {
         // _.each(args.input, async (value, key) => {
         if (value.isConnected) {
-          console.log("TCL: updateConnectProfile value", value)
           res = await ProfileModel.updateOne({ _id: value.id }, { isConnected: value.isConnected });
-          console.log("TCL: updateConnectProfile res", res)
         }
       }));
     }
@@ -95,7 +91,6 @@ module.exports = {
     const storeDetail = await StoreModel.findById(args.storeId);
     storeDetail.numberOfConnectedProfiles = connectedProfiles.length;
     await storeDetail.save();
-    console.log("TCL: connectedProfiles", connectedProfiles);
     return profiles.map(profile => {
       return formattedProfile(profile);
     })
@@ -115,7 +110,6 @@ module.exports = {
     const profileDetail = await ProfileModel.findById(args.profileId);
     if (profileDetail.isTokenExpired) {
       const ruleUpdate = await RuleModel.updateMany({ profile: args.profileId }, { active: false });
-      console.log("ruleUpdate", ruleUpdate)
       const oldProductRule = await RuleModel.findOne({ profile: args.profileId, type: RULE_TYPE_OLD });
       if (oldProductRule) {
         await updateClass.deleteScheduledUpdates(oldProductRule._id)

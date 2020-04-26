@@ -20,7 +20,7 @@ const {
 
 module.exports = {
   listProducts: async (obj, args, context, info) => {
-    console.log("args", args)
+    console.log("listProducts args", args)
     let searchQuery = {
       store: args.filter.storeId,
     }
@@ -89,7 +89,6 @@ module.exports = {
       offset: args.skip,
       limit: args.limit
     }
-    console.log("searchOptions", searchOptions)
     const products = await ProductModel.paginate(searchQuery, searchOptions);
     console.log("products.total", products.total)
     const productList = products.docs.map(product => {
@@ -102,7 +101,7 @@ module.exports = {
 
   },
   syncProducts: async (obj, args, context, info) => {
-    console.log("args", args)
+    console.log("syncProducts args", args)
     const storeDetail = await StoreModel.findById(args.storeId);
     if (process.env.IS_OFFLINE === 'false') {
       const storePayload = {

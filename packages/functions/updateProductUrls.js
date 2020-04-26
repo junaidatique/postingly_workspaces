@@ -32,7 +32,6 @@ module.exports = {
     let updatedURLs
     await Promise.all(updates.map(async update => {
       URLForCaption = await shortLink.getItemShortLink(update.defaultShortLinkService, update.productExternalURL, []);
-      console.log("updateProductUrls execute URLForCaption", URLForCaption)
       bulkUpdate.push({
         updateOne: {
           filter: { _id: update._id },

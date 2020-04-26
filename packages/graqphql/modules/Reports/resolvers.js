@@ -5,7 +5,7 @@ const Mongoose = require('mongoose');
 const ObjectId = Mongoose.Types.ObjectId;
 module.exports = {
   allStorePosting: async (obj, args, context, info) => {
-    console.log("TCL: args", args)
+    console.log("TCL: allStorePosting args", args)
     const storeReport = [];
     let response;
     let matchFilter = {};
@@ -75,7 +75,6 @@ module.exports = {
     return storeReport;
   },
   allStorePostingAggregate: async function (matchFilter) {
-    // console.log("TCL: matchFilter", matchFilter)
     const UpdateModel = shared.UpdateModel;
     res = await UpdateModel.aggregate([{
       "$match": matchFilter

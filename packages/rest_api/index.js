@@ -40,7 +40,6 @@ exports.getChargeURL = async function (event, context) {
     }
 
     const response = await partner.getChargeURL(event, new Date());
-    console.log("TCL: getChargeURL response", response)
     return httpHelper.ok(
       response
     );

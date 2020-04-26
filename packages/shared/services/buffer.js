@@ -41,7 +41,6 @@ module.exports = {
   getProfile: async function (storeId, code, serviceProfile) {
     const tokenResponse = await this.getAccessToken(code);
     const userResponse = await fetch(`${BUFFER_API_URL}user.json?access_token=${tokenResponse.accessToken}`).then(response => response.json());
-    console.log("TCL: getProfile userResponse", userResponse)
 
     const uniqKey = `${BUFFER_PROFILE}-${storeId}-${userResponse.id}`;
     let profile = await ProfileModel.findOne({ uniqKey: uniqKey });
@@ -78,7 +77,6 @@ module.exports = {
     try {
       const storeId = bufferProfile.store;
       const userResponse = await fetch(`${BUFFER_API_URL}profiles.json?access_token=${bufferProfile.accessToken}`).then(response => response.json());
-      console.log("TCL: getUserProfiles userResponse", userResponse);
       if (!_.isUndefined(userResponse.error)) {
         console.log("TCL: userResponse.error", userResponse.error)
         throw new Error(userResponse.error);
@@ -135,7 +133,6 @@ module.exports = {
       }).filter(function (item) {
         return !_.isUndefined(item);
       });;
-      console.log("TCL: bulkProfileInsert", bulkProfileInsert)
       const pageProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
       const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
       const store = await StoreModel.findById(storeId);
@@ -168,7 +165,6 @@ module.exports = {
         scheduled_at: moment(update.scheduleTime).add(5, 'minutes').toISOString()
       })
       const bufferIRL = `${BUFFER_API_URL}updates/create.json?access_token=${profile.accessToken}`;
-      console.log("TCL: bufferIRL", bufferIRL)
       const updateResponse = await fetch(bufferIRL, {
         body: requestBody,
         headers: {
@@ -177,7 +173,6 @@ module.exports = {
         },
         method: "POST",
       }).then(response => response.json());
-      console.log("TCL: updateResponse", updateResponse)
       if (updateResponse.success === true) {
         return {
           scheduleState: POSTED,
@@ -203,7 +198,6 @@ module.exports = {
     try {
       const url = `${BUFFER_API_URL}profiles/${profileDetail.bufferId}/updates/${status}.json?count=20&access_token=${profileDetail.accessToken}`;
       const profileUpdates = await fetch(url).then(response => response.json());
-      console.log("profileUpdates", profileUpdates)
       const response = {
         total: profileUpdates.total,
         updates: profileUpdates.updates.map(update => {

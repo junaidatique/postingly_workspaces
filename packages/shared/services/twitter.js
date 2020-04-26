@@ -10,13 +10,8 @@ const consumer = new oauth.OAuth(`${TWITTER_API_URL}oauth/request_token`, `${TWI
 
 module.exports = {
   getRequestToken: function (callback) {
-    console.log("TCL: callback", callback)
     return new Promise((resolve, reject) => {
       consumer.getOAuthRequestToken(function (error, oauthToken, oauthTokenSecret, results) {
-        console.log("TCL: results", results)
-        console.log("TCL: error", error)
-        console.log("TCL: oauthTokenSecret", oauthTokenSecret)
-        console.log("TCL: oauthToken", oauthToken)
         responseOauthToken = oauthToken;
         responseoauthTokenSecret = oauthTokenSecret;
         resolve(
@@ -94,14 +89,12 @@ module.exports = {
       const storeDetail = await StoreModel.findById(storeId);
       storeDetail.profiles = [...storeDetail.profiles, profile._id];
       const s = await storeDetail.save();
-      console.log("TCL: s", s)
     }
 
     console.log(" -- TW getUserDetail End -- ");
     return profile;
   },
   shareTwitterPosts: async function (update) {
-    console.log("TCL: update", update)
     try {
       const profile = await ProfileModel.findById(update.profile);
       const T = new Twit({
@@ -119,7 +112,6 @@ module.exports = {
 
         }));
       }
-      console.log("TCL: image_ids", image_ids)
       const params = { status: update.text, media_ids: image_ids }
       console.log("TCL: params", params)
       const tweetResponse = await T.post('statuses/update', params);

@@ -29,7 +29,6 @@ module.exports = {
         client_secret: process.env.FACEBOOK_APP_SECRET,
         redirect_uri: `${process.env.FRONTEND_URL}facebook-callback`
       };
-      console.log('getAccessToken paramsAccessToken', paramsAccessToken)
       queryStr = querystring.stringify(paramsAccessToken);
       const accessTokenResponse = await fetch(`${accessTokenUrl}?${queryStr}`);
       const response = await accessTokenResponse.json();
@@ -62,8 +61,6 @@ module.exports = {
       });
 
       const getPermissionResponseJson = await getPermissionResponse.json();
-      console.log("getPermission getPermissionResponseJson", getPermissionResponseJson)
-
       const permissionDeclinedCount = getPermissionResponseJson.data.map(permission => {
         if (permission.permission === "email" && permission.status === 'declined') {
           return permission;
@@ -90,8 +87,6 @@ module.exports = {
     }
   },
   getExtendedToken: async function (shortLivedAccessToken) {
-    console.log(" -- FB getExtendedToken Start -----------------");
-    console.log("FB getExtendedToken ", shortLivedAccessToken);
     try {
       const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}oauth/access_token`;
       var paramsToExtendToken = {
@@ -110,12 +105,8 @@ module.exports = {
       });
       const extendedToken = await extendedTokenResponse.json();
       if (extendedTokenResponse.status === 200) {
-        console.log("Fb getExtendedToken Recieved", extendedToken);
-        console.log(" -- FB getExtendedToken End -- ");
         return extendedToken.access_token;
       } else {
-        console.log("Fb getExtendedToken Not Recieved", extendedTokenResponse);
-        console.log("Fb getExtendedToken Not Recieved", extendedToken);
         throw new Error(extendedTokenResponse.statusText);
       }
     } catch (error) {
@@ -125,8 +116,6 @@ module.exports = {
 
   },
   getUserDetail: async function (storeId, accessToken) {
-    console.log(" -- FB getUserDetail Start -- ", storeId);
-    console.log("FB getUserDetail ", accessToken);
     try {
       const fields = ['id', 'email', 'link', 'name', 'picture'];
       const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me?fields=` + fields.join(',');
@@ -143,7 +132,6 @@ module.exports = {
         console.log("FB getUserDetail Recieved");
         const uniqKey = `${FACEBOOK_PROFILE}-${storeId}-${userResponse.id}`;
         let profile = await ProfileModel.findOne({ uniqKey: uniqKey });
-        console.log("TCL: getUserDetail profile", profile)
         if (profile === null) {
           const userParams = {
             uniqKey: `${FACEBOOK_PROFILE}-${storeId}-${userResponse.id}`,
@@ -159,14 +147,12 @@ module.exports = {
             isSharePossible: false,
             store: storeId
           };
-          console.log("userparams", userParams);
           const profileInstance = new ProfileModel(userParams);
           profile = await profileInstance.save();
           const storeDetail = await StoreModel.findById(storeId);
           await storeDetail.profiles.push(profile);
         }
 
-        console.log(" -- FB getUserDetail End -- ");
         return profile;
       } else {
         console.log("Fb getUserDetail Not Recieved");
@@ -188,22 +174,15 @@ module.exports = {
       } else if (serviceProfile === FACEBOOK_GROUP) {
         profile = await this.getGroups(storeId, userDetail._id, accessToken);
       }
-      console.log("TCL: profile", profile)
       return profile;
     } catch (error) {
       throw new Error(error.message);
     }
   },
   getPages: async function (storeId, parentId, accessToken) {
-    console.log("TCL: storeId", storeId)
-    console.log("TCL: parentId", parentId)
-    console.log(" -- FB getPages Start -- ");
-    console.log("FB getPages ", accessToken);
-
     const parent = await ProfileModel.findById(parentId);
     try {
       const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me?fields=accounts.limit(5000){access_token,description,is_published,username,name,picture,link,id}`;
-      console.log("TCL: graphApiUrl -> graphApiUrl", graphApiUrl);
       getPagesQuery = querystring.stringify({ access_token: accessToken });
       const pagesDetailResponse = await fetch(`${graphApiUrl}&${getPagesQuery}`, {
         headers: {
@@ -214,7 +193,6 @@ module.exports = {
       });
       const pageResponse = await pagesDetailResponse.json();
       if (pagesDetailResponse.status === 200) {
-        console.log("FB getPages Recieved", pageResponse);
         if (!_.isUndefined(pageResponse.accounts) && !_.isNull(pageResponse.accounts) && !_.isEmpty(pageResponse.accounts.data)) {
           const bulkProfileInsert = pageResponse.accounts.data.map(pageProfile => {
             const uniqKey = `${FACEBOOK_PAGE}-${storeId}-${pageProfile.id}`;
@@ -247,7 +225,6 @@ module.exports = {
         const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
         parent.children = childProfiles;
         await parent.save();
-        console.log("TCL: parent", parent)
         return parent;
       } else {
         console.log("Fb getPages Not Recieved");
@@ -259,14 +236,9 @@ module.exports = {
     }
   },
   getGroups: async function (storeId, parentId, accessToken) {
-    console.log("TCL: storeId", storeId)
-    console.log("TCL: parentId", parentId)
-    console.log(" -- FB getGroups Start -- ");
-    console.log("FB getGroups ", accessToken);
     const parent = await ProfileModel.findById(parentId);
     try {
       const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me/groups?admin_only=true`;
-      console.log("TCL: graphApiUrl -> graphApiUrl", graphApiUrl);
       getGroupsQuery = querystring.stringify({ access_token: accessToken });
       const groupsDetailResponse = await fetch(`${graphApiUrl}&${getGroupsQuery}`, {
         headers: {
@@ -277,7 +249,6 @@ module.exports = {
       });
       const groupResponse = await groupsDetailResponse.json();
       if (groupsDetailResponse.status === 200) {
-        console.log("FB getGroups Recieved", groupResponse);
         const bulkProfileInsert = groupResponse.data.map(groupProfile => {
           const uniqKey = `${FACEBOOK_GROUP}-${storeId}-${groupProfile.id}`;
           return {
@@ -308,7 +279,6 @@ module.exports = {
         const childProfiles = await ProfileModel.find({ parent: parentId }).select('_id');
         parent.children = childProfiles;
         await parent.save();
-        console.log("TCL: parent", parent)
         return parent;
       } else {
         console.log("Fb getGroups Not Recieved");
@@ -366,7 +336,6 @@ module.exports = {
     }
     const queryStr = querystring.stringify(requestBody);
     const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}${profile.serviceUserId}/feed?${queryStr}`;
-    console.log("TCL: graphApiUrl -> graphApiUrl", graphApiUrl);
     const linkCreateResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
@@ -374,9 +343,7 @@ module.exports = {
       },
       method: "POST",
     });
-    console.log("TCL: linkCreateResponse", linkCreateResponse)
     const linkCreateResponseJson = await linkCreateResponse.json();
-    console.log("TCL: linkCreateResponseJson", linkCreateResponseJson)
     if (linkCreateResponse.status === 200) {
       return {
         scheduleState: POSTED,
@@ -406,10 +373,8 @@ module.exports = {
     } else {
       fbDefaultAlbum = profile.fbDefaultAlbum;
     }
-    console.log("TCL: shareFacebookPostAsPhoto fbDefaultAlbum", fbDefaultAlbum);
     if (_.isNull(fbDefaultAlbum)) {
       const defaultAlbumResponse = await this.getDefaultAlbum(profile.serviceUserId, profile.accessToken);
-      console.log("TCL: shareFacebookPostAsPhoto defaultAlbumResponse", defaultAlbumResponse)
       if (defaultAlbumResponse.status !== 200) {
         return {
           scheduleState: FAILED,
@@ -433,7 +398,6 @@ module.exports = {
           fbDefaultAlbum = defaultAlbumResponse.defaultAlbumId;
         }
       }
-      console.log("TCL: shareFacebookPostAsPhoto fbDefaultAlbum", fbDefaultAlbum)
       profile.fbDefaultAlbum = fbDefaultAlbum;
       await profile.save();
     }
@@ -474,9 +438,7 @@ module.exports = {
       },
       method: "POST",
     });
-    // console.log("TCL: imageUploadResponse", imageUploadResponse)
     const imageUploadResponseJson = await imageUploadResponse.json();
-    console.log("TCL: imageUploadResponseJson", imageUploadResponseJson)
     if (imageUploadResponse.status === 200) {
       return {
         servicePostId: imageUploadResponseJson.post_id,
@@ -496,7 +458,6 @@ module.exports = {
     }
     const queryStr = querystring.stringify(requestBody);
     const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}${serviceUserId}/albums?${queryStr}`;
-    console.log("TCL: graphApiUrl", graphApiUrl)
     const albumGetResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
@@ -504,7 +465,6 @@ module.exports = {
       },
     });
     const albumGetResponseJson = await albumGetResponse.json();
-    console.log("TCL: getDefaultAlbum albumGetResponseJson", albumGetResponseJson)
     if (albumGetResponse.status === 200) {
       const defaultAlbumId = albumGetResponseJson.data.map(album => {
         if (album.name === FB_DEFAULT_ALBUM) {
@@ -535,7 +495,6 @@ module.exports = {
     }
     const queryStr = querystring.stringify(requestBody);
     const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}${serviceUserId}/albums?${queryStr}`;
-    console.log("TCL: createAlbum graphApiUrl -> graphApiUrl", graphApiUrl);
     const albumCreateResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
@@ -543,9 +502,7 @@ module.exports = {
       },
       method: "POST",
     });
-    console.log("TCL: createAlbum albumCreateResponse", albumCreateResponse)
     const albumCreateResponseJson = await albumCreateResponse.json();
-    console.log("TCL: createAlbum albumCreateResponseJson", albumCreateResponseJson);
     return {
       albumCreateResponse,
       albumCreateResponseJson

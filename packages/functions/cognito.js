@@ -19,7 +19,6 @@ module.exports = {
       };
       event.response.challengeMetadata = "JWT";
     }
-    console.log("create auth challange Response", event);
     // callback(null, event);
     context.done(null, event)
   },
@@ -54,7 +53,6 @@ module.exports = {
     const jwtSecret = process.env.JWT_SECRET;
     const challengeAnswer = event.request.challengeAnswer;
     if (!jwtSecret || !challengeAnswer) {
-      console.log("No JWT_SECRET or challengeAnswer");
       event.response.answerCorrect = false;
     } else {
       try {
@@ -65,11 +63,10 @@ module.exports = {
         });
         event.response.answerCorrect = true;
       } catch (err) {
-        console.log("Error verifying nonce", err);
+        console.error("Error verifying nonce", err);
         event.response.answerCorrect = false;
       }
     }
-    console.log("vefify auth challange Response", event);
     context.done(null, event)
   }
 };
