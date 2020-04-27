@@ -77,7 +77,6 @@ module.exports = {
     try {
       const storeId = bufferProfile.store;
       const existingStoreProfiles = await ProfileModel.find({ store: storeId, service: BUFFER_SERVICE });
-      console.log("existingStoreProfiles", existingStoreProfiles)
       const userResponse = await fetch(`${BUFFER_API_URL}profiles.json?access_token=${bufferProfile.accessToken}`).then(response => response.json());
       if (!_.isUndefined(userResponse.error)) {
         console.log("TCL: userResponse.error", userResponse.error)
@@ -110,7 +109,7 @@ module.exports = {
         if (!_.isNull(serviceProfile)) {
           const uniqKey = `${serviceProfile}-${storeId}-${profile.service_id}`;
           const currentProfile = existingStoreProfiles.map(profile => (profile.uniqKey === uniqKey) ? profile : undefined).filter(item => !_.isUndefined(item))
-          console.log("currentProfile", currentProfile)
+
           return {
             updateOne: {
               filter: { uniqKey: uniqKey },
@@ -138,7 +137,6 @@ module.exports = {
       }).filter(function (item) {
         return !_.isUndefined(item);
       });;
-      console.log("bulkProfileInsert", bulkProfileInsert.map(profileInsert => profileInsert.updateOne.update))
       const pageProfiles = await ProfileModel.bulkWrite(bulkProfileInsert);
       const storeProfiles = await ProfileModel.find({ store: storeId }).select('_id');
       const store = await StoreModel.findById(storeId);
