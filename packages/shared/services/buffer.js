@@ -202,26 +202,34 @@ module.exports = {
     try {
       const url = `${BUFFER_API_URL}profiles/${profileDetail.bufferId}/updates/${status}.json?count=20&access_token=${profileDetail.accessToken}`;
       const profileUpdates = await fetch(url).then(response => response.json());
-      const response = {
-        total: profileUpdates.total,
-        updates: profileUpdates.updates.map(update => {
-          return {
-            id: update.id,
-            day: update.day,
-            dueTime: update.due_time,
-            status: update.status,
-            error: update.error,
-            textFormatted: update.text,
-            media: {
-              link: update.media.link,
-              description: update.media.description,
-              title: update.media.title,
-              thumbnail: update.media.thumbnail
+
+      if (profileUpdates.updates) {
+
+        return {
+          total: profileUpdates.total,
+          updates: profileUpdates.updates.map(update => {
+            return {
+              id: update.id,
+              day: update.day,
+              dueTime: update.due_time,
+              status: update.status,
+              error: update.error,
+              textFormatted: update.text,
+              media: {
+                link: update.media.link,
+                description: update.media.description,
+                title: update.media.title,
+                thumbnail: update.media.thumbnail
+              }
             }
-          }
-        })
+          })
+        }
+      } else {
+        return {
+          total: 0,
+          updates: []
+        }
       }
-      return response;
     } catch (error) {
       console.log(" -- Buffer getPendingUpdates Error -- ");
       throw new Error(error.message);
