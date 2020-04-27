@@ -68,27 +68,29 @@ module.exports = {
     const userResponse = await T.get('account/verify_credentials');
     const uniqKey = `${TWITTER_PROFILE}-${storeId}-${userResponse.data.id}`;
     let profile = await ProfileModel.findOne({ uniqKey: uniqKey });
+    let userParams = {
+      uniqKey: `${TWITTER_PROFILE}-${storeId}-${userResponse.data.id}`,
+      name: userResponse.data.name,
+      avatarUrl: userResponse.data.profile_image_url,
+      serviceUserId: userResponse.data.id,
+      profileURL: `https://twitter.com/${userResponse.data.screen_name}`,
+      accessToken: tokenResponse.oauthAccessToken,
+      accessTokenSecret: tokenResponse.oauthAccessTokenSecret,
+      service: TWITTER_SERVICE,
+      serviceProfile: TWITTER_PROFILE,
+      isTokenExpired: false,
+      isSharePossible: true,
+      store: storeId
+    };
     if (profile === null) {
-      const userParams = {
-        uniqKey: `${TWITTER_PROFILE}-${storeId}-${userResponse.data.id}`,
-        name: userResponse.data.name,
-        avatarUrl: userResponse.data.profile_image_url,
-        serviceUserId: userResponse.data.id,
-        profileURL: `https://twitter.com/${userResponse.data.screen_name}`,
-        accessToken: tokenResponse.oauthAccessToken,
-        accessTokenSecret: tokenResponse.oauthAccessTokenSecret,
-        service: TWITTER_SERVICE,
-        serviceProfile: TWITTER_PROFILE,
-        isConnected: false,
-        isTokenExpired: false,
-        isSharePossible: true,
-        store: storeId
-      };
+      userParams.isConnected = false;
       const profileInstance = new ProfileModel(userParams);
       profile = await profileInstance.save();
       const storeDetail = await StoreModel.findById(storeId);
       storeDetail.profiles = [...storeDetail.profiles, profile._id];
       const s = await storeDetail.save();
+    } else {
+      await ProfileModel.updateOne({ _id: profile._id }, userParams)
     }
 
     console.log(" -- TW getUserDetail End -- ");

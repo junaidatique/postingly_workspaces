@@ -76,6 +76,7 @@ module.exports = {
   getUserProfiles: async function (bufferProfile) {
     try {
       const storeId = bufferProfile.store;
+      const existingStoreProfiles = await ProfileModel.find({ store: storeId, service: BUFFER_SERVICE });
       const userResponse = await fetch(`${BUFFER_API_URL}profiles.json?access_token=${bufferProfile.accessToken}`).then(response => response.json());
       if (!_.isUndefined(userResponse.error)) {
         console.log("TCL: userResponse.error", userResponse.error)
@@ -107,6 +108,8 @@ module.exports = {
         }
         if (!_.isNull(serviceProfile)) {
           const uniqKey = `${serviceProfile}-${storeId}-${profile.service_id}`;
+          const currentProfile = existingStoreProfiles.map(profile => (profile.uniqKey === uniqKey) ? profile : undefined).filter(item => !_.isUndefined(item))
+
           return {
             updateOne: {
               filter: { uniqKey: uniqKey },
@@ -122,7 +125,8 @@ module.exports = {
                 store: storeId,
                 parent: bufferProfile._id,
                 isSharePossible: true,
-                isConnected: false
+                isConnected: (currentProfile[0]) ? currentProfile[0].isConnected : false,
+                isTokenExpired: false
               },
               upsert: true
             }
