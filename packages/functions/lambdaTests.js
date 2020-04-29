@@ -51,41 +51,18 @@ module.exports = {
     // console.log("TCL: updateProductUrls ---------------------------------------------------------")
     // await updateProductUrls();
     // console.log("TCL: changeCaption ---------------------------------------------------------")
-    // await changeCaption({ rule: ruleDetail._id, storeId: null });
+    // await changeCaption({ rule: "5ea9bfe30e46d97b2a4300b1", storeId: null });
     // console.log("TCL: Postupdates ---------------------------------------------------------")
     // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: `` })
     // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
 
-    // // second iteration.
-    // const lastUpdate = await UpdateModel.findOne({ store: storeId }).sort({ scheduleTime: -1 });
-    // await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
-    // await schedule({ ruleId: ruleDetail._id });
-    // await changeCaption({ rule: ruleDetail._id, storeId: null });
-
-
-    // // third iteration
-    // await schedule({ ruleId: ruleDetail._id });
-    // await changeCaption({ rule: ruleDetail._id, storeId: null });
-    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
-
-    // if (_.isNull(lastUpdate)) {
-    //   await createUpdates({ ruleId: ruleDetail._id });
-    // } else {
-    //   await createUpdates({ ruleId: ruleDetail._id, scheduleWeek: lastUpdate.scheduleTime });
-    // }
-    // // await createUpdates({ ruleId: ruleDetail._id });
-    // // // await createUpdatesforNextWeek();
-    // // // await cronThisWeekRulesForUpdates();
-
-    // await schedule({ ruleId: ruleDetail._id });
-    // // await cronAddCaptions();
-    // await changeCaption({ rule: ruleDetail._id, storeId: null });
-    // // // await cronPostUpdates();
-    // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
     // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
-    updates = await UpdateModel.findOne();
+    // updates = await UpdateModel.findOne({sch}).sort({ createdAt: 1 });
     // console.log("TCL: updates", updates)
-    await shareUpdates({ updateId: updates._id });
+    updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(25);
+    await Promise.all(updates.map(async update => {
+      await shareUpdates({ updateId: update._id });
+    }));
 
 
   }

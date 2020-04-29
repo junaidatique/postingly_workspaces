@@ -3,6 +3,7 @@ const shared = require('shared');
 const _ = require('lodash');
 const moment = require('moment-timezone');
 const sqsHelper = require('shared').sqsHelper;
+const ProductModel = shared.ProductModel;
 const {
   NOT_SCHEDULED,
   SCHEDULE_TYPE_PRODUCT,
@@ -17,7 +18,7 @@ module.exports = {
     console.log("TCL: event", event)
     const RuleModel = shared.RuleModel;
     const UpdateModel = shared.UpdateModel;
-    const ProductModel = shared.ProductModel;
+
     const activeRules = await RuleModel.find({ active: true });
     const scheduleWeekRules = await UpdateModel.distinct('rule',
       {
@@ -128,7 +129,7 @@ module.exports = {
     const scheduleClass = shared.scheduleClass;
     const ruleDetail = await RuleModel.findById(event.ruleId).populate('profile');
     if (!ruleDetail || !ruleDetail.profile) {
-      console.log("TCL: rule or profile not found for ${event.ruleId}");
+      console.error("TCL: rule or profile not found for ${event.ruleId}");
       return;
     }
 
@@ -178,14 +179,13 @@ module.exports = {
       try {
         updates = await UpdateModel.bulkWrite([].concat.apply([], bulkUpdatesWrite));
       } catch (error) {
-        console.log("TCL: error.message", error.message)
+        console.error("TCL: error.message", error.message)
         if (error.message.indexOf('E11000') >= 0) {
           await sqsHelper.addToQueue('CreateUpdates', event);
         }
       }
       // scheduleState is set seperately because there may be some updates that are updated. so scheduleState is updated for only newly created updates.
       if (!_.isUndefined(updates)) {
-        console.log("TCL: updates.result.nUpserted", updates.result.nUpserted)
         if (updates.result.nUpserted > 0) {
           const bulkUpdate = updates.result.upserted.map(updateTime => {
             return {
@@ -211,55 +211,101 @@ module.exports = {
   },
   deleteScheduledUpdates: async function (ruleId) {
     const UpdateModel = shared.UpdateModel;
-    const ProductModel = shared.ProductModel;
-    const RuleModel = shared.RuleModel;
-    const ruleDetail = await RuleModel.findOne({ _id: ruleId });
-    const ruleUpdates = await UpdateModel.find({ rule: ruleId, scheduleState: { $in: [PENDING, APPROVED] } }).select('product');
-
-
-    if (!_.isNull(ruleUpdates)) {
-      const items = await ProductModel.find({ _id: { $in: ruleUpdates.map(update => update['product']) } })
-
-      let updateItemShareHistory = [];
-      const updateProducts = items.map(item => {
-        updateItemShareHistory = [];
-        updateItemShareHistory = item.shareHistory.map(itemScheduleHistory => {
-          if ((ruleDetail.profile.toString() === itemScheduleHistory.profile.toString()) && (ruleDetail.type === itemScheduleHistory.postType)) {
-            if (itemScheduleHistory.counter === 1) {
-              return undefined
-            } else {
-              return {
-                profile: itemScheduleHistory.profile,
-                postType: itemScheduleHistory.postType,
-                counter: (itemScheduleHistory.counter) > 0 ? itemScheduleHistory.counter - 1 : 0
-              }
-            }
-          } else {
-            return itemScheduleHistory
-          }
-        }).filter(item => !_.isUndefined(item));
-
-
-        return {
-          updateOne: {
-            filter: { uniqKey: item.uniqKey },
-            update: {
-              shareHistory: updateItemShareHistory
-            }
-          }
-        }
-      });
-
-      if (!_.isEmpty(updateProducts)) {
-        const products = await ProductModel.bulkWrite(updateProducts);
+    const updatesDeleted = await UpdateModel.deleteMany(
+      {
+        rule: ruleId,
+        scheduleState: { $in: [NOT_SCHEDULED, PENDING, APPROVED] },
+        scheduleTime: { $gte: moment().utc() },
+        scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
       }
-      const updatesDeleted = await UpdateModel.deleteMany(
-        {
-          rule: ruleId,
-          scheduleState: { $in: [NOT_SCHEDULED, PENDING, APPROVED] },
-          scheduleTime: { $gte: moment().utc() },
-          scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
-        })
+    )
+    // const ProductModel = shared.ProductModel;
+    // const RuleModel = shared.RuleModel;
+    // const ruleDetail = await RuleModel.findOne({ _id: ruleId });
+    // const ruleUpdates = await UpdateModel.find({ rule: ruleId, scheduleState: { $in: [PENDING, APPROVED] } }).select('product');
+
+
+    // if (!_.isNull(ruleUpdates)) {
+    //   const items = await ProductModel.find({ _id: { $in: ruleUpdates.map(update => update['product']) } })
+
+    //   let updateItemShareHistory = [];
+    //   const updateProducts = items.map(item => {
+    //     updateItemShareHistory = [];
+    //     updateItemShareHistory = item.shareHistory.map(itemScheduleHistory => {
+    //       if ((ruleDetail.profile.toString() === itemScheduleHistory.profile.toString()) && (ruleDetail.type === itemScheduleHistory.postType)) {
+    //         if (itemScheduleHistory.counter === 1) {
+    //           return undefined
+    //         } else {
+    //           return {
+    //             profile: itemScheduleHistory.profile,
+    //             postType: itemScheduleHistory.postType,
+    //             counter: (itemScheduleHistory.counter) > 0 ? itemScheduleHistory.counter - 1 : 0
+    //           }
+    //         }
+    //       } else {
+    //         return itemScheduleHistory
+    //       }
+    //     }).filter(item => !_.isUndefined(item));
+
+
+    //     return {
+    //       updateOne: {
+    //         filter: { uniqKey: item.uniqKey },
+    //         update: {
+    //           shareHistory: updateItemShareHistory
+    //         }
+    //       }
+    //     }
+    //   });
+
+    //   if (!_.isEmpty(updateProducts)) {
+    //     const products = await ProductModel.bulkWrite(updateProducts);
+    //   }
+    // }
+
+  },
+  createHistoryForProduct: async function (update) {
+
+    const updatePostType = update.postType;
+    const updateProfileId = update.profile;
+    const updateProduct = update.product;
+    const ruleId = update.product;
+    const updateProductDetail = await ProductModel.findById(updateProduct);
+    let shareHistory = updateProductDetail.shareHistory;
+
+
+    // profile history for given profile in the item share history
+    let profileHistory = shareHistory.map(history => {
+      if (updatePostType === history.postType && history.profile && history.profile.toString() === updateProfileId.toString()) {
+        return history;
+      } else {
+        return undefined;
+      }
+    }).filter(item => !_.isUndefined(item))[0];
+
+
+    // if no share history is found counter is set to one. 
+    if (_.isEmpty(profileHistory) || _.isUndefined(profileHistory)) {
+      shareHistory[updateProductDetail.shareHistory.length] = { profile: updateProfileId, counter: 1, postType: updatePostType, rule: update.rule };
+    } else {
+      // otherwise counter is incremented and history is returned. 
+      shareHistory = updateProductDetail.shareHistory.map(history => {
+        if (history._id.toString() === profileHistory._id.toString()) {
+          history.counter = history.counter + 1;
+        }
+        return history;
+      });
     }
+    // console.log("shareHistory", shareHistory)
+    const updateQuery = [{
+      updateOne: {
+        filter: { _id: updateProduct._id },
+        update: {
+          shareHistory: shareHistory,
+        }
+      }
+    }];
+    const productUpdates = await ProductModel.bulkWrite(updateQuery);
+
   }
 }
