@@ -28,10 +28,8 @@ const shortLink = {
   pooostURL: async function (longURL) {
     const url = `${process.env.POOST_URL_SHORTNER_LINK}/api/v2/action/shorten?key=`
       + `${process.env.POOOST_URL_SHORTNER_API_KEY}&url=${URI.serialize(URI.parse(longURL))}&custom_ending=&is_secret=false&response_type=json`;
-    console.log('pooostURL url', url);
     const resp = await fetch(encodeURI(url));
     const json = await resp.json();
-    console.log('pooostURL json', json);
     return json.result;
   }
 }

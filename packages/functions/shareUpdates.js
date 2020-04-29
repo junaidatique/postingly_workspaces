@@ -13,6 +13,7 @@ const TwitterService = require('shared').TwitterService;
 const BufferService = require('shared').BufferService;
 const PartnerShopify = require('shared').PartnerShopify;
 const scheduleClass = require('shared').scheduleClass;
+const ProductModel = require('shared').ProductModel;
 const dbConnection = require('./db');
 module.exports = {
   share: async function (eventSQS, context) {
@@ -100,6 +101,8 @@ module.exports = {
           await update.save();
           return;
         }
+        // if user has selected post as link and url is not allowed than change the rule to post as photo. 
+        // this will update rule and delete all the existing scheduled products and reschedule again. 
         if (response.failedMessage.indexOf('Only owners of the URL') >= 0 && update.rule) {
           const updateRule = await RuleModel.findById(update.rule);
           if (updateRule) {
@@ -127,6 +130,8 @@ module.exports = {
       update.failedMessage = "undefined.";
     }
     await update.save();
-  },
-
+    if (update.product) {
+      await updateClass.createHistoryForProduct(update)
+    }
+  }
 }

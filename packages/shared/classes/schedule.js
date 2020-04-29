@@ -6,6 +6,8 @@ const ProductModel = shared.ProductModel;
 const UpdateModel = shared.UpdateModel;
 const RuleModel = shared.RuleModel;
 const StoreModel = shared.StoreModel;
+const PRODUCT_LIMIT = 80;
+const MAX_NO_DAYS = 7;
 const {
   NOT_SCHEDULED,
   PENDING,
@@ -126,15 +128,15 @@ module.exports = {
       }
     })
     if (!_.isEmpty(productUpdate)) {
-      const productUpdates = await ProductModel.bulkWrite(productUpdate);
+      // const productUpdates = await ProductModel.bulkWrite(productUpdate);
     }
-    if (bulkUpdate.length > 0) {
-      if (process.env.IS_OFFLINE === 'false') {
-        await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: postingCollectionOption });
-      } else {
-        this.schedule({ ruleId: event.ruleId, postingCollectionOption: postingCollectionOption }, context)
-      }
-    }
+    // if (bulkUpdate.length === productsToSchedule.length) {
+    //   if (process.env.IS_OFFLINE === 'false') {
+    //     await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: postingCollectionOption });
+    //   } else {
+    //     this.schedule({ ruleId: event.ruleId, postingCollectionOption: postingCollectionOption }, context)
+    //   }
+    // }
   },
 
   scheduleSingleProduct: function (ruleDetail, product, scheduleUpdate, defaultShortLinkService, addTime) {
@@ -225,7 +227,6 @@ module.exports = {
         }
         return history;
       });
-
     }
     return { bulkUpdateObject, productUpdateObject };
   },
@@ -352,8 +353,6 @@ module.exports = {
   },
 
   getUpdatesForSchedule: async function (ruleDetail, postingCollectionOption) {
-    const productLimit = 8;
-    const maxNumberOfDays = 7;
     let updates = [];
     let allowedCollections = [];
     if (ruleDetail.type === RULE_TYPE_MANUAL) {
@@ -364,25 +363,25 @@ module.exports = {
           scheduleTime: { $gt: moment.utc() },
           scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] }
         }
-      ).sort({ scheduleTime: 1 }).limit(productLimit);
+      ).sort({ scheduleTime: 1 }).limit(PRODUCT_LIMIT);
     } else {
       if (postingCollectionOption === COLLECTION_OPTION_ALL) {
         updates = await UpdateModel.find(
           {
             rule: ruleDetail._id,
             scheduleState: NOT_SCHEDULED,
-            scheduleTime: { $gt: moment.utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
+            scheduleTime: { $gt: moment.utc(), $lt: moment().add(MAX_NO_DAYS, 'days').utc() },
             scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
             postingCollectionOption: COLLECTION_OPTION_ALL
           }
-        ).sort({ scheduleTime: 1 }).limit(productLimit);
+        ).sort({ scheduleTime: 1 }).limit(PRODUCT_LIMIT);
       } else {
         // get posting timeing id and select updates one by one. 
         const postTimingIds = await UpdateModel.distinct('postTimingId',
           {
             rule: ruleDetail._id,
             scheduleState: NOT_SCHEDULED,
-            scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(maxNumberOfDays, 'days') },
+            scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(MAX_NO_DAYS, 'days') },
             scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
             postingCollectionOption: COLLECTION_OPTION_SELECTED
           }
@@ -393,11 +392,11 @@ module.exports = {
             {
               rule: ruleDetail._id,
               scheduleState: NOT_SCHEDULED,
-              scheduleTime: { $gt: moment.utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
+              scheduleTime: { $gt: moment.utc(), $lt: moment().add(MAX_NO_DAYS, 'days').utc() },
               scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
               postTimingId: unScheduledPostTimingId
             }
-          ).sort({ scheduleTime: 1 }).limit(productLimit);
+          ).sort({ scheduleTime: 1 }).limit(PRODUCT_LIMIT);
           allowedCollections = updates[0].allowedCollections;
         }
       }
@@ -405,7 +404,6 @@ module.exports = {
     return { updates, allowedCollections };
   },
   getProductsForUpdates: async function (ruleDetail, postingCollectionOption, allowedCollections, noOfActiveProducts) {
-    const maxNumberOfDays = 7;
     const profile = ruleDetail.profile;
     let productsToSchedule = [];
     let existingScheduleItems = [];
@@ -416,7 +414,7 @@ module.exports = {
         {
           profile: profile,
           scheduleState: { $ne: NOT_SCHEDULED },
-          scheduleTime: { $gt: moment().add(-1, 'days').utc(), $lt: moment().add(maxNumberOfDays, 'days').utc() },
+          scheduleTime: { $gt: moment().add(-1, 'days').utc(), $lt: moment().add(MAX_NO_DAYS, 'days').utc() },
           scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
         }
       ).sort({ scheduleTime: 1 }).select('_id product variant');
@@ -497,7 +495,7 @@ module.exports = {
         }
       );
 
-      notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.limit(8);
+      notSharedOnThisProfileLimitQuery = notSharedOnThisProfileLimitQuery.limit(PRODUCT_LIMIT);
       console.log("TCL: getNotSharedProducts notSharedOnThisProfileLimitQuery['_conditions']", notSharedOnThisProfileLimitQuery['_conditions']);
       console.log("TCL: getNotSharedProducts notSharedOnThisProfileLimitQuery['options']", notSharedOnThisProfileLimitQuery['options']);
 
@@ -517,7 +515,7 @@ module.exports = {
     } else {
       lessSharedOnThisProfile = lessSharedOnThisProfile.limit(-1).skip(Math.floor(Math.random() * noOfActiveProducts));
     }
-    lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ "shareHistory.counter": 1 }).limit(8);
+    lessSharedOnThisProfile = lessSharedOnThisProfile.sort({ "shareHistory.counter": 1 }).limit(PRODUCT_LIMIT);
     console.log("TCL: getNotSharedProducts lessSharedOnThisProfile['_conditions']", lessSharedOnThisProfile['_conditions']);
     console.log("TCL: getNotSharedProducts lessSharedOnThisProfile['options']", lessSharedOnThisProfile['options']);
     let products = await lessSharedOnThisProfile;
