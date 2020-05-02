@@ -63,7 +63,7 @@ module.exports = {
     if (process.env.IS_OFFLINE === 'false') {
       await sqsHelper.addToQueue('CreateUpdates', { ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id });
     } else {
-      await updateClass.createUpdates({ ruleId: ruleDetail._id })
+      await updateClass.createUpdates({ ruleId: ruleDetail._id, ruleIdForScheduler: ruleDetail._id })
     }
     const ruleResult = formattedRule(ruleDetail);
     return ruleResult;

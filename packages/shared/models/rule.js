@@ -148,9 +148,7 @@ const ruleSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  repeatFrequency: {
-    type: Number
-  },
+
   postingProductOrder: {
     type: String,
     enum: POSTING_SORTORDER,
@@ -173,6 +171,17 @@ const ruleSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
     index: true
+  },
+  allowProductRepetition: {
+    type: Boolean,
+    default: false,
+  },
+  productRepeatFrequency: {
+    type: Number
+  },
+  productRepeatFinalDate: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
   }
 });
 

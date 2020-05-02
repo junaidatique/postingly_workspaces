@@ -38,7 +38,7 @@ module.exports = {
       }
 
       if (!event.queryStringParameters) {
-        const response = httpHelper.badRequest("No query string paramters found");
+        const response = httpHelper.badRequest("No query string parameters found");
         return response;
       }
 
@@ -101,7 +101,7 @@ module.exports = {
       try {
         response = await this.exchangeToken(shopDomain, code);
       } catch (err) {
-        return httpHelper.badRequest("autherization code is already used.");
+        return httpHelper.badRequest("code is already used.");
       }
 
       const accessToken = response.access_token;
@@ -127,7 +127,7 @@ module.exports = {
       const cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
       let syncStoreProducts = false;
       if (store === null) {
-        console.log("verifyCallback new signup");
+        console.log("verifyCallback new sign up");
         const shopParams = {
           uniqKey: storeKey,
           userId: cognitoUser,
@@ -295,7 +295,6 @@ module.exports = {
   validateHMAC: function (params) {
     return true;
     // const shopifyApiSecret = process.env.SHOPIFY_SECRET;
-    // const shopifyApiSecret = 'ShtespOxGicviv9';
     // console.log("shopifyApiSecret", shopifyApiSecret);
     // if (!shopifyApiSecret) {
     //   throw new Error("SHOPIFY_API_SECRET environment variable not set");

@@ -101,8 +101,9 @@ module.exports = {
     let updateTimes = [];
     const numberOfProducts = ruleDetail.selectedProducts.length;
     let startOfDay = moment.tz(storeTimezone).startOf('day');
-    while (updateTimes.length < numberOfProducts) {
-      let updateTime = startOfDay.clone();
+    let updateTime = startOfDay.clone();
+    while (updateTime.isSameOrBefore(moment(ruleDetail.productRepeatFinalDate))) {
+      updateTime = startOfDay.clone();
       ruleDetail.postTimings.forEach((postTime) => {
         hour = updateTime.set({ 'hour': postTime.postingHour, 'minute': postTime.postingMinute });
         if (hour.isAfter(moment.utc()) && postTime.postingDays.includes(moment.weekdays(updateTime.weekday()))) {

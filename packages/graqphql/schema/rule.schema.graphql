@@ -55,7 +55,9 @@ type Rule {
   allowZeroQuantity: Boolean
   postAsVariants: Boolean
   postingProductOrder: PostingSortOrder
-  repeatFrequency: Int
+  allowProductRepetition: Boolean  
+  productRepeatFrequency: Int
+  productRepeatFinalDate: String
   rotateImages: Boolean
   rotateImageLimit: Int
   captions: [Caption]
@@ -104,7 +106,9 @@ input RuleInput {
   allowZeroQuantity: Boolean
   postAsVariants: Boolean
   postingProductOrder: PostingSortOrder
-  repeatFrequency: Int
+  allowProductRepetition: Boolean  
+  productRepeatFrequency: Int
+  productRepeatFinalDate: String
   rotateImages: Boolean
   rotateImageLimit: Int
   captions: [CreateCaptionInput]  
