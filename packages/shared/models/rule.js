@@ -181,7 +181,7 @@ const ruleSchema = new mongoose.Schema({
   },
   productRepeatFinalDate: {
     type: Date,
-    get: date => (date !== undefined) ? date.toISOString() : null,
+    get: date => (date) ? date.toISOString() : null,
   }
 });
 
