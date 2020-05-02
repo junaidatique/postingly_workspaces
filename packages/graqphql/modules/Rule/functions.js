@@ -3,7 +3,8 @@ const storeFunctions = require('../Store/functions');
 const profileFunctions = require('../Profile/functions');
 const collectionFunctions = require('../Collection/functions');
 const productFunctions = require('../Product/functions');
-const _ = 'lodash'
+const _ = require('lodash');
+const moment = require('moment');
 const formattedRule = async (rule) => {
   return {
     ...rule._doc,
@@ -15,6 +16,7 @@ const formattedRule = async (rule) => {
     captions: formatCaptions.bind(this, rule._doc.captions),
     postTimings: formatPostTimings.bind(this, rule._doc.postTimings),
     createdAt: (rule.createdAt !== undefined) ? rule.createdAt.toISOString() : null,
+    productRepeatFinalDate: (rule.productRepeatFinalDate) ? moment(rule.productRepeatFinalDate).toISOString() : null,
 
   }
 }

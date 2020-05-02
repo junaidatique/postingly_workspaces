@@ -130,13 +130,13 @@ module.exports = {
     if (!_.isEmpty(productUpdate)) {
       // const productUpdates = await ProductModel.bulkWrite(productUpdate);
     }
-    // if (bulkUpdate.length === productsToSchedule.length) {
-    //   if (process.env.IS_OFFLINE === 'false') {
-    //     await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: postingCollectionOption });
-    //   } else {
-    //     this.schedule({ ruleId: event.ruleId, postingCollectionOption: postingCollectionOption }, context)
-    //   }
-    // }
+    if (bulkUpdate.length > 0) {
+      if (process.env.IS_OFFLINE === 'false') {
+        await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: postingCollectionOption });
+      } else {
+        this.schedule({ ruleId: event.ruleId, postingCollectionOption: postingCollectionOption }, context)
+      }
+    }
   },
 
   scheduleSingleProduct: function (ruleDetail, product, scheduleUpdate, defaultShortLinkService, addTime) {
@@ -440,7 +440,7 @@ module.exports = {
     }
     products = await this.getLessSharedProducts(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, noOfActiveProducts);
     if (products.length === 0) {
-      products = await this.getLessSharedProducts(ruleDetail, [], postingCollectionOption, allowedCollections, noOfActiveProducts);
+      // products = await this.getLessSharedProducts(ruleDetail, [], postingCollectionOption, allowedCollections, noOfActiveProducts);
     }
 
     return products;
