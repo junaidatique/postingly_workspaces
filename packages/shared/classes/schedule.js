@@ -431,7 +431,7 @@ module.exports = {
   },
   getProductsForSchedule: async function (ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections, noOfActiveProducts) {
     let products;
-    products = await this.getNotSharedProducts(ruleDetail, [], postingCollectionOption, allowedCollections);
+    products = await this.getNotSharedProducts(ruleDetail, existingScheduleItems, postingCollectionOption, allowedCollections);
     if (products.length > 0) {
       return products;
     }
