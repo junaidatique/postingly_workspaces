@@ -74,10 +74,10 @@ module.exports = {
       endOfWeek = moment().add(1, 'weeks').tz(storeTimezone).endOf('isoWeek');
     } else if (!_.isUndefined(scheduleWeek)) { // this is used for testing purposes. 
       startOfWeek = moment(scheduleWeek);
-      endOfWeek = moment(scheduleWeek).add(7, 'days');
+      endOfWeek = moment(scheduleWeek).add(14, 'days');
     } else {
       startOfWeek = moment().tz(storeTimezone).startOf('isoWeek')
-      endOfWeek = moment().tz(storeTimezone).endOf('isoWeek');
+      endOfWeek = moment().add(1, 'weeks').tz(storeTimezone).endOf('isoWeek');
     }
 
     ruleDetail.postTimings.forEach((postTime) => {
