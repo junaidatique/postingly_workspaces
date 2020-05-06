@@ -166,6 +166,17 @@ const storeSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  showReviewMessage: {
+    type: Boolean,
+    default: false,
+  },
+  statusMessage: {
+    type: String,
+  },
+  showStatusMessage: {
+    type: Boolean,
+    default: false
+  },
 });
 
 storeSchema.set('timestamps', true);
