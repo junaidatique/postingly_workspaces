@@ -1,5 +1,8 @@
 const ProfileModel = require('shared').ProfileModel;
 const storeFunctions = require('../Store/functions');
+const updateFunctions = require('../Update/functions');
+
+const moment = require('moment')
 const _ = require('lodash')
 const formattedProfile = async (profile) => {
   if (!_.isNull(profile)) {
@@ -10,6 +13,13 @@ const formattedProfile = async (profile) => {
       children: getProfiles.bind(this, profile._doc.children),
       store: storeFunctions.getStoreByID.bind(this, profile._doc.store),
       createdAt: (profile.createdAt !== undefined) ? profile.createdAt.toISOString() : null,
+      numberOfUpdatesScheduled: await updateFunctions.getScheduledUpdatesCountByProfileId.bind(this, profile._id),
+      numberOfUpdatesScheduled: await updateFunctions.getPostedUpdatesCountByProfileId.bind(this, profile._doc._id),
+      // numberOfUpdatesScheduled: await updateFunctions.getUpdatesCount.bind(this, {
+      //   profile: profile._id,
+      //   status: FAILED,
+      //   scheduleTime: { $gt: moment().subtract(1, 'day') }
+      // })
     }
   } else {
     return undefined;

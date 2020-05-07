@@ -16,7 +16,10 @@ type Profile {
   isTokenExpired: Boolean
   isSharePossible: Boolean
   store: Store
-  createdAt: String
+  createdAt: String  
+  numberOfUpdatesScheduled: Int
+  numberOfUpdatesPosted: Int
+  numberOfUpdatesFailed: Int
 }
 
 input connectProfileInput {
