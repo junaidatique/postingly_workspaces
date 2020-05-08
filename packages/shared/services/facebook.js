@@ -1,6 +1,7 @@
 const fetch = require("node-fetch");
 const querystring = require('querystring')
 const ProfileModel = require('shared').ProfileModel;
+const ProductModel = require('shared').ProductModel;
 const StoreModel = require('shared').StoreModel;
 
 const _ = require('lodash')
@@ -294,7 +295,11 @@ module.exports = {
     if (profile.serviceProfile === FACEBOOK_GROUP) {
       return this.shareFacebookPostAsPhoto(update);
     }
-    const albumTitle = update.titleForCaption;
+    let albumTitle = update.titleForCaption;
+    if (!albumTitle) {
+      const productDetail = await ProductModel.findOne(update.product);
+      albumTitle = productDetail.title;
+    }
     const albumResponse = await this.createAlbum(profile.serviceUserId, albumTitle, update.text, profile.accessToken);
     const albumCreateResponse = albumResponse.albumCreateResponse;
     const albumCreateResponseJson = albumResponse.albumCreateResponseJson;

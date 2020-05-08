@@ -4,7 +4,8 @@ const profileFunctions = require('../Profile/functions');
 const ruleFunctions = require('../Rule/functions');
 const productFunctions = require('../Product/functions');
 const moment = require('moment');
-const { PENDING, APPROVED, POSTED, FAILED } = require('shared/constants')
+const _ = require('lodash');
+const { NOT_SCHEDULED, PENDING, APPROVED, POSTED, FAILED, PAUSED } = require('shared/constants')
 const formattedUpdate = async (update) => {
   return {
     ...update._doc,
@@ -19,25 +20,41 @@ const formattedUpdate = async (update) => {
   }
 }
 
-const getScheduledUpdatesCountByProfileId = async profileId => {
-  const query = {
-    profile: profileId,
-    status: { $in: [PENDING, APPROVED] }
+const dailyUpdateReportAggregate = async (matchFilter) => {
+  res = await UpdateModel.aggregate([{
+    "$match": matchFilter
+  },
+  {
+    "$group": {
+      "_id": "$scheduleState",
+      "count": {
+        "$sum": 1.0
+      }
+    }
+  }]);
+  let response = {
+    notScheduledCount: calculateCountForDailyUpdateReport(res, NOT_SCHEDULED),
+    pendingCount: calculateCountForDailyUpdateReport(res, PENDING),
+    approvedCount: calculateCountForDailyUpdateReport(res, APPROVED),
+    postedCount: calculateCountForDailyUpdateReport(res, POSTED),
+    failedCount: calculateCountForDailyUpdateReport(res, FAILED),
+    pausedCount: calculateCountForDailyUpdateReport(res, PAUSED),
   };
-  console.log("getScheduledUpdatesCountByProfileId query", query)
-  return await UpdateModel.countDocuments(query);
+  return response;
 }
-const getPostedUpdatesCountByProfileId = async profileId => {
-  const query = {
-    profile: profileId,
-    status: POSTED,
-    scheduleTime: { $gt: moment().subtract(1, 'day') }
-  }
-  console.log("getPostedUpdatesCountByProfileId query", query)
-  return await UpdateModel.countDocuments(query);
+const calculateCountForDailyUpdateReport = (res, key) => {
+  const result = res.map(counter => {
+    if (counter._id === key) {
+      return counter.count;
+    } else {
+      return undefined;
+    }
+  }).filter(item => !_.isUndefined(item));
+  return _.isEmpty(result) ? 0 : result[0];
 }
 
 exports.formattedUpdate = formattedUpdate
-exports.getScheduledUpdatesCountByProfileId = getScheduledUpdatesCountByProfileId
-exports.getPostedUpdatesCountByProfileId = getPostedUpdatesCountByProfileId
+exports.dailyUpdateReportAggregate = dailyUpdateReportAggregate
+exports.calculateCountForDailyUpdateReport = calculateCountForDailyUpdateReport
+
 // exports.getUpdatesCount = getUpdatesCount
