@@ -8,7 +8,7 @@ const formattedProfile = async (profile) => {
   if (!_.isNull(profile)) {
     let matchFilter = {};
     matchFilter.profile = profile._id;
-    matchFilter.scheduleDayOfYear = { $gte: moment().add(-1, 'days').dayOfYear() };
+    matchFilter.scheduleDayOfYear = { $gte: moment().add(-7, 'days').dayOfYear() };
     response = await updateFunctions.dailyUpdateReportAggregate(matchFilter);
     return {
       ...profile._doc,
