@@ -1,8 +1,15 @@
 const ProfileModel = require('shared').ProfileModel;
 const storeFunctions = require('../Store/functions');
+const updateFunctions = require('../Update/functions');
+
+const moment = require('moment')
 const _ = require('lodash')
 const formattedProfile = async (profile) => {
   if (!_.isNull(profile)) {
+    let matchFilter = {};
+    matchFilter.profile = profile._id;
+    matchFilter.scheduleDayOfYear = { $gte: moment().add(-1, 'days').dayOfYear() };
+    response = await updateFunctions.dailyUpdateReportAggregate(matchFilter);
     return {
       ...profile._doc,
       id: profile._id,
@@ -10,6 +17,9 @@ const formattedProfile = async (profile) => {
       children: getProfiles.bind(this, profile._doc.children),
       store: storeFunctions.getStoreByID.bind(this, profile._doc.store),
       createdAt: (profile.createdAt !== undefined) ? profile.createdAt.toISOString() : null,
+      numberOfUpdatesScheduled: response.pendingCount + response.approvedCount,
+      numberOfUpdatesPosted: response.postedCount,
+      numberOfUpdatesFailed: response.failedCount
     }
   } else {
     return undefined;

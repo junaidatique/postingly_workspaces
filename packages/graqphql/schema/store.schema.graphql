@@ -41,7 +41,11 @@ type Store {
   variants(productId: String!): [Variant]
   rules(filter: ModelRuleFilterInput, limit: Int, skip: Int): [Rule]
   updates(limit: Int, skip: Int): [Update]
-  chargeURL: String
+  chargeURL: String,
+  showReviewMessage: Boolean,
+  statusMessage: String,
+  showStatusMessage: Boolean
+  active: Boolean
 }
 
 enum ShortLinkServices {
@@ -75,6 +79,10 @@ input CreateStoreInput {
   chargeId: String
   chargeDate: String
   isUninstalled: Boolean
+  showReviewMessage: Boolean,
+  statusMessage: String,
+  showStatusMessage: Boolean
+  active: Boolean
 }
 
 input UpdateStoreInput { 
@@ -101,6 +109,12 @@ input UpdateStoreInput {
   chargeDate: String
   isUninstalled: Boolean
   shortLinkService: ShortLinkServices
+  showReviewMessage: Boolean,
+  statusMessage: String,
+  showStatusMessage: Boolean
+  active: Boolean
+  autoApproveUpdates: Boolean
+  autoAddCaptionOfUpdates: Boolean
 }
 
 input ModelStoreFilterInput {

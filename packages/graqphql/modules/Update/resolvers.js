@@ -1,6 +1,7 @@
 const UpdateModel = require('shared').UpdateModel;
 const ProfileModel = require('shared').ProfileModel;
 const formattedUpdate = require('./functions').formattedUpdate;
+const dailyUpdateReportAggregate = require('./functions').dailyUpdateReportAggregate
 const query = require('shared').query;
 const _ = require('lodash')
 const moment = require('moment');
@@ -147,7 +148,7 @@ module.exports = {
     console.log("dailyUpdateReport args", args)
     let matchFilter = {};
     let updateReport = [];
-    let date;
+    let date, dayCounter;
     if (!_.isUndefined(args.filter.storeId) && !_.isEmpty(args.filter.storeId)) {
       matchFilter.store = new ObjectId(args.filter.storeId);
     }
@@ -163,61 +164,42 @@ module.exports = {
     if (!_.isUndefined(args.filter.scheduleType) && !_.isEmpty(args.filter.scheduleType)) {
       matchFilter.scheduleType = args.filter.scheduleType;
     }
+
     dayCounter = -2;
-    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
+    date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    response = await dailyUpdateReportAggregate(matchFilter);
+    response.date = date;
     updateReport.push(response)
 
     dayCounter = -1;
-    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
+    date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    response = await dailyUpdateReportAggregate(matchFilter);
+    response.date = date;
     updateReport.push(response)
 
     dayCounter = 0;
-    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
+    date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    response = await dailyUpdateReportAggregate(matchFilter);
+    response.date = date;
     updateReport.push(response)
 
     dayCounter = 1;
-    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
+    date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
+    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    response = await dailyUpdateReportAggregate(matchFilter);
+    response.date = date;
     updateReport.push(response)
 
     dayCounter = 2;
-    response = await module.exports.dailyUpdateReportAggregate(dayCounter, matchFilter);
-    updateReport.push(response)
-
-    return updateReport;
-  },
-  dailyUpdateReportAggregate: async function (dayCounter, matchFilter) {
     date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
     matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
-    res = await UpdateModel.aggregate([{
-      "$match": matchFilter
-    },
-    {
-      "$group": {
-        "_id": "$scheduleState",
-        "count": {
-          "$sum": 1.0
-        }
-      }
-    }]);
-    let resposne = {
-      date: date,
-      notScheduledCount: module.exports.clculateCountFordailyUpdateReport(res, 'not_scheduled'),
-      pendingCount: module.exports.clculateCountFordailyUpdateReport(res, 'pending'),
-      approvedCount: module.exports.clculateCountFordailyUpdateReport(res, 'approved'),
-      postedCount: module.exports.clculateCountFordailyUpdateReport(res, 'posted'),
-      failedCount: module.exports.clculateCountFordailyUpdateReport(res, 'failed'),
-      pausedCount: module.exports.clculateCountFordailyUpdateReport(res, 'paused'),
-    };
-    return resposne;
+    response = await dailyUpdateReportAggregate(matchFilter);
+    response.date = date;
+    updateReport.push(response)
+    return updateReport;
   },
-  clculateCountFordailyUpdateReport: (response, key) => {
-    const result = res.map(counter => {
-      if (counter._id === key) {
-        return counter.count;
-      } else {
-        return undefined;
-      }
-    }).filter(item => !_.isUndefined(item));
-    return _.isEmpty(result) ? 0 : result[0];
-  }
+
 }
