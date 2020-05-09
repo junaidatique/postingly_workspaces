@@ -70,10 +70,15 @@ module.exports = {
 
     // if no updates are found
     if (updates.length === 0) {
-      // if postingCollectionOption is from all collection now check for selected collection.
+      // if postingCollectionOption is from all collection now check for selected collection.      
       if (postingCollectionOption === COLLECTION_OPTION_ALL && ruleDetail.type !== RULE_TYPE_MANUAL) {
-        await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: COLLECTION_OPTION_SELECTED });
+        if (process.env.IS_OFFLINE === 'false') {
+          await sqsHelper.addToQueue('ScheduleUpdates', { ruleId: event.ruleId, postingCollectionOption: COLLECTION_OPTION_SELECTED });
+        } else {
+          await this.schedule({ ruleId: event.ruleId, postingCollectionOption: COLLECTION_OPTION_SELECTED }, context);
+        }
       }
+
       return;
     }
 
@@ -396,7 +401,7 @@ module.exports = {
               scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
               postTimingId: unScheduledPostTimingId
             }
-          ).sort({ scheduleTime: 1 }).limit(PRODUCT_LIMIT);
+          ).sort({ scheduleTime: 1 }).limit(2);
           allowedCollections = updates[0].allowedCollections;
         }
       }
@@ -458,13 +463,6 @@ module.exports = {
         $or: [
           { "shareHistory.profile": { $ne: profileId } },
           { "shareHistory.profile": profileId, "shareHistory.postType": { $ne: ruleDetail.type } },
-          // {
-          //   "shareHistory": {
-          //     "profile": profileId,
-          //     "postType": ruleDetail.type,
-          //     "counter": 0
-          //   }
-          // },
         ]
       }
     );
@@ -484,13 +482,6 @@ module.exports = {
           $or: [
             { "shareHistory.profile": { $ne: profileId } },
             { "shareHistory.profile": profileId, "shareHistory.postType": { $ne: ruleDetail.type } },
-            // {
-            //   "shareHistory": {
-            //     "profile": profileId,
-            //     "postType": ruleDetail.type,
-            //     "counter": 0
-            //   }
-            // },
           ]
         }
       );

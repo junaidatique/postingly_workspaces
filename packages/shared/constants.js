@@ -1,5 +1,5 @@
 
-exports.FACEBOOK_GRPAHAPI_URL = 'https://graph.facebook.com/v4.0/'
+exports.FACEBOOK_GRAPH_API_URL = 'https://graph.facebook.com/v4.0/'
 exports.TWITTER_API_URL = 'https://api.twitter.com/'
 exports.BUFFER_API_URL = 'https://api.bufferapp.com/1/'
 exports.ACTIVE_CAMPAIGN_URL = 'https://postingly694.api-us1.com/api/3/'
@@ -8,6 +8,7 @@ exports.TEST = 'test'
 exports.STAGING = 'staging'
 exports.PROD = 'prod'
 exports.FB_DEFAULT_ALBUM = 'Timeline Photos'
+exports.FB_DEFAULT_ALBUM_TYPE = 'wall'
 
 // schedule states
 const NOT_SCHEDULED = 'not_scheduled'

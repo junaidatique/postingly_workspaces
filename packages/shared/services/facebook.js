@@ -5,7 +5,11 @@ const ProductModel = require('shared').ProductModel;
 const StoreModel = require('shared').StoreModel;
 
 const _ = require('lodash')
-const { FACEBOOK_SERVICE, FACEBOOK_GRPAHAPI_URL, FACEBOOK_PROFILE, FACEBOOK_PAGE, FACEBOOK_GROUP, FAILED, POSTED, FB_DEFAULT_ALBUM } = require('shared/constants');
+const {
+  FACEBOOK_SERVICE, FACEBOOK_GRAPH_API_URL, FACEBOOK_PROFILE,
+  FACEBOOK_PAGE, FACEBOOK_GROUP, FAILED,
+  POSTED, FB_DEFAULT_ALBUM, FB_DEFAULT_ALBUM_TYPE
+} = require('shared/constants');
 module.exports = {
   login: async function (storeId, code, serviceProfile) {
     console.log(" -- FB Login Start -- ");
@@ -23,7 +27,7 @@ module.exports = {
   getAccessToken: async function (code) {
     console.log(" -- FB Get Access Token Start -- ");
     try {
-      const accessTokenUrl = `${FACEBOOK_GRPAHAPI_URL}oauth/access_token`;
+      const accessTokenUrl = `${FACEBOOK_GRAPH_API_URL}oauth/access_token`;
       var paramsAccessToken = {
         code: code,
         client_id: process.env.FACEBOOK_APP_ID,
@@ -52,7 +56,7 @@ module.exports = {
         access_token: accessToken
       }
       const queryStr = querystring.stringify(requestBody);
-      const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me/permissions?${queryStr}`;
+      const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}me/permissions?${queryStr}`;
       console.log("TCL: getPermission graphApiUrl -> graphApiUrl", graphApiUrl);
       const getPermissionResponse = await fetch(`${graphApiUrl}`, {
         headers: {
@@ -89,7 +93,7 @@ module.exports = {
   },
   getExtendedToken: async function (shortLivedAccessToken) {
     try {
-      const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}oauth/access_token`;
+      const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}oauth/access_token`;
       var paramsToExtendToken = {
         fb_exchange_token: shortLivedAccessToken,
         client_id: process.env.FACEBOOK_APP_ID,
@@ -119,7 +123,7 @@ module.exports = {
   getUserDetail: async function (storeId, accessToken) {
     try {
       const fields = ['id', 'email', 'link', 'name', 'picture'];
-      const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me?fields=` + fields.join(',');
+      const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}me?fields=` + fields.join(',');
       accessTokenQuery = querystring.stringify({ access_token: accessToken });
       const userDetailResponse = await fetch(`${graphApiUrl}&${accessTokenQuery}`, {
         headers: {
@@ -183,7 +187,7 @@ module.exports = {
   getPages: async function (storeId, parentId, accessToken) {
     const parent = await ProfileModel.findById(parentId);
     try {
-      const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me?fields=accounts.limit(5000){access_token,description,is_published,username,name,picture,link,id}`;
+      const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}me?fields=accounts.limit(5000){access_token,description,is_published,username,name,picture,link,id}`;
       getPagesQuery = querystring.stringify({ access_token: accessToken });
       const pagesDetailResponse = await fetch(`${graphApiUrl}&${getPagesQuery}`, {
         headers: {
@@ -239,7 +243,7 @@ module.exports = {
   getGroups: async function (storeId, parentId, accessToken) {
     const parent = await ProfileModel.findById(parentId);
     try {
-      const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}me/groups?admin_only=true`;
+      const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}me/groups?admin_only=true`;
       getGroupsQuery = querystring.stringify({ access_token: accessToken });
       const groupsDetailResponse = await fetch(`${graphApiUrl}&${getGroupsQuery}`, {
         headers: {
@@ -340,7 +344,7 @@ module.exports = {
       access_token: profile.accessToken
     }
     const queryStr = querystring.stringify(requestBody);
-    const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}${profile.serviceUserId}/feed?${queryStr}`;
+    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${profile.serviceUserId}/feed?${queryStr}`;
     const linkCreateResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
@@ -435,7 +439,7 @@ module.exports = {
       access_token: accessToken
     }
     const queryStr = querystring.stringify(requestBody);
-    const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}${albumId}/photos?${queryStr}`;
+    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${albumId}/photos?${queryStr}`;
     const imageUploadResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
@@ -458,11 +462,13 @@ module.exports = {
     }
   },
   getDefaultAlbum: async function (serviceUserId, accessToken) {
+    const fields = ['id', 'can_upload', 'count', 'event', 'from', 'link', 'location', 'name', 'type'];
     const requestBody = {
-      access_token: accessToken
+      access_token: accessToken,
+      fields: fields.join(',')
     }
     const queryStr = querystring.stringify(requestBody);
-    const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}${serviceUserId}/albums?${queryStr}`;
+    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${serviceUserId}/albums?${queryStr}`;
     const albumGetResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
@@ -470,9 +476,10 @@ module.exports = {
       },
     });
     const albumGetResponseJson = await albumGetResponse.json();
+    console.log("albumGetResponseJson", albumGetResponseJson)
     if (albumGetResponse.status === 200) {
       const defaultAlbumId = albumGetResponseJson.data.map(album => {
-        if (album.name === FB_DEFAULT_ALBUM) {
+        if (album.type === FB_DEFAULT_ALBUM_TYPE) {
           return album.id;
         } else {
           return undefined;
@@ -499,7 +506,7 @@ module.exports = {
       access_token: accessToken
     }
     const queryStr = querystring.stringify(requestBody);
-    const graphApiUrl = `${FACEBOOK_GRPAHAPI_URL}${serviceUserId}/albums?${queryStr}`;
+    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${serviceUserId}/albums?${queryStr}`;
     const albumCreateResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
