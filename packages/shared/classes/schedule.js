@@ -381,29 +381,30 @@ module.exports = {
           }
         ).sort({ scheduleTime: 1 }).limit(PRODUCT_LIMIT);
       } else {
-        // get posting timeing id and select updates one by one. 
-        const postTimingIds = await UpdateModel.distinct('postTimingId',
+        // // get posting timing id and select updates one by one. 
+        // const postTimingIds = await UpdateModel.distinct('postTimingId',
+        //   {
+        //     rule: ruleDetail._id,
+        //     scheduleState: NOT_SCHEDULED,
+        //     scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(MAX_NO_DAYS, 'days') },
+        //     scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
+        //     postingCollectionOption: COLLECTION_OPTION_SELECTED
+        //   }
+        // );
+        // if (postTimingIds.length > 0) {
+        //   const unScheduledPostTimingId = postTimingIds[0];
+
+        // }
+        updates = await UpdateModel.find(
           {
             rule: ruleDetail._id,
             scheduleState: NOT_SCHEDULED,
-            scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(MAX_NO_DAYS, 'days') },
+            scheduleTime: { $gt: moment.utc(), $lt: moment().add(MAX_NO_DAYS, 'days').utc() },
             scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
-            postingCollectionOption: COLLECTION_OPTION_SELECTED
+            // postTimingId: unScheduledPostTimingId
           }
-        );
-        if (postTimingIds.length > 0) {
-          const unScheduledPostTimingId = postTimingIds[0];
-          updates = await UpdateModel.find(
-            {
-              rule: ruleDetail._id,
-              scheduleState: NOT_SCHEDULED,
-              scheduleTime: { $gt: moment.utc(), $lt: moment().add(MAX_NO_DAYS, 'days').utc() },
-              scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
-              postTimingId: unScheduledPostTimingId
-            }
-          ).sort({ scheduleTime: 1 }).limit(2);
-          allowedCollections = updates[0].allowedCollections;
-        }
+        ).sort({ scheduleTime: 1 }).limit(1);
+        allowedCollections = updates[0].allowedCollections;
       }
     }
     return { updates, allowedCollections };
