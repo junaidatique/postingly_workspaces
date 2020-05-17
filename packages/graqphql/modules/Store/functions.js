@@ -1,5 +1,6 @@
 const StoreModel = require('shared').StoreModel;
-const profileFuns = require('../Profile/functions');
+const profileFunc = require('../Profile/functions');
+const ruleFunc = require('../Rule/functions');
 
 const formattedStore = (store) => {
   return {
@@ -12,7 +13,8 @@ const formattedStore = (store) => {
     productsLastUpdated: store.productsLastUpdated,
     chargeDate: store.chargeDate,
     // profiles: (store._doc.profiles.count > 0) ? profileFuns.getProfiles.bind(this, store._doc.profiles) : []
-    profiles: profileFuns.getProfiles.bind(this, store._doc.profiles)
+    profiles: profileFunc.getProfiles.bind(this, store._doc.profiles),
+    rules: ruleFunc.getRules.bind(this, store._doc.rules)
   }
 }
 const getStoreByUniqKey = async (uniqKey) => {

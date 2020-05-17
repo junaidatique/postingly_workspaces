@@ -125,7 +125,7 @@ module.exports = {
         createUserEmail = email;
       }
       const cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
-      let syncStoreProducts = false;
+      let isNewSignUpStore = false;
       if (store === null) {
         console.log("verifyCallback new sign up");
         const shopParams = {
@@ -151,13 +151,13 @@ module.exports = {
         };
         const storeInstance = new StoreModel(shopParams);
         store = await storeInstance.save();
-        syncStoreProducts = true;
+        isNewSignUpStore = true;
       } else {
         if (!store.active) {
           return httpHelper.badRequest("Please contact administrator.");
         }
         if (store.isUninstalled) {
-          syncStoreProducts = true;
+          isNewSignUpStore = true;
         }
         isCharged = store.isCharged;
         const shopUpdateParams = {
@@ -171,7 +171,7 @@ module.exports = {
         store.partnerToken = accessToken;
         await StoreModel.updateOne({ _id: store._id }, shopUpdateParams);
       }
-      if (syncStoreProducts) {
+      if (isNewSignUpStore) {
         const profileDelete = await shared.ProfileModel.deleteMany({ store: store._id });
         const ruleDelete = await shared.RuleModel.deleteMany({ store: store._id });
         const updateDelete = await shared.UpdateModel.deleteMany({ store: store._id });
@@ -226,7 +226,7 @@ module.exports = {
       console.log("verifyCallback Completed");
       console.groupEnd();
       return httpHelper.ok({
-        isCharged: isCharged,
+        isNewSignUpStore: isNewSignUpStore,
         userName: cognitoUser,
         storePartnerId: storeKey,
         token: jwt.createJWT(cognitoUser, nonce, now, 600),
