@@ -39,7 +39,7 @@ type Store {
   products: [Product]
   collections: [Collection]
   variants(productId: String!): [Variant]
-  rules(filter: ModelRuleFilterInput, limit: Int, skip: Int): [Rule]
+  rules: [Rule]
   updates(limit: Int, skip: Int): [Update]
   chargeURL: String,
   showReviewMessage: Boolean,
