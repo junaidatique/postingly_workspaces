@@ -333,6 +333,13 @@ module.exports = {
   shareFacebookPostAsLink: async function (update) {
     const profile = await ProfileModel.findById(update.profile);
     const itemLink = update.productExternalURL;
+    if (!update.images) {
+      return {
+        scheduleState: FAILED,
+        failedMessage: "type unrecognized",
+        response: null,
+      }
+    }
     const image = `https://posting.ly/image?url=${update.images[0].url}`
 
     const requestBody = {
