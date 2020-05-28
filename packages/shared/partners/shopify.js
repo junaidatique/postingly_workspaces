@@ -253,6 +253,12 @@ module.exports = {
     if (planName === PRO_PLAN) {
       price = process.env.PLAN_AMOUNT_PRO;
     }
+    if (store.enableCustomPricing) {
+      price = store.basicPackagePrice;
+      if (planName === PRO_PLAN) {
+        price = store.proPackagePrice;
+      }
+    }
     console.log("TCL: price", price)
     chargeAuthorizationUrl = await this.createCharge(store.partnerSpecificUrl, store.partnerToken, planName, price, store.noOfTrialDays);
     return {

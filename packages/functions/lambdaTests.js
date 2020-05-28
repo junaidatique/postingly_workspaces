@@ -26,10 +26,10 @@ const {
   RULE_TYPE_OLD } = require('shared/constants')
 module.exports = {
   execute: async function (event, context) {
-    const token = "EAACwJczql2ABAMYRKLOXHYoOLD3Q5XaWkulc0WdzAkxRejGEHA1GDHFgIoxnLVspydjFzP8J9PrmcwhTZBcwnXmG9QPZC2NMBKcDtqBH1Pb4j7XMAR9eSANPTdeSndprFpYArJHMKMsmejLKrPebgjRMIWxQRYtZAyIxs7flsS3upTirGIO";
-    const serviceUserId = 549867861701636;
-    const albums = await facebookService.getDefaultAlbum(serviceUserId, token);
-    console.log("albums", albums)
+    // const token = "EAACwJczql2ABAMYRKLOXHYoOLD3Q5XaWkulc0WdzAkxRejGEHA1GDHFgIoxnLVspydjFzP8J9PrmcwhTZBcwnXmG9QPZC2NMBKcDtqBH1Pb4j7XMAR9eSANPTdeSndprFpYArJHMKMsmejLKrPebgjRMIWxQRYtZAyIxs7flsS3upTirGIO";
+    // const serviceUserId = 549867861701636;
+    // const albums = await facebookService.getDefaultAlbum(serviceUserId, token);
+    // console.log("albums", albums)
     // const StoreModel = shared.StoreModel;
     // // console.log("TCL: StoreModel", StoreModel)
     // const ProductModel = shared.ProductModel;
@@ -37,7 +37,7 @@ module.exports = {
     // const storeDetail = await StoreModel.findOne({ _id: '5e9721e2d317bb22f149abef' })
     // // console.log("TCL: storeDetail", storeDetail)
 
-    // const UpdateModel = shared.UpdateModel;
+    const UpdateModel = shared.UpdateModel;
     // // const storeId = storeDetail._id;
     // // const PartnerShopify = shared.PartnerShopify;
 
@@ -62,11 +62,11 @@ module.exports = {
 
     // // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
     // // updates = await UpdateModel.findOne({sch}).sort({ createdAt: 1 });
-    // // console.log("TCL: updates", updates)
-    // updates = await UpdateModel.find({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } }).limit(25);
-    // await Promise.all(updates.map(async update => {
-    //   await shareUpdates({ updateId: update._id });
-    // }));
+    updates = await UpdateModel.find({ scheduleState: APPROVED }).limit(25);
+    console.log("TCL: updates", updates)
+    await Promise.all(updates.map(async update => {
+      await shareUpdates({ updateId: update._id });
+    }));
 
 
   }
