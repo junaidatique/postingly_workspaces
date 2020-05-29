@@ -4,7 +4,7 @@ const StoreModel = require('shared').StoreModel;
 const querystring = require('qs');
 const moment = require('moment');
 const {
-  BUFFER_SERVICE, BUFFER_API_URL, POSTED, FAILED, BUFFER_PROFILE,
+  BUFFER_SERVICE, BUFFER_API_URL, POSTED, APPROVED, FAILED, BUFFER_PROFILE,
   BUFFER_TWITTER_PROFILE, BUFFER_FACEBOOK_PAGE, BUFFER_FACEBOOK_GROUP,
   BUFFER_INSTAGRAM_PROFILE, BUFFER_INSTAGRAM_BUSINESS,
   BUFFER_LINKEDIN_PROFILE, BUFFER_LINKEDIN_PAGE, BUFFER_LINKEDIN_GROUP,
@@ -179,7 +179,7 @@ module.exports = {
       }).then(response => response.json());
       if (updateResponse.success === true) {
         return {
-          scheduleState: POSTED,
+          scheduleState: APPROVED,
           response: {
             bufferId: updateResponse.updates[0].id,
           },
@@ -240,5 +240,36 @@ module.exports = {
     const url = `${BUFFER_API_URL}updates/${updateId}/destroy.json?access_token=${profileDetail.accessToken}`;
     const updateResponse = await fetch(url).then(response => response.json());
     return updateResponse;
-  }
+  },
+  getUpdateById: async function (bufferUpdate) {
+    const profileDetail = await ProfileModel.findById(bufferUpdate.profile);
+    try {
+      const url = `${BUFFER_API_URL}updates/${bufferUpdate.response.bufferId}.json?access_token=${profileDetail.accessToken}`;
+      console.log("url", url)
+      const update = await fetch(url).then(response => response.json());
+
+      if (update) {
+
+        return {
+          id: update.id,
+          day: update.day,
+          dueTime: update.due_time,
+          status: update.status,
+          error: update.error,
+          textFormatted: update.text,
+          media: {
+            link: update.media.link,
+            description: update.media.description,
+            title: update.media.title,
+            thumbnail: update.media.thumbnail
+          }
+        }
+      } else {
+        return {}
+      }
+    } catch (error) {
+      console.log(" -- Buffer getPendingUpdates Error -- ");
+      throw new Error(error.message);
+    }
+  },
 }
