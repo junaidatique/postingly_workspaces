@@ -228,6 +228,12 @@ const updateSchema = new mongoose.Schema({
   defaultShortLinkService: {
     type: String
   },
+  bufferStatus: {
+    type: String
+  },
+  isStoreDeleted: {
+    type: Boolean
+  }
   productCollections: [
     {
       type: Schema.Types.ObjectId,

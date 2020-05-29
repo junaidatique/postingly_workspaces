@@ -19,6 +19,11 @@ Resources:
     Properties:
       QueueName: stagingShareUpdates
       VisibilityTimeout: 3600
+  stagingBufferShareUpdates:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: stagingBufferShareUpdates
+      VisibilityTimeout: 3600
   stagingSyncStoreData:
     Type: "AWS::SQS::Queue"
     Properties:

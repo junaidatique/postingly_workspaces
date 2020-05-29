@@ -133,5 +133,39 @@ module.exports = {
     if (update.product) {
       await updateClass.createHistoryForProduct(update)
     }
+  },
+  bufferShare: async function (eventSQS, context) {
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    console.log("TCL: schedule event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
+    // function starts here. 
+    await dbConnection.createConnection(context);
+    const UpdateModel = shared.UpdateModel;
+    const RuleModel = shared.RuleModel;
+    const update = await UpdateModel.findById(event.updateId);
+
+    // console.log("update.scheduleState", update.scheduleState);
+    if (_.isNull(update) || _.isUndefined(update) || update.scheduleState !== APPROVED) {
+      return;
+    }
+    response = await BufferService.getUpdateById(update);
+    if (response.status === 'error') {
+      update.scheduleState = FAILED;
+      update.failedMessage = response.error;
+    } else {
+      update.scheduleState = POSTED;
+    }
+    update.bufferStatus = response.status;
+    await update.save();
+    console.log("response", response)
   }
 }

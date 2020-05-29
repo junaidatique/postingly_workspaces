@@ -83,7 +83,7 @@ module.exports = {
   },
   updateReport: async (obj, args, context, info) => {
     console.log("TCL: updateReport args", args)
-    let searchQuery = {}
+    let searchQuery = { isStoreDeleted: false }
     if (!_.isUndefined(args.filter)) {
       if (!_.isUndefined(args.filter.storeId) && !_.isEmpty(args.filter.storeId)) {
         searchQuery.store = new ObjectId(args.filter.storeId);
