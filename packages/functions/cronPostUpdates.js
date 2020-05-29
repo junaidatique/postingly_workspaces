@@ -66,7 +66,7 @@ module.exports = {
   bufferShare: async function (event, context) {
     console.log("event", event)
     updates = [];
-    const prevThirtyMinutes = dateTime.getOldRoundedDate(30);
+    const prevThirtyMinutes = dateTime.getOldRoundedDate(10);
 
     if (process.env.IS_OFFLINE === 'false') {
       updates = await UpdateModel.find(

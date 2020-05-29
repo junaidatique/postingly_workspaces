@@ -233,7 +233,7 @@ const updateSchema = new mongoose.Schema({
   },
   isStoreDeleted: {
     type: Boolean
-  }
+  },
   productCollections: [
     {
       type: Schema.Types.ObjectId,
