@@ -177,6 +177,19 @@ const storeSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  basicPackagePrice: {
+    type: String,
+    default: process.env.PLAN_AMOUNT_BASIC
+  },
+  proPackagePrice: {
+    type: String,
+    default: process.env.PLAN_AMOUNT_PRO
+  },
+  enableCustomPricing: {
+    type: Boolean,
+    default: false
+  }
+
 });
 
 storeSchema.set('timestamps', true);
