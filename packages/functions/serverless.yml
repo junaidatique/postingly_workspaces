@@ -101,6 +101,8 @@ functions:
   schedule-updates:
     handler: scheduleProductUpdates.schedule
     reservedConcurrency: ${env:RESERVED_CONCURRENCY_SCHEDULE_PRODUCT_UPDATES}
+    memorySize: 2048
+    timeout: 360
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}ScheduleUpdates
