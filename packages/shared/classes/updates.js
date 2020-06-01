@@ -102,22 +102,42 @@ module.exports = {
     const numberOfProducts = ruleDetail.selectedProducts.length;
     let startOfDay = moment.tz(storeTimezone).startOf('day');
     let updateTime = startOfDay.clone();
-    while (updateTime.isSameOrBefore(moment(ruleDetail.productRepeatFinalDate))) {
-      updateTime = startOfDay.clone();
-      ruleDetail.postTimings.forEach((postTime) => {
-        hour = updateTime.set({ 'hour': postTime.postingHour, 'minute': postTime.postingMinute });
-        if (hour.isAfter(moment.utc()) && postTime.postingDays.includes(moment.weekdays(updateTime.weekday()))) {
-          updateTimes.push(
-            {
-              time: hour.toISOString(),
-              postingCollectionOption: postTime.postingCollectionOption,
-              allowedCollections: postTime.collections,
-              postTimingId: postTime._id,
-            }
-          );
-        }
-      });
-      startOfDay = startOfDay.add(1, 'day');
+    if (ruleDetail.allowProductRepetition) {
+      while (updateTime.isSameOrBefore(moment(ruleDetail.productRepeatFinalDate))) {
+        updateTime = startOfDay.clone();
+        ruleDetail.postTimings.forEach((postTime) => {
+          hour = updateTime.set({ 'hour': postTime.postingHour, 'minute': postTime.postingMinute });
+          if (hour.isAfter(moment.utc()) && postTime.postingDays.includes(moment.weekdays(updateTime.weekday()))) {
+            updateTimes.push(
+              {
+                time: hour.toISOString(),
+                postingCollectionOption: postTime.postingCollectionOption,
+                allowedCollections: postTime.collections,
+                postTimingId: postTime._id,
+              }
+            );
+          }
+        });
+        startOfDay = startOfDay.add(1, 'day');
+      }
+    } else {
+      while (numberOfProducts > updateTimes.length) {
+        updateTime = startOfDay.clone();
+        ruleDetail.postTimings.forEach((postTime) => {
+          hour = updateTime.set({ 'hour': postTime.postingHour, 'minute': postTime.postingMinute });
+          if (hour.isAfter(moment.utc()) && postTime.postingDays.includes(moment.weekdays(updateTime.weekday()))) {
+            updateTimes.push(
+              {
+                time: hour.toISOString(),
+                postingCollectionOption: postTime.postingCollectionOption,
+                allowedCollections: postTime.collections,
+                postTimingId: postTime._id,
+              }
+            );
+          }
+        });
+        startOfDay = startOfDay.add(1, 'day');
+      }
     }
     return updateTimes;
   },
