@@ -1408,7 +1408,13 @@ module.exports = {
         const collectionDelete = await shared.CollectionModel.deleteMany({ store: storeDetail._id });
         const productDelete = await shared.ProductModel.deleteMany({ store: storeDetail._id });
         const ruleDelete = await shared.RuleModel.updateMany({ store: storeDetail._id }, { active: false });
-        const updateDelete = await shared.UpdateModel.updateMany({ store: storeDetail._id, scheduleTime: { $gte: moment().utc() } }, { scheduleState: PAUSED });
+        const updateDelete = await shared.UpdateModel.updateMany(
+          {
+            store: storeDetail._id,
+            scheduleTime: { $gte: moment().utc() }
+          },
+          { scheduleState: PAUSED, isStoreDeleted: true }
+        );
         storeDetail.isUninstalled = true;
         storeDetail.uninstalledDate = new Date().toISOString();
         storeDetail.isCharged = false;

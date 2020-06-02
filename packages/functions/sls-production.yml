@@ -19,6 +19,11 @@ Resources:
     Properties:
       QueueName: productionShareUpdates
       VisibilityTimeout: 3600
+  productionBufferShareUpdates:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: productionBufferShareUpdates
+      VisibilityTimeout: 3600
   productionSyncStoreData:
     Type: "AWS::SQS::Queue"
     Properties:

@@ -26,6 +26,7 @@ type Update {
   userEdited: Boolean
   createdAt: String
   updatedAt: String
+  bufferStatus: String
 }
 type UpdateImages {  
   url: String
