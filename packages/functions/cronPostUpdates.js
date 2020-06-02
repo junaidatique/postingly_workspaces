@@ -65,6 +65,7 @@ module.exports = {
   },
   bufferShare: async function (event, context) {
     console.log("event", event)
+    await dbConnection.createConnection(context);
     updates = [];
     const prevThirtyMinutes = dateTime.getOldRoundedDate(10);
 
