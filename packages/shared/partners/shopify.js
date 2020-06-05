@@ -1125,8 +1125,10 @@ module.exports = {
         );
       }
       const product = JSON.parse(event.body);
+      console.log("`${PARTNERS_SHOPIFY}-${partnerId}`", `${PARTNERS_SHOPIFY}-${partnerId}`);
       const productFromDB = await ProductModel.findOne({ uniqKey: `${PARTNERS_SHOPIFY}-${partnerId}` }).select(
         '_id title partnerSpecificUrl active minimumPrice postableByImage postableByQuantity postableByPrice postableIsNew variants imagesList');
+      console.log("productFromDB", productFromDB.id)
 
       if (!productFromDB) {
         await this.createProductFromWebhook(storeDetail, [product], context)
