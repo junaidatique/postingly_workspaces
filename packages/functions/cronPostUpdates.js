@@ -46,9 +46,7 @@ module.exports = {
           scheduleState: APPROVED,
           scheduleTime: { $lte: next_fifteen_minutes },
           service: BUFFER_SERVICE,
-          response: {
-            bufferId: { $exists: false }
-          }
+          "response.bufferId": { $exists: false }
         }
       );
     } else {
@@ -75,9 +73,7 @@ module.exports = {
           scheduleState: APPROVED,
           scheduleTime: { $lte: prevThirtyMinutes },
           service: BUFFER_SERVICE,
-          response: {
-            bufferId: { $exists: true }
-          }
+          "response.bufferId": { $exists: true }
         }
       );
     } else {
