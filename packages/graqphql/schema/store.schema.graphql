@@ -132,7 +132,7 @@ input UpdateStoreInput {
 input ModelStoreFilterInput {
   partner: String
   userId: String
-  email: String
+  paymentPlan: String
   title: String
   id: String
   partnerId: String
