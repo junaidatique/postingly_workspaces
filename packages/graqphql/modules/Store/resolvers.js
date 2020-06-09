@@ -2,7 +2,7 @@ const shared = require('shared');
 const formattedStore = require('./functions').formattedStore
 const getStoreByID = require('./functions').getStoreByID
 const _ = require('lodash')
-const { PRO_PLAN } = require('shared/constants');
+const { PRO_PLAN, UPDATE_PRODUCT_WEBHOOK } = require('shared/constants');
 let conn;
 const query = require('shared').query
 module.exports = {
@@ -87,6 +87,32 @@ module.exports = {
     return response;
 
   },
+  deleteProductsUpdateWebhook: async (obj, args, context, info) => {
+    const StoreModel = shared.StoreModel;
+    const PartnerShopify = shared.PartnerShopify;
+    const storeDetail = await StoreModel.findById(args.storeId);
+    const response = await PartnerShopify.getWebhooks(
+      {
+        storeId: storeDetail._id,
+        accessToken: storeDetail.partnerToken,
+        shopURL: storeDetail.partnerSpecificUrl
+      }
+    )
 
+    if (response.length > 0) {
+      await Promise.all(response.map(async item => {
+        if (item.topic === UPDATE_PRODUCT_WEBHOOK) {
+          await PartnerShopify.deleteSingleWebhook(
+            {
+              itemId: item.id,
+              accessToken: storeDetail.partnerToken,
+              shopURL: storeDetail.partnerSpecificUrl
+            }
+          )
+        }
+      }));
+    }
+    return formattedStore(storeDetail);
+  }
 
 }
