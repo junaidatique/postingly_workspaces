@@ -452,7 +452,7 @@ module.exports = {
         storeId: store._id
       }
       if (process.env.IS_OFFLINE === 'false') {
-        await sqsHelper.addToQueue('GetWebhooks', webhookPayload);
+        await sqsHelper.addToQueue('CreateWebhooks', webhookPayload);
 
       } else {
         // this.getWebhooks(webhookPayload);
@@ -698,6 +698,7 @@ module.exports = {
     console.log("TCL: syncProductCount json", json);
     storeDetail.numberOfProducts = json.count;
     storeDetail.noOfActiveProducts = json.count;
+    storeDetail.lastSyncDate = moment();
     await storeDetail.save();
   },
   syncProductPage: async function (event, context) {
@@ -1000,9 +1001,10 @@ module.exports = {
     }
     console.log("TCL: WEBHOOKS[PARTNERS_SHOPIFY].length", WEBHOOKS[PARTNERS_SHOPIFY].length)
     console.log("TCL: json.webhooks.length", json.webhooks.length)
-    if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
-      await this.createWebhooks(event);
-    }
+    // if (json.webhooks.length < WEBHOOKS[PARTNERS_SHOPIFY].length) {
+    //   await this.createWebhooks(event);
+    // }
+    return json.webhooks;
   },
   createWebhooks: async function (event) {
     console.log("TCL: event", event)

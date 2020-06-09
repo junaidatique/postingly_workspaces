@@ -1,6 +1,7 @@
 const shared = require('shared');
 const { PARTNERS_SHOPIFY } = require('shared/constants');
 const _ = require('lodash');
+const moment = require('moment')
 const dbConnection = require('./db');
 module.exports = {
   syncStoreData: async function (eventSQS, context) {
@@ -118,4 +119,34 @@ module.exports = {
       await shopifyAPI.syncVariantPage(event, context);
     }
   },
+  syncProductsWeekly: async function (event, context) {
+    console.log("event", event)
+    await dbConnection.createConnection(context);
+    const StoreModel = shared.StoreModel;
+    stores = await StoreModel.find(
+      {
+        lastSyncDate: { $lt: moment().subtract(7, "days") },
+        disableSync: { $ne: true },
+        active: true,
+        isUninstalled: false
+      }
+    ).limit(3);
+    console.log("stores", stores.length)
+    await Promise.all(stores.map(async store => {
+      if (store.partner == PARTNERS_SHOPIFY) {
+        storePayload = {
+          "storeId": store._id,
+          "partnerStore": PARTNERS_SHOPIFY,
+          "collectionId": null
+        }
+        console.log("storePayload", storePayload)
+        if (process.env.IS_OFFLINE === 'false') {
+          await sqsHelper.addToQueue('SyncStoreData', storePayload);
+        } else {
+          // PartnerShopify.syncStoreData(storePayload);
+        }
+      }
+    }));
+
+  }
 }

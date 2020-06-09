@@ -188,6 +188,14 @@ const storeSchema = new mongoose.Schema({
   enableCustomPricing: {
     type: Boolean,
     default: false
+  },
+  lastSyncDate: {
+    type: Date,
+    get: date => (date !== undefined) ? date.toISOString() : null,
+  },
+  disableSync: {
+    type: Boolean,
+    default: false
   }
 
 });

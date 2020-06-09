@@ -36,5 +36,6 @@ module.exports = {
     syncProducts: productResolvers.syncProducts,
     deleteBufferUpdate: profileResolvers.deleteBufferUpdate,
     upgradePlan: storeResolvers.upgradePlan,
+    deleteProductsUpdateWebhook: storeResolvers.deleteProductsUpdateWebhook,
   },
 }

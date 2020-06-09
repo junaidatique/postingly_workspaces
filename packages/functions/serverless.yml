@@ -171,6 +171,13 @@ functions:
           arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}BufferShareUpdates
           batchSize: 1
           enabled: true
+  # This lambda updates the urls for the scheduled products and also updates them in DB. 
+  sync-products-weekly:
+    handler: syncStoreData.syncProductsWeekly
+    events:
+      - schedule:
+          rate: cron(*/5 * * * ? *)
+          enabled: true
   #  product sync data.
   sync-store-data:
     handler: syncStoreData.syncStoreData  
