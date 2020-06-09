@@ -3,6 +3,7 @@ const { PARTNERS_SHOPIFY } = require('shared/constants');
 const _ = require('lodash');
 const moment = require('moment')
 const dbConnection = require('./db');
+const sqsHelper = require('shared').sqsHelper;
 module.exports = {
   syncStoreData: async function (eventSQS, context) {
     let event;
