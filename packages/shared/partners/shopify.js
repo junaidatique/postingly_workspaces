@@ -698,7 +698,6 @@ module.exports = {
     console.log("TCL: syncProductCount json", json);
     storeDetail.numberOfProducts = json.count;
     storeDetail.noOfActiveProducts = json.count;
-    storeDetail.lastSyncDate = moment();
     await storeDetail.save();
   },
   syncProductPage: async function (event, context) {
