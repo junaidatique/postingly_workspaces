@@ -121,6 +121,11 @@ module.exports = {
   },
   syncProductsWeekly: async function (event, context) {
     console.log("event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     const StoreModel = shared.StoreModel;
     stores = await StoreModel.find(
@@ -139,7 +144,8 @@ module.exports = {
           "partnerStore": PARTNERS_SHOPIFY,
           "collectionId": null
         }
-        console.log("storePayload", storePayload)
+        store.lastSyncDate = moment();
+        await store.save();
         if (process.env.IS_OFFLINE === 'false') {
           await sqsHelper.addToQueue('SyncStoreData', storePayload);
         } else {
