@@ -191,6 +191,7 @@ module.exports = {
               disallowedCollections: ruleDetail.disallowedCollections,
               allowZeroQuantity: ruleDetail.allowZeroQuantity,
               postingProductOrder: ruleDetail.postingProductOrder,
+              isStoreDeleted: false
             },
             upsert: true
           }

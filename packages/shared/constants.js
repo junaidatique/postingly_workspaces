@@ -254,5 +254,6 @@ exports.WEBHOOKS = {
     { webhook: 'collections/delete', endpoint: 'collectionsDelete' },
     { webhook: 'app/uninstalled', endpoint: 'appUninstalled' },
     { webhook: 'shop/update', endpoint: 'shopUpdate' },
-  ]
+  ],
 }
+exports.UPDATE_PRODUCT_WEBHOOK = 'products/update'

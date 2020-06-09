@@ -50,6 +50,8 @@ type Store {
   proPackagePrice: String
   noOfTrialDays: String
   active: Boolean
+  lastSyncDate: String
+  disableSync: Boolean
 }
 
 enum ShortLinkServices {
@@ -91,6 +93,8 @@ input CreateStoreInput {
   proPackagePrice: String
   noOfTrialDays: String
   active: Boolean
+  lastSyncDate: String
+  disableSync: Boolean
 }
 
 input UpdateStoreInput { 
@@ -127,6 +131,8 @@ input UpdateStoreInput {
   active: Boolean
   autoApproveUpdates: Boolean
   autoAddCaptionOfUpdates: Boolean
+  lastSyncDate: String
+  disableSync: Boolean
 }
 
 input ModelStoreFilterInput {
