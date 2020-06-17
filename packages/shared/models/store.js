@@ -196,6 +196,10 @@ const storeSchema = new mongoose.Schema({
   disableSync: {
     type: Boolean,
     default: false
+  },
+  freeProActivated: {
+    type: Boolean,
+    default: false
   }
 
 });

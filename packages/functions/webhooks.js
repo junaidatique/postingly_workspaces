@@ -5,6 +5,17 @@ const dbConnection = require('./db');
 const sqsHelper = require('shared').sqsHelper;
 module.exports = {
   cronWebhooks: async function (eventSQS, context) {
+    let event;
+    if (_.isUndefined(eventSQS.Records)) {
+      event = eventSQS;
+    } else {
+      event = JSON.parse(eventSQS.Records[0].body);
+    }
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     const StoreModel = require('shared').StoreModel;
     const stores = await StoreModel.find({ isUninstalled: false });
@@ -33,6 +44,11 @@ module.exports = {
     } else {
       event = JSON.parse(eventSQS.Records[0].body);
     }
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     console.log("TCL: getWebhooks event", event);
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
@@ -46,6 +62,11 @@ module.exports = {
       event = eventSQS;
     } else {
       event = JSON.parse(eventSQS.Records[0].body);
+    }
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
     }
     console.log("TCL: createWebhooks event", event);
     await dbConnection.createConnection(context);
@@ -61,6 +82,11 @@ module.exports = {
     } else {
       event = JSON.parse(eventSQS.Records[0].body);
     }
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     console.log("TCL: deleteWebhooks event", event);
     await dbConnection.createConnection(context);
     if (event.partnerStore == PARTNERS_SHOPIFY) {
@@ -74,6 +100,11 @@ module.exports = {
       event = eventSQS;
     } else {
       event = JSON.parse(eventSQS.Records[0].body);
+    }
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
     }
     console.log("TCL: deleteWebhooks event", event);
     await dbConnection.createConnection(context);

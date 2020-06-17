@@ -28,6 +28,11 @@ module.exports = {
     } else {
       event = JSON.parse(eventSQS.Records[0].body);
     }
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await scheduleClass.schedule(event, context);
   },
 }

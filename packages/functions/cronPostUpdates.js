@@ -10,9 +10,12 @@ const dbConnection = require('./db');
 
 module.exports = {
   share: async function (event, context) {
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
-
-
     let updates;
     const next_five_minutes = dateTime.getRoundedDate(5);
     console.log("TCL: next_five_minutes", next_five_minutes)
@@ -63,6 +66,11 @@ module.exports = {
   },
   bufferShare: async function (event, context) {
     console.log("event", event)
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     updates = [];
     const prevThirtyMinutes = dateTime.getOldRoundedDate(10);

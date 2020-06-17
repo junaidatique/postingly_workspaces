@@ -8,6 +8,11 @@ const dbConnection = require('./db');
 
 module.exports = {
   execute: async function (event, context) {
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     const UpdateModel = shared.UpdateModel;
     const ProductModel = shared.ProductModel;

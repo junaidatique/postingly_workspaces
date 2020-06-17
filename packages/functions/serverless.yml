@@ -90,13 +90,23 @@ functions:
   # this lambda executes every thirty minutes and pass distinct rule 
   #  based on the updates that are not scheduled. 
   cron-this-week-rules:
-    handler: cronThisWeekRulesForUpdates.excute
+    handler: cronThisWeekRulesForUpdates.execute
     warmup:
       enabled: false
     events:
       - schedule:
           rate: cron(*/30 * * * ? *)
           enabled: true
+  # this lambda converts free pro plan stores to free plan.   
+  cron-change-payment-plan:
+    handler: cronChangePaymentPlan.execute
+    warmup:
+      enabled: false
+    events:
+      - schedule:
+          rate: cron(*/30 * * * ? *)
+          enabled: true
+
   # This updates simply takes the rule id and schedule all the not scheduled updates. 
   schedule-updates:
     handler: scheduleProductUpdates.schedule
