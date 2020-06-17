@@ -52,6 +52,7 @@ type Store {
   active: Boolean
   lastSyncDate: String
   disableSync: Boolean
+  freeProActivated: Boolean
 }
 
 enum ShortLinkServices {

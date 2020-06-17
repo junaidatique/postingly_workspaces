@@ -240,7 +240,11 @@ const updateSchema = new mongoose.Schema({
       ref: 'Collection',
       index: true,
     }
-  ]
+  ],
+  freeProExpired: {
+    type: Boolean,
+    default: false
+  }
 
 });
 

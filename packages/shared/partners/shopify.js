@@ -146,8 +146,9 @@ module.exports = {
           moneyWithCurrencyFormat: shop.money_with_currency_format,
           isCharged: false,
           shortLinkService: LINK_SHORTENER_SERVICES_POOOST,
-          paymentPlan: FREE_PLAN,
+          paymentPlan: PRO_PLAN,
           isUninstalled: false,
+          freeProActivated: true
         };
         const storeInstance = new StoreModel(shopParams);
         store = await storeInstance.save();
@@ -439,6 +440,7 @@ module.exports = {
     } else if (activateResponse && activateResponse.name.indexOf(PRO_PLAN) >= 0) {
       store.paymentPlan = PRO_PLAN;
     }
+    store.freeProActivated = false;
     store.isCharged = true;
     store.chargedMethod = 'shopify';
     store.chargeId = charge_id;
@@ -1423,6 +1425,7 @@ module.exports = {
         storeDetail.isCharged = false;
         storeDetail.paymentPlan = FREE_PLAN;
         storeDetail.intercomId = "";
+        storeDetail.freeProActivated = false;
         await storeDetail.save();
 
         intercomDeleteBody = JSON.stringify({ intercom_user_id: storeDetail.intercomId });
