@@ -5,6 +5,7 @@ const sqsHelper = require('shared').sqsHelper;
 const moment = require('moment');
 const _ = require('lodash');
 const dbConnection = require('./db');
+
 // const createUpdates = require('./createUpdates');
 // const scheduleProductUpdates = require('./scheduleProductUpdates');
 // const shareUpdates = require('./shareUpdates');
@@ -54,7 +55,10 @@ module.exports = {
 
   testFetch: async function (event, context) {
 
-
+    const ActiveCampaignService = shared.ActiveCampaignService;
+    const StoreModel = shared.StoreModel;
+    const storeDetail = await StoreModel.findOne();
+    await ActiveCampaignService.syncContact(storeDetail._id)
 
 
 

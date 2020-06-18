@@ -4,6 +4,7 @@ const { ACTIVE_CAMPAIGN_URL } = require('shared/constants');
 
 module.exports = {
   syncContact: async function (storeId) {
+    console.log("storeId", storeId)
     const storeDetail = await StoreModel.findById(storeId);
     const body = {
       email: storeDetail.email,
@@ -13,7 +14,7 @@ module.exports = {
       headers: {
         "Api-Token": process.env.ACTIVE_CAMPAIGN_API_KEY,
       },
-      method: method
+      method: 'POST'
     }).then(response => response.json());
     console.log("contactResponse", contactResponse)
   }
