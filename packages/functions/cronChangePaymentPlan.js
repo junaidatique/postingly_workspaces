@@ -2,7 +2,7 @@ const shared = require('shared');
 const sqsHelper = require('shared').sqsHelper;
 const moment = require('moment');
 const _ = require('lodash');
-const { FREE_PLAN, BUFFER_SERVICE } = require('shared/constants');
+const { FREE_PLAN, BUFFER_SERVICE, RULE_TYPE_MANUAL, RULE_TYPE_NEW } = require('shared/constants');
 // const scheduleProducts = require('functions').scheduleProducts.schedule;
 const dbConnection = require('./db');
 
@@ -28,6 +28,8 @@ module.exports = {
     console.log("stores", stores)
     await Promise.all(stores.map(async store => {
 
+      await RuleModel.updateMany({ store: store._id, type: RULE_TYPE_MANUAL }, { active: false })
+      await RuleModel.updateMany({ store: store._id, type: RULE_TYPE_NEW }, { active: false })
       await RuleModel.updateMany({ store: store._id, service: BUFFER_SERVICE }, { active: false })
       await UpdateModel.updateMany({ store: store._id, service: BUFFER_SERVICE }, { freeProExpired: true })
 
