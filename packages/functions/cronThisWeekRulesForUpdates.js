@@ -7,8 +7,12 @@ const { SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT, NOT_SCHEDULED, RULE_TYPE_O
 const dbConnection = require('./db');
 
 module.exports = {
-  excute: async function (event, context) {
-    console.log("TCL: event", event)
+  execute: async function (event, context) {
+    if (event.source === 'serverless-plugin-warmup') {
+      console.log('WarmUP - Lambda is warm!')
+      await new Promise(r => setTimeout(r, 25));
+      return 'lambda is warm!';
+    }
     await dbConnection.createConnection(context);
     const UpdateModel = shared.UpdateModel;
     const rules = await UpdateModel.distinct('rule',
