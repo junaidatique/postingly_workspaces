@@ -625,10 +625,10 @@ module.exports = {
         const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
         if (!_.isNull(pageInfo)) {
           if (process.env.IS_OFFLINE === 'false') {
-            const collectionPayload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo };
+            const collectionPayload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo, productId: null };
             await sqsHelper.addToQueue('SyncCollectionPage', collectionPayload);
           } else {
-            await this.syncCollectionPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo });
+            await this.syncCollectionPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo, productId: null });
           }
         }
       }
