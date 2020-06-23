@@ -1110,10 +1110,12 @@ module.exports = {
   },
   productsUpdate: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
-      console.log("TCL: context", context.getRemainingTimeInMillis())
       const ProductModel = shared.ProductModel;
       const updateClass = require('shared').updateClass;
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
+      if (process.env.DISABLED_PRODUCT_UPDATES_STORES.includes(shopDomain)) {
+        return;
+      }
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const partnerId = JSON.parse(event.body).id;
