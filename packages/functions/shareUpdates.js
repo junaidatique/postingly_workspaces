@@ -16,7 +16,7 @@ const scheduleClass = require('shared').scheduleClass;
 const ProductModel = require('shared').ProductModel;
 const dbConnection = require('./db');
 module.exports = {
-    share: async function(eventSQS, context) {
+    share: async function (eventSQS, context) {
         let event;
         if (_.isUndefined(eventSQS.Records)) {
             event = eventSQS;
@@ -91,7 +91,10 @@ module.exports = {
                 ) {
                     if (update.images[0].url.indexOf(PARTNERS_SHOPIFY) >= 0) {
                         await PartnerShopify.getSingleProduct({ productId: update.product, storeId: update.store }, context)
-                        const scheduleResponse = await scheduleClass.reScheduleProduct(update.product, context)
+                        scheduleResponse = {};
+                        if (update.rule) {
+                            scheduleResponse = await scheduleClass.reScheduleProduct(update.product, context)
+                        }
                         if (!_.isEmpty(scheduleResponse)) {
                             return;
                         }
@@ -137,7 +140,7 @@ module.exports = {
             await updateClass.createHistoryForProduct(update)
         }
     },
-    bufferShare: async function(eventSQS, context) {
+    bufferShare: async function (eventSQS, context) {
         let event;
         if (_.isUndefined(eventSQS.Records)) {
             event = eventSQS;
