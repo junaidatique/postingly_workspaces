@@ -10,15 +10,12 @@ const {
   SCHEDULE_TYPE_VARIANT,
   PENDING,
   APPROVED,
-  RULE_TYPE_MANUAL,
-  RULE_TYPE_NEW
+  RULE_TYPE_MANUAL
 } = require('shared/constants');
 module.exports = {
-  createUpdatesforThisWeek: async function (event) {
-    console.log("TCL: event", event)
+  createUpdatesForThisWeek: async function (event) {
     const RuleModel = shared.RuleModel;
     const UpdateModel = shared.UpdateModel;
-
     const activeRules = await RuleModel.find({ active: true });
     const scheduleWeekRules = await UpdateModel.distinct('rule',
       {

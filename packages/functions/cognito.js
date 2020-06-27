@@ -5,7 +5,6 @@ module.exports = {
   createAuthChallenge: async function (event, context) {
 
     if (event.source === 'serverless-plugin-warmup') {
-      console.log('WarmUP - Lambda is warm!')
       await new Promise(r => setTimeout(r, 25));
       return 'lambda is warm!';
     }
@@ -24,7 +23,6 @@ module.exports = {
   },
   defineAuthChallenge: async function (event, context, callback) {
     if (event.source === 'serverless-plugin-warmup') {
-      console.log('WarmUP - Lambda is warm!')
       await new Promise(r => setTimeout(r, 25));
       return 'lambda is warm!';
     }
@@ -46,7 +44,6 @@ module.exports = {
   },
   verifyAuthChallenge: async function (event, context, callback) {
     if (event.source === 'serverless-plugin-warmup') {
-      console.log('WarmUP - Lambda is warm!')
       await new Promise(r => setTimeout(r, 25));
       return 'lambda is warm!';
     }
