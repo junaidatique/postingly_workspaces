@@ -2,7 +2,6 @@ const shared = require('shared');
 const moment = require('moment')
 const _ = require('lodash')
 
-
 const {
     PARTNERS_SHOPIFY,
     FACEBOOK_SERVICE,

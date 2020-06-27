@@ -817,14 +817,14 @@ module.exports = {
     });
   },
 
-  addCollectiontoItems: async function (model, items, collectionId) {
+  addCollectionsToItems: async function (model, items, collectionId) {
     if (items.length > 0) {
       let collections;
-      const bulkCollectionUpdate = items.map(item => {
+      let slicedItems = item.slice(0, 10);
+      const bulkCollectionUpdate = slicedItems.map(item => {
         collections = item.collections;
         collections.push(collectionId);
         collections = this.uniqueArray1(collections);
-        console.log("TCL: collections", collections)
         return {
           updateOne: {
             filter: { _id: item._id },
@@ -979,8 +979,8 @@ module.exports = {
     }
 
     if (!_.isNull(event.collectionId)) {
-      const colltionProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description variants imagesList');
-      await this.addCollectiontoItems(ProductModel, colltionProducts, event.collectionId);
+      const collectionProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description variants imagesList');
+      await this.addCollectionsToItems(ProductModel, collectionProducts, event.collectionId);
     }
     console.log("TCL: All Done")
   },

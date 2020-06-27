@@ -6,7 +6,7 @@ const dbConnection = require('./db');
 
 module.exports = {
   // event = null
-  createUpdatesforThisWeek: async function (event, context) {
+  createUpdatesForThisWeek: async function (event, context) {
     if (event.source === 'serverless-plugin-warmup') {
       console.log('WarmUP - Lambda is warm!')
       await new Promise(r => setTimeout(r, 25));
@@ -14,8 +14,8 @@ module.exports = {
     }
     const totalTime = Math.ceil(context.getRemainingTimeInMillis() / 1000);
     await dbConnection.createConnection(context);
-    await updateClass.createUpdatesforThisWeek(event);
-    console.log('createUpdatesforThisWeek =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
+    await updateClass.createUpdatesForThisWeek(event);
+    console.log('createUpdatesForThisWeek =>', (totalTime - (context.getRemainingTimeInMillis() / 1000)).toFixed(3));
   },
   createUpdatesforNextWeek: async function (event, context) {
     if (event.source === 'serverless-plugin-warmup') {

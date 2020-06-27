@@ -7,7 +7,6 @@ const httpHelper = require('shared').httpHelper
 const shared = require('shared');
 exports.auth = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -18,7 +17,6 @@ exports.auth = async function (event, context) {
 };
 exports.callback = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -29,7 +27,6 @@ exports.callback = async function (event, context) {
 };
 exports.getChargeURL = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -47,7 +44,6 @@ exports.getChargeURL = async function (event, context) {
 };
 exports.activatePayment = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -58,7 +54,6 @@ exports.activatePayment = async function (event, context) {
 };
 exports.productsCreate = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -71,9 +66,7 @@ exports.productsCreate = async function (event, context) {
   }
 };
 exports.productsUpdate = async function (event, context) {
-
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -89,7 +82,6 @@ exports.productsUpdate = async function (event, context) {
 };
 exports.productsDelete = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -103,7 +95,6 @@ exports.productsDelete = async function (event, context) {
 };
 exports.collectionsCreate = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -117,7 +108,6 @@ exports.collectionsCreate = async function (event, context) {
 };
 exports.collectionsUpdate = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -131,7 +121,6 @@ exports.collectionsUpdate = async function (event, context) {
 };
 exports.collectionsDelete = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -145,7 +134,6 @@ exports.collectionsDelete = async function (event, context) {
 };
 exports.appUninstalled = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -159,7 +147,6 @@ exports.appUninstalled = async function (event, context) {
 };
 exports.shopUpdate = async function (event, context) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
@@ -173,12 +160,11 @@ exports.shopUpdate = async function (event, context) {
 };
 exports.twitterRequestToken = async function (event, context, callback) {
   if (event.source === 'serverless-plugin-warmup') {
-    console.log('WarmUP - Lambda is warm!')
     await new Promise(r => setTimeout(r, 25));
     return 'lambda is warm!';
   }
   if (event.source !== 'serverless-plugin-warmup') {
-    const respones = await TwitterService.getRequestToken(callback);
-    return respones;
+    const response = await TwitterService.getRequestToken(callback);
+    return response;
   }
 }
