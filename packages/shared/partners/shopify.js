@@ -820,7 +820,7 @@ module.exports = {
   addCollectionsToItems: async function (model, items, collectionId) {
     if (items.length > 0) {
       let collections;
-      let slicedItems = item.slice(0, 10);
+      let slicedItems = items.slice(0, 10);
       const bulkCollectionUpdate = slicedItems.map(item => {
         collections = item.collections;
         collections.push(collectionId);
