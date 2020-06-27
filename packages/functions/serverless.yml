@@ -58,7 +58,7 @@ custom:
 functions:
   # creates update for the current week. this lambda will execute every 6 hours. 
   cron-create-updates-for-this-week:
-    handler: createUpdates.createUpdatesforThisWeek
+    handler: createUpdates.createUpdatesForThisWeek
     warmup:
       enabled: false
     events:
