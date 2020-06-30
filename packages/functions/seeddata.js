@@ -53,7 +53,9 @@ const {
 module.exports = {
 
   testFetch: async function (event, context) {
-
+    const PartnerShopify = shared.PartnerShopify;
+    const product = await shared.ProductModel.findById('5dc4b4d5ff6e150d4a6b12ec')
+    await PartnerShopify.getSingleProduct({ productId: product._id, storeId: product.store }, context)
 
 
 
