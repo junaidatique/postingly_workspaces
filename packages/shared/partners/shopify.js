@@ -569,8 +569,8 @@ module.exports = {
       // syncing products
       await sqsHelper.addToQueue('SyncProductPage', syncProductPayload);
     } else {
-      await this.syncCollectionPage(syncCustomCollectionPayload);
-      await this.syncCollectionPage(syncSmartCollectionPayload);
+      // await this.syncCollectionPage(syncCustomCollectionPayload);
+      // await this.syncCollectionPage(syncSmartCollectionPayload);
       await this.syncProductPage(syncProductPayload);
     }
   },
@@ -720,13 +720,13 @@ module.exports = {
     if (!_.isNull(event.pageInfo)) {
       pageInfoQuery = `&page_info=${event.pageInfo}`;
     } else {
-      pageInfoQuery = '&published_status=published'
+      pageInfoQuery = ''
       if (!_.isNull(event.collectionId)) {
         const collectionDetail = await CollectionModel.findById(event.collectionId);
         collectionQuery = `&collection_id=${collectionDetail.partnerId}`;
       }
     }
-    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=75${collectionQuery}${pageInfoQuery}`;
+    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=100${collectionQuery}${pageInfoQuery}`;
     console.log("TCL: syncProductPage url", url)
     const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if (_.isNull(json)) {
@@ -793,7 +793,6 @@ module.exports = {
     let pageInfoQuery = '';
 
     const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${productDetail.partnerId}.json`;
-    console.log("TCL: getSingleProduct url", url)
     const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if (_.isNull(json)) {
       return;
@@ -933,7 +932,7 @@ module.exports = {
       minimumPrice: minimumPrice,
       maximumPrice: maximumPrice,
       onSale: onSale,
-      postableByImage: (product.images.length > 0) ? true : false,
+      postableByImage: (embeddedImages.length > 0) ? true : false,
       postableByQuantity: (quantity > 0) ? true : false,
       postableByPrice: (minimumPrice > 0) ? true : false,
       postableIsNew: (!_.isNull(markIsNew)) ? markIsNew : false,
