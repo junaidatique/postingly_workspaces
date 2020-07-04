@@ -819,11 +819,12 @@ module.exports = {
   addCollectionsToItems: async function (model, items, collectionId) {
     if (items.length > 0) {
       let collections;
-      let slicedItems = items.slice(0, 10);
-      const bulkCollectionUpdate = slicedItems.map(item => {
+
+      const bulkCollectionUpdate = items.map(item => {
         collections = item.collections;
         collections.push(collectionId);
         collections = this.uniqueArray1(collections);
+        collections = collections.slice(0, 15);
         return {
           updateOne: {
             filter: { _id: item._id },
