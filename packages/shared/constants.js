@@ -1,5 +1,5 @@
 
-exports.FACEBOOK_GRAPH_API_URL = 'https://graph.facebook.com/v6.0/'
+exports.FACEBOOK_GRAPH_API_URL = 'https://graph.facebook.com/v4.0/'
 exports.TWITTER_API_URL = 'https://api.twitter.com/'
 exports.BUFFER_API_URL = 'https://api.bufferapp.com/1/'
 exports.ACTIVE_CAMPAIGN_URL = 'https://postingly694.api-us1.com/api/3/'

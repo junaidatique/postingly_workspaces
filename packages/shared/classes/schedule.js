@@ -227,7 +227,7 @@ module.exports = {
     } else {
       // otherwise counter is incremented and history is returned. 
       productUpdateObject.shareHistory = productUpdateObject.shareHistory.map(history => {
-        if (history._id.toString() === profileHistory._id.toString()) {
+        if (history._id && profileHistory._id && history._id.toString() === profileHistory._id.toString()) {
           history.counter = history.counter + 1;
         }
         return history;
