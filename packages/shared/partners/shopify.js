@@ -555,7 +555,8 @@ module.exports = {
       storeId: event.storeId,
       partnerStore: PARTNERS_SHOPIFY,
       collectionId: null,
-      pageInfo: null
+      pageInfo: null,
+      productCount: 0
     }
 
     // console.log("TCL: syncCustomCollectionPayload", syncCustomCollectionPayload)
@@ -637,7 +638,15 @@ module.exports = {
         await Promise.all(dbCollections.map(async collection => {
           if (process.env.IS_OFFLINE === 'false') {
             // syncing products for this collection
-            await sqsHelper.addToQueue('SyncProductPage', { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null });
+            await sqsHelper.addToQueue('SyncProductPage',
+              {
+                storeId: event.storeId,
+                partnerStore: PARTNERS_SHOPIFY,
+                collectionId: collection._id,
+                pageInfo: null,
+                productCount: 0
+              }
+            );
           } else {
             const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null };
             console.log("TCL: syncCollectionPage payload", payload)
@@ -764,7 +773,8 @@ module.exports = {
             storeId: event.storeId,
             partnerStore: PARTNERS_SHOPIFY,
             collectionId: event.collectionId,
-            pageInfo: pageInfo
+            pageInfo: pageInfo,
+            productCount: parseInt(event.productCount) + 100
           };
           await sqsHelper.addToQueue('SyncProductPage', pageInfoProductPayload);
         } else {
@@ -900,7 +910,7 @@ module.exports = {
     })
     return returnImages;
   },
-  formatProductForQuery: function (storeDetail, product, productFromDB, currency, markIsNew) {
+  formatProductForQuery: function (storeDetail, product, productFromDB, currency, markIsNew, productCount) {
     let productVaraints = [];
     let productImages = [];
     if (!_.isUndefined(productFromDB)) {
@@ -927,7 +937,7 @@ module.exports = {
       partnerCreatedAt: product.created_at,
       partnerUpdatedAt: product.updated_at,
       uniqKey: `${PARTNERS_SHOPIFY}-${product.id}`,
-      active: (product.published_at) ? true : false,
+      active: (product.published_at && productCount < 2000) ? true : false,
       store: storeDetail._id,
       quantity: quantity,
       minimumPrice: minimumPrice,
@@ -954,7 +964,7 @@ module.exports = {
     const bulkProductInsert = apiProducts.map(product => {
       // get product from the list of dbProducts;
       const productFromDB = dbProducts.find(dbProduct => dbProduct.uniqKey === `${PARTNERS_SHOPIFY}-${product.id}`);
-      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, markIsNew);
+      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, markIsNew, event.productCount);
       return {
         updateOne: {
           filter: { uniqKey: `${PARTNERS_SHOPIFY}-${product.id}` },
@@ -1147,7 +1157,7 @@ module.exports = {
       const currency = currencyFormat.substr(currencyFormat.length - 3);
       // the following function basically change the format of the product from shopify 
       // and convert it into the data structure that is used by the app. 
-      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, productFromDB.postableIsNew);
+      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, productFromDB.postableIsNew, 0);
 
       // this is the object by the product found in db. 
       const productFromDBObject = {
