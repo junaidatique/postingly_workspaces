@@ -68,6 +68,7 @@ module.exports = {
     let currencyFormat = stringHelper.stripTags(StoreDetail.moneyFormat);
     currencyFormat = currencyFormat.replace('{{amount}}', "");
     currencyFormat = currencyFormat.replace('{{amount_with_comma_separator}}', "");
+    currencyFormat = currencyFormat.replace('{{amount_no_decimals}}', "");
     const currency = currencyFormat; //.substr(currencyFormat.length - 3);
     // console.log("TCL: ruleCaptions", ruleCaptions)
     await Promise.all(updates.map(async update => {
