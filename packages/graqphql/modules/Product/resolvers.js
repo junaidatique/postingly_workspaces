@@ -28,26 +28,36 @@ module.exports = {
       searchQuery.title = new RegExp(args.filter.title, "i")
     }
     if (!_.isNull(args.filter.profile) && !_.isUndefined(args.filter.profile)) {
-      if (args.filter.scheduledOnProfile) {
+      if (args.filter.scheduledOnProfile === 'yes') {
         searchQuery["shareHistory.profile"] = args.filter.profile
-      } else {
+      } else if (args.filter.scheduledOnProfile === 'no') {
         searchQuery["shareHistory.profile"] = { $ne: args.filter.profile }
       }
     }
-    if (!_.isUndefined(args.filter.postableIsNew)) {
-      searchQuery["postableIsNew"] = args.filter.postableIsNew;
+    if (args.filter.postableIsNew === 'yes') {
+      searchQuery["postableIsNew"] = true;
+    } else if (args.filter.postableIsNew === 'no') {
+      searchQuery["postableIsNew"] = false;
     }
-    if (!_.isUndefined(args.filter.postableByPrice)) {
-      searchQuery["postableByPrice"] = args.filter.postableByPrice;
+    if (args.filter.postableByPrice === 'yes') {
+      searchQuery["postableByPrice"] = true;
+    } else if (args.filter.postableByPrice === 'no') {
+      searchQuery["postableByPrice"] = false;
     }
-    if (!_.isUndefined(args.filter.postableByImage)) {
-      searchQuery["postableByImage"] = args.filter.postableByImage;
+    if (args.filter.postableByImage === 'yes') {
+      searchQuery["postableByImage"] = true;
+    } else if (args.filter.postableByImage === 'no') {
+      searchQuery["postableByImage"] = false;
     }
-    if (!_.isUndefined(args.filter.postableByQuantity)) {
-      searchQuery["postableByQuantity"] = args.filter.postableByQuantity;
+    if (args.filter.postableByQuantity === 'yes') {
+      searchQuery["postableByQuantity"] = true;
+    } else if (args.filter.postableByQuantity === 'no') {
+      searchQuery["postableByQuantity"] = false;
     }
-    if (!_.isUndefined(args.filter.active)) {
-      searchQuery["active"] = args.filter.active;
+    if (args.filter.active === 'yes') {
+      searchQuery["postableByQuantity"] = true;
+    } else if (args.filter.active === 'no') {
+      searchQuery["active"] = false;
     }
 
     if (!_.isEmpty(args.filter.collections)) {
@@ -103,7 +113,7 @@ module.exports = {
   syncProducts: async (obj, args, context, info) => {
     console.log("syncProducts args", args)
     const storeDetail = await StoreModel.findById(args.storeId);
-    if (process.env.IS_OFFLINE === 'false') {
+    if (process.env.IS_OFFLINE === 'no') {
       const storePayload = {
         "storeId": args.storeId,
         "partnerStore": storeDetail.partner,

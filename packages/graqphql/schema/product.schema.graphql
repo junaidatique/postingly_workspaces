@@ -93,12 +93,12 @@ input ModelProductFilterInput {
   storeId: ID!
   title: String
   profile: ID
-  scheduledOnProfile: Boolean
-  postableIsNew: Boolean
-  postableByPrice: Boolean
-  postableByQuantity: Boolean
-  postableByImage: Boolean
-  active: Boolean
+  scheduledOnProfile: String
+  postableIsNew: String
+  postableByPrice: String
+  postableByQuantity: String
+  postableByImage: String
+  active: String
   collections: [ID]
 }
 input ModelCollectionFilterInput {
