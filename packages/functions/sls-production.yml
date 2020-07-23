@@ -59,3 +59,8 @@ Resources:
     Properties:
       QueueName: productionDeleteWebhooks
       VisibilityTimeout: 3600
+  productionGetFacebookDefaultAlbums:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: productionGetFacebookDefaultAlbums
+      VisibilityTimeout: 3600

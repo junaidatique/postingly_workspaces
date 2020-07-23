@@ -59,3 +59,8 @@ Resources:
     Properties:
       QueueName: stagingDeleteWebhooks
       VisibilityTimeout: 3600
+  stagingGetFacebookDefaultAlbums:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: stagingGetFacebookDefaultAlbums
+      VisibilityTimeout: 3600

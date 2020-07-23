@@ -53,10 +53,31 @@ const {
 module.exports = {
 
   testFetch: async function (event, context) {
-    const PartnerShopify = shared.PartnerShopify;
-    const product = await shared.ProductModel.findById('5dc4b4d5ff6e150d4a6b12ec')
-    await PartnerShopify.getSingleProduct({ productId: product._id, storeId: product.store }, context)
-
+    const profiles = await shared.ProfileModel.find(
+      {
+        service: FACEBOOK_SERVICE,
+        isConnected: true,
+        fbDefaultAlbum: { $exists: false },
+        parent: '5ef6f67faa168d091bc339b8'
+      }
+    )
+    // await Promise.all(profiles.map(async profile => {
+    //   await 
+    // }))
+    // const response = await shared.FacebookService.getDefaultAlbum(
+    //   profiles[0]._id,
+    //   profiles[0].serviceUserId,
+    //   profiles[0].accessToken,
+    //   null
+    // );
+    const profile = await shared.ProfileModel.findById('5ee646efa302080a30633108')
+    const response = await shared.FacebookService.getDefaultAlbum(
+      profile._id,
+      profile.serviceUserId,
+      profile.accessToken,
+      null
+    );
+    console.log("response", response)
 
 
 

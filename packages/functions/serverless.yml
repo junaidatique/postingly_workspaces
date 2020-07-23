@@ -272,6 +272,16 @@ functions:
     warmup:
       enabled: false
     timeout: 20
+  facebookGetDefaultAlbum:
+    handler: facebook.getDefaultAlbum    
+    warmup:
+      enabled: false
+    timeout: 60
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:${env:AWS_USER_ID}:${env:STAGE}GetFacebookDefaultAlbums
+          batchSize: 1
+          enabled: true
   
   
   fetch-test:
