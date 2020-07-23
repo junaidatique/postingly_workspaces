@@ -937,7 +937,7 @@ module.exports = {
       partnerCreatedAt: product.created_at,
       partnerUpdatedAt: product.updated_at,
       uniqKey: `${PARTNERS_SHOPIFY}-${product.id}`,
-      active: (product.published_at && productCount < 2000) ? true : false,
+      active: (product.published_at) ? true : false,
       store: storeDetail._id,
       quantity: quantity,
       minimumPrice: minimumPrice,
