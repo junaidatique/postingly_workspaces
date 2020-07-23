@@ -74,7 +74,6 @@ module.exports = {
     console.log("TCL: updateConnectProfile args", args)
     if (!_.isEmpty(args)) {
       await Promise.all(args.input.map(async value => {
-        // _.each(args.input, async (value, key) => {
         if (value.isConnected) {
           res = await ProfileModel.updateOne({ _id: value.id }, { isConnected: value.isConnected });
         }
@@ -84,6 +83,9 @@ module.exports = {
     connectedProfiles = profiles.map(profile => {
       if (profile.isConnected && profile.isSharePossible) {
         return profile;
+        if (profile.service === FACEBOOK_SERVICE && !profile.fbDefaultAlbum) {
+
+        }
       } else {
         return undefined;
       }

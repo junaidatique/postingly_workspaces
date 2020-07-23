@@ -390,7 +390,7 @@ module.exports = {
       fbDefaultAlbum = profile.fbDefaultAlbum;
     }
     if (_.isNull(fbDefaultAlbum)) {
-      const defaultAlbumResponse = await this.getDefaultAlbum(profile.serviceUserId, profile.accessToken);
+      const defaultAlbumResponse = await this.getDefaultAlbum(profile._id, profile.serviceUserId, profile.accessToken);
       if (defaultAlbumResponse.status !== 200) {
         return {
           scheduleState: FAILED,
@@ -413,9 +413,10 @@ module.exports = {
         } else {
           fbDefaultAlbum = defaultAlbumResponse.defaultAlbumId;
         }
+        profile.fbDefaultAlbum = fbDefaultAlbum;
+        await profile.save();
       }
-      profile.fbDefaultAlbum = fbDefaultAlbum;
-      await profile.save();
+
     }
     const imageResponse = await this.shareImage(fbDefaultAlbum, update.images[0].url, update.text, profile.accessToken);
     if (imageResponse.status === 200) {
@@ -468,14 +469,17 @@ module.exports = {
       }
     }
   },
-  getDefaultAlbum: async function (serviceUserId, accessToken) {
+  getDefaultAlbum: async function (profileId, serviceUserId, accessToken, after) {
     const fields = ['id', 'can_upload', 'count', 'event', 'from', 'link', 'location', 'name', 'type'];
     const requestBody = {
       access_token: accessToken,
       fields: fields.join(',')
     }
     const queryStr = querystring.stringify(requestBody);
-    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${serviceUserId}/albums?${queryStr}`;
+    let graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${serviceUserId}/albums?${queryStr}&limit=100`;
+    if (!_.isNull(after)) {
+      graphApiUrl = `${graphApiUrl}&after=${after}`
+    }
     const albumGetResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
@@ -483,7 +487,7 @@ module.exports = {
       },
     });
     const albumGetResponseJson = await albumGetResponse.json();
-    console.log("albumGetResponseJson", albumGetResponseJson)
+    // console.log("albumGetResponseJson", albumGetResponseJson)
     if (albumGetResponse.status === 200) {
       const defaultAlbumId = albumGetResponseJson.data.map(album => {
         if (album.type === FB_DEFAULT_ALBUM_TYPE) {
@@ -493,12 +497,25 @@ module.exports = {
         }
       }).filter(album => {
         return !_.isUndefined(album);
-      })
-      console.log("TCL: getDefaultAlbum defaultAlbumId", defaultAlbumId)
-      return {
-        status: albumGetResponse.status,
-        defaultAlbumId: defaultAlbumId[0]
+      })[0]
+
+      if (defaultAlbumId) {
+        await ProfileModel.updateOne({ _id: profileId }, { fbDefaultAlbum: defaultAlbumId });
+        return {
+          status: albumGetResponse.status,
+          defaultAlbumId: defaultAlbumId
+        }
+      } else {
+        if (albumGetResponseJson.paging) {
+          this.getDefaultAlbum(profileId, serviceUserId, accessToken, albumGetResponseJson.paging.cursors.after)
+        } else {
+          return {
+            status: albumGetResponse.status,
+            defaultAlbumId: null,
+          }
+        }
       }
+
     } else {
       return {
         status: albumGetResponse.status,
