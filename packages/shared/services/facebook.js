@@ -507,7 +507,7 @@ module.exports = {
         }
       } else {
         if (albumGetResponseJson.paging) {
-          this.getDefaultAlbum(profileId, serviceUserId, accessToken, albumGetResponseJson.paging.cursors.after)
+          await this.getDefaultAlbum(profileId, serviceUserId, accessToken, albumGetResponseJson.paging.cursors.after)
         } else {
           return {
             status: albumGetResponse.status,

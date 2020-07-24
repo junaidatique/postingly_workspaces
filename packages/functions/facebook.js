@@ -1,9 +1,10 @@
 const shared = require('shared');
 // const sqsHelper = require('shared').sqsHelper;
-
+const dbConnection = require('./db');
 module.exports = {
 
   getDefaultAlbum: async function (event, context) {
+    await dbConnection.createConnection(context);
     const profile = await shared.ProfileModel.findById(event.profileId)
     // await Promise.all(profiles.map(async profile => {
     //   await 
