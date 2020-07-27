@@ -53,24 +53,19 @@ const {
 module.exports = {
 
   testFetch: async function (event, context) {
-    const profiles = await shared.ProfileModel.find(
-      {
-        service: FACEBOOK_SERVICE,
-        isConnected: true,
-        fbDefaultAlbum: { $exists: false },
-        parent: '5ef6f67faa168d091bc339b8'
-      }
-    )
+    await dbConnection.createConnection(context);
+    // const profiles = await shared.ProfileModel.find(
+    //   {
+    //     service: FACEBOOK_SERVICE,
+    //     isConnected: true,
+    //     fbDefaultAlbum: { $exists: false },
+    //   }
+    // )
     // await Promise.all(profiles.map(async profile => {
-    //   await 
+    //   await sqsHelper.addToQueue('GetFacebookDefaultAlbums', { profileId: profile._id })
     // }))
-    // const response = await shared.FacebookService.getDefaultAlbum(
-    //   profiles[0]._id,
-    //   profiles[0].serviceUserId,
-    //   profiles[0].accessToken,
-    //   null
-    // );
-    const profile = await shared.ProfileModel.findById('5ee646efa302080a30633108')
+
+    const profile = await shared.ProfileModel.findById('5e6067d1589a2471151e663b')
     const response = await shared.FacebookService.getDefaultAlbum(
       profile._id,
       profile.serviceUserId,
