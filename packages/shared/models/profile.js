@@ -1,6 +1,18 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const { SERVICES, SERVICE_PROFILES } = require('shared/constants');
+const { SERVICES, SERVICE_PROFILES, FB_ALBUM_TYPES } = require('shared/constants');
+const FB_ALBUMS = {
+  albumId: {
+    type: String
+  },
+  name: {
+    type: String,
+  },
+  type: {
+    type: String,
+    enum: FB_ALBUM_TYPES
+  }
+}
 const profileSchema = new mongoose.Schema({
   store: {
     type: Schema.Types.ObjectId,
@@ -76,7 +88,8 @@ const profileSchema = new mongoose.Schema({
   fbDefaultAlbum: {
     type: String,
     default: null
-  }
+  },
+  fbAlbums: [FB_ALBUMS]
 });
 
 profileSchema.set('timestamps', true);

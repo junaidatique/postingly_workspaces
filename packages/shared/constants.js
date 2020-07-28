@@ -1,4 +1,3 @@
-
 exports.FACEBOOK_GRAPH_API_URL = 'https://graph.facebook.com/v4.0/'
 exports.TWITTER_API_URL = 'https://api.twitter.com/'
 exports.BUFFER_API_URL = 'https://api.bufferapp.com/1/'
@@ -8,7 +7,7 @@ exports.TEST = 'test'
 exports.STAGING = 'staging'
 exports.PROD = 'prod'
 exports.FB_DEFAULT_ALBUM = 'Timeline Photos'
-exports.FB_DEFAULT_ALBUM_TYPE = 'wall'
+
 
 // schedule states
 const NOT_SCHEDULED = 'not_scheduled'
@@ -192,6 +191,12 @@ exports.PRODUCT_SORT_UPDATED_DESC = PRODUCT_SORT_UPDATED_DESC;
 exports.PRODUCT_SORT_SCHEDULED_ASC = PRODUCT_SORT_SCHEDULED_ASC;
 exports.PRODUCT_SORT_SCHEDULED_DESC = PRODUCT_SORT_SCHEDULED_DESC;
 
+const FB_ALBUM_TYPE_NORMAL = 'normal';
+const FB_DEFAULT_ALBUM_TYPE = 'wall';
+exports.FB_ALBUM_TYPE_NORMAL = FB_ALBUM_TYPE_NORMAL;
+exports.FB_DEFAULT_ALBUM_TYPE = FB_DEFAULT_ALBUM_TYPE;
+exports.FB_ALBUM_TYPES = [FB_ALBUM_TYPE_NORMAL, FB_DEFAULT_ALBUM_TYPE];
+
 
 exports.PARTNERS = [PARTNERS_SHOPIFY, PARTNERS_BIGCOMMERCE];
 exports.SERVICES = [FACEBOOK_SERVICE, TWITTER_SERVICE, INSTAGRAM_SERVICE, LINKEDIN_SERVICE, PINTEREST_SERVICE, BUFFER_SERVICE];
@@ -257,3 +262,4 @@ exports.WEBHOOKS = {
   ],
 }
 exports.UPDATE_PRODUCT_WEBHOOK = 'products/update'
+

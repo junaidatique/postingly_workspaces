@@ -65,7 +65,7 @@ module.exports = {
     //   await sqsHelper.addToQueue('GetFacebookDefaultAlbums', { profileId: profile._id })
     // }))
 
-    const profile = await shared.ProfileModel.findById('5e6067d1589a2471151e663b')
+    const profile = await shared.ProfileModel.findById('5ef6f6803e4acb5503eac89a')
     const response = await shared.FacebookService.getDefaultAlbum(
       profile._id,
       profile.serviceUserId,

@@ -3,7 +3,7 @@ const querystring = require('querystring')
 const ProfileModel = require('shared').ProfileModel;
 const ProductModel = require('shared').ProductModel;
 const StoreModel = require('shared').StoreModel;
-
+const { FB_ALBUM_TYPES } = require('shared/constants');
 const _ = require('lodash')
 const {
   FACEBOOK_SERVICE, FACEBOOK_GRAPH_API_URL, FACEBOOK_PROFILE,
@@ -470,6 +470,7 @@ module.exports = {
     }
   },
   getDefaultAlbum: async function (profileId, serviceUserId, accessToken, after) {
+    const profile = await ProfileModel.findById(profileId);
     const fields = ['id', 'can_upload', 'count', 'event', 'from', 'link', 'location', 'name', 'type'];
     const requestBody = {
       access_token: accessToken,
@@ -487,27 +488,42 @@ module.exports = {
       },
     });
     const albumGetResponseJson = await albumGetResponse.json();
-    // console.log("albumGetResponseJson", albumGetResponseJson)
     if (albumGetResponse.status === 200) {
-      const defaultAlbumId = albumGetResponseJson.data.map(album => {
-        if (album.type === FB_DEFAULT_ALBUM_TYPE) {
-          return album.id;
-        } else {
-          return undefined;
-        }
-      }).filter(album => {
-        return !_.isUndefined(album);
-      })[0]
-
-      if (defaultAlbumId) {
-        await ProfileModel.updateOne({ _id: profileId }, { fbDefaultAlbum: defaultAlbumId });
-        return {
-          status: albumGetResponse.status,
-          defaultAlbumId: defaultAlbumId
-        }
-      } else {
+      if (albumGetResponseJson.data.length > 0) {
+        const fbAlbums = albumGetResponseJson.data.map(album => {
+          if (FB_ALBUM_TYPES.includes(album.type)) {
+            return {
+              albumId: album.id,
+              name: album.name,
+              type: album.type
+            }
+          }
+        }).filter(album => {
+          return !_.isUndefined(album);
+        })
+        const albumsToBeUpdated = fbAlbums.concat(profile.fbAlbums);
+        const uniqFbAlbums = [...new Map(albumsToBeUpdated.map(item => [item['albumId'], item])).values()];
+        await ProfileModel.updateOne({ _id: profileId }, { fbAlbums: uniqFbAlbums });
         if (albumGetResponseJson.paging) {
           await this.getDefaultAlbum(profileId, serviceUserId, accessToken, albumGetResponseJson.paging.cursors.after)
+        }
+      } else {
+        const profileUpdated = await ProfileModel.findById(profileId);
+        const defaultAlbumId = profileUpdated.fbAlbums.map(album => {
+          if (album.type === FB_DEFAULT_ALBUM_TYPE) {
+            return album.id;
+          } else {
+            return undefined;
+          }
+        }).filter(album => {
+          return !_.isUndefined(album);
+        })[0]
+        if (defaultAlbumId) {
+          await ProfileModel.updateOne({ _id: profileId }, { fbDefaultAlbum: defaultAlbumId });
+          return {
+            status: albumGetResponse.status,
+            defaultAlbumId: defaultAlbumId
+          }
         } else {
           return {
             status: albumGetResponse.status,
@@ -515,6 +531,9 @@ module.exports = {
           }
         }
       }
+
+
+
 
     } else {
       return {

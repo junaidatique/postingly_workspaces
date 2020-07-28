@@ -2,8 +2,9 @@ const shared = require('shared');
 const fetch = require('node-fetch');
 const FacebookService = require('shared').FacebookService;
 const TwitterService = require('shared').TwitterService;
-const BufferService = require('shared').BufferService;
+const getProfileById = require('./functions').getProfileById;
 const moment = require('moment')
+const sqsHelper = require('shared').sqsHelper;
 const updateClass = require('shared').updateClass;
 const {
   FACEBOOK_SERVICE, TEST, TWITTER_SERVICE, BUFFER_SERVICE,
@@ -68,6 +69,9 @@ module.exports = {
     })
 
   },
+  getProfile: async (obj, args, context, info) => {
+    return getProfileById(args.id);
+  },
   updateConnectProfile: async (obj, args, context, info) => {
 
     let res;
@@ -83,13 +87,26 @@ module.exports = {
     connectedProfiles = profiles.map(profile => {
       if (profile.isConnected && profile.isSharePossible) {
         return profile;
-        if (profile.service === FACEBOOK_SERVICE && !profile.fbDefaultAlbum) {
-
-        }
       } else {
         return undefined;
       }
     }).filter(item => !_.isUndefined(item));
+
+    await Promise.all(connectedProfiles.map(async profile => {
+      if (profile.service === FACEBOOK_SERVICE && !profile.fbDefaultAlbum) {
+        if (process.env.IS_OFFLINE === 'false') {
+          await sqsHelper.addToQueue('GetFacebookDefaultAlbums', { profileId: profile._id })
+        } else {
+          await shared.FacebookService.getDefaultAlbum(
+            profile._id,
+            profile.serviceUserId,
+            profile.accessToken,
+            null
+          );
+        }
+      }
+    }))
+
     const storeDetail = await StoreModel.findById(args.storeId);
     storeDetail.numberOfConnectedProfiles = connectedProfiles.length;
     await storeDetail.save();
@@ -105,6 +122,9 @@ module.exports = {
     }
     if (!_.isUndefined(args.input.isConnected)) {
       updateData['isConnected'] = args.input.isConnected;
+    }
+    if (!_.isUndefined(args.input.fbDefaultAlbum)) {
+      updateData['fbDefaultAlbum'] = args.input.fbDefaultAlbum;
     }
     if (!_.isEmpty(updateData)) {
       await ProfileModel.updateOne({ _id: args.profileId }, updateData);
