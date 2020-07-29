@@ -332,6 +332,7 @@ module.exports = {
   },
   shareFacebookPostAsLink: async function (update) {
     const profile = await ProfileModel.findById(update.profile);
+    const store = await StoreModel.findById(profile.store);
     const itemLink = update.productExternalURL;
     if (!update.images) {
       return {
@@ -340,7 +341,11 @@ module.exports = {
         response: null,
       }
     }
-    const image = `https://posting.ly/image?url=${update.images[0].url}`
+
+    let image = `https://posting.ly/image?url=${update.images[0].url}`
+    if (store.postFullImageOnPostAsLink) {
+      image = update.images[0].url;
+    }
 
     const requestBody = {
       message: update.text,
@@ -509,15 +514,17 @@ module.exports = {
         }
       } else {
         const profileUpdated = await ProfileModel.findById(profileId);
+        console.log("profileUpdated", profileUpdated.fbAlbums)
         const defaultAlbumId = profileUpdated.fbAlbums.map(album => {
           if (album.type === FB_DEFAULT_ALBUM_TYPE) {
-            return album.id;
+            return album.albumId;
           } else {
             return undefined;
           }
         }).filter(album => {
           return !_.isUndefined(album);
         })[0]
+        console.log("defaultAlbumId", defaultAlbumId)
         if (defaultAlbumId) {
           await ProfileModel.updateOne({ _id: profileId }, { fbDefaultAlbum: defaultAlbumId });
           return {
