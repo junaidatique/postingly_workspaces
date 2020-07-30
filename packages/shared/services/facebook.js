@@ -353,7 +353,8 @@ module.exports = {
       picture: image,
       published: 1,
       description: update.text,
-      access_token: profile.accessToken
+      access_token: profile.accessToken,
+      call_to_action: { "type": "Shop Now", "value": { "link": itemLink } }
     }
     const queryStr = querystring.stringify(requestBody);
     const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${profile.serviceUserId}/feed?${queryStr}`;
