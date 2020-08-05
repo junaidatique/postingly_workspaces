@@ -554,7 +554,8 @@ module.exports = {
     const requestBody = {
       name: albumTitle,
       message: albumtText,
-      access_token: accessToken
+      access_token: accessToken,
+      type: 'wall'
     }
     const queryStr = querystring.stringify(requestBody);
     const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${serviceUserId}/albums?${queryStr}`;

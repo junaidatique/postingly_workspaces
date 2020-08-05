@@ -2,6 +2,7 @@ const shared = require('shared');
 const fetch = require('node-fetch');
 const FacebookService = require('shared').FacebookService;
 const TwitterService = require('shared').TwitterService;
+const BufferService = require('shared').BufferService;
 const getProfileById = require('./functions').getProfileById;
 const moment = require('moment')
 const sqsHelper = require('shared').sqsHelper;
