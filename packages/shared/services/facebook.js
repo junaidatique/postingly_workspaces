@@ -395,35 +395,35 @@ module.exports = {
     } else {
       fbDefaultAlbum = profile.fbDefaultAlbum;
     }
-    if (_.isNull(fbDefaultAlbum)) {
-      const defaultAlbumResponse = await this.getDefaultAlbum(profile._id, profile.serviceUserId, profile.accessToken);
-      if (defaultAlbumResponse.status !== 200) {
-        return {
-          scheduleState: FAILED,
-          failedMessage: defaultAlbumResponse.message
-        };
-      } else {
-        if (_.isNull(defaultAlbumResponse.defaultAlbumId) || _.isUndefined(defaultAlbumResponse.defaultAlbumId)) {
-          const albumResponse = await this.createAlbum(profile.serviceUserId, FB_DEFAULT_ALBUM, '', profile.accessToken);
-          const albumCreateResponse = albumResponse.albumCreateResponse;
-          const albumCreateResponseJson = albumResponse.albumCreateResponseJson;
-          if (albumCreateResponse.status === 200) {
-            fbDefaultAlbum = albumCreateResponseJson.id;
-          } else {
-            return {
-              scheduleState: FAILED,
-              failedMessage: albumCreateResponseJson.error.message,
-              response: null,
-            }
-          }
-        } else {
-          fbDefaultAlbum = defaultAlbumResponse.defaultAlbumId;
-        }
-        profile.fbDefaultAlbum = fbDefaultAlbum;
-        await profile.save();
-      }
+    // if (_.isNull(fbDefaultAlbum)) {
+    //   const defaultAlbumResponse = await this.getDefaultAlbum(profile._id, profile.serviceUserId, profile.accessToken);
+    //   if (defaultAlbumResponse.status !== 200) {
+    //     return {
+    //       scheduleState: FAILED,
+    //       failedMessage: defaultAlbumResponse.message
+    //     };
+    //   } else {
+    //     if (_.isNull(defaultAlbumResponse.defaultAlbumId) || _.isUndefined(defaultAlbumResponse.defaultAlbumId)) {
+    //       const albumResponse = await this.createAlbum(profile.serviceUserId, FB_DEFAULT_ALBUM, '', profile.accessToken);
+    //       const albumCreateResponse = albumResponse.albumCreateResponse;
+    //       const albumCreateResponseJson = albumResponse.albumCreateResponseJson;
+    //       if (albumCreateResponse.status === 200) {
+    //         fbDefaultAlbum = albumCreateResponseJson.id;
+    //       } else {
+    //         return {
+    //           scheduleState: FAILED,
+    //           failedMessage: albumCreateResponseJson.error.message,
+    //           response: null,
+    //         }
+    //       }
+    //     } else {
+    //       fbDefaultAlbum = defaultAlbumResponse.defaultAlbumId;
+    //     }
+    //     profile.fbDefaultAlbum = fbDefaultAlbum;
+    //     await profile.save();
+    //   }
 
-    }
+    // }
     const imageResponse = await this.shareImage(fbDefaultAlbum, update.images[0].url, update.text, profile.accessToken);
     if (imageResponse.status === 200) {
       return {
@@ -453,7 +453,7 @@ module.exports = {
       access_token: accessToken
     }
     const queryStr = querystring.stringify(requestBody);
-    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${albumId}/photos?${queryStr}`;
+    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}me/photos?${queryStr}`;
     const imageUploadResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",

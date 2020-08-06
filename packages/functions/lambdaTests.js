@@ -2,6 +2,17 @@ const shared = require('shared');
 const moment = require('moment')
 const _ = require('lodash')
 
+const createUpdates = require('functions').createUpdates.createUpdates;
+const createUpdatesforThisWeek = require('functions').createUpdates.createUpdatesforThisWeek;
+const createUpdatesforNextWeek = require('functions').createUpdates.createUpdatesforNextWeek;
+const schedule = require('functions').scheduleProducts.schedule;
+const cronThisWeekRulesForUpdates = require('functions').cronThisWeekRulesForUpdates.execute;
+const cronAddCaptions = require('functions').cronAddCaptions.execute;
+const changeCaption = require('functions').changeCaption.update;
+const updateProductUrls = require('functions').updateProductUrls.execute;
+const shareUpdates = require('functions').shareUpdates.share;
+const bufferShareUpdates = require('functions').shareUpdates.bufferShare;
+const facebookService = require('shared').FacebookService
 const {
     PARTNERS_SHOPIFY,
     FACEBOOK_SERVICE,
@@ -14,7 +25,50 @@ const {
     RULE_TYPE_MANUAL,
     RULE_TYPE_NEW,
     RULE_TYPE_OLD } = require('shared/constants')
-const dbConnection = require('./db');
 module.exports = {
+    execute: async function (event, context) {
+        // const token = "EAACwJczql2ABAMYRKLOXHYoOLD3Q5XaWkulc0WdzAkxRejGEHA1GDHFgIoxnLVspydjFzP8J9PrmcwhTZBcwnXmG9QPZC2NMBKcDtqBH1Pb4j7XMAR9eSANPTdeSndprFpYArJHMKMsmejLKrPebgjRMIWxQRYtZAyIxs7flsS3upTirGIO";
+        // const serviceUserId = 549867861701636;
+        // const albums = await facebookService.getDefaultAlbum(serviceUserId, token);
+        // console.log("albums", albums)
+        const StoreModel = shared.StoreModel;
+        // // console.log("TCL: StoreModel", StoreModel)
+        // const ProductModel = shared.ProductModel;
+        // const storeDetail = await StoreModel.findOne()
+        const storeDetail = await StoreModel.findOne({ _id: '5f207d1986514d3773614f9a' })
+        // // console.log("TCL: storeDetail", storeDetail)
 
+        const UpdateModel = shared.UpdateModel;
+        const storeId = storeDetail._id;
+        // // const PartnerShopify = shared.PartnerShopify;
+
+        await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
+
+        const RuleModel = shared.RuleModel;
+        const ruleDetail = await RuleModel.findOne({ store: storeId, type: RULE_TYPE_OLD }).populate('profiles');
+
+        // // first iteration.
+        // // console.log("TCL: createUpdates ---------------------------------------------------------")
+        await createUpdates({ ruleId: ruleDetail._id }, context);
+        // // console.log("TCL: schedule ---------------------------------------------------------")
+        await schedule({ ruleId: ruleDetail._id }, context);
+        // // await schedule({ ruleId: ruleDetail._id, "postingCollectionOption": COLLECTION_OPTION_SELECTED }, context);
+        // // console.log("TCL: updateProductUrls ---------------------------------------------------------")
+        await updateProductUrls({});
+        // // console.log("TCL: changeCaption ---------------------------------------------------------")
+        await changeCaption({ rule: ruleDetail._id, storeId: null });
+        // // console.log("TCL: Postupdates ---------------------------------------------------------")
+        // // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: FAILED, postingTime: moment().toISOString(), failedMessage: `` })
+        // // await UpdateModel.updateMany({ scheduleState: APPROVED }, { scheduleState: POSTED, postingTime: moment().toISOString() })
+
+        // // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
+        // // updates = await UpdateModel.findOne({sch}).sort({ createdAt: 1 });
+        updates = await UpdateModel.find({ scheduleState: APPROVED }).limit(1);
+        console.log("TCL: updates", updates)
+        await Promise.all(updates.map(async update => {
+            await shareUpdates({ updateId: update._id });
+        }));
+
+
+    }
 }
