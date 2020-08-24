@@ -200,6 +200,10 @@ const storeSchema = new mongoose.Schema({
   freeProActivated: {
     type: Boolean,
     default: false
+  },
+  postFullImageOnPostAsLink: {
+    type: Boolean,
+    default: false
   }
 
 });

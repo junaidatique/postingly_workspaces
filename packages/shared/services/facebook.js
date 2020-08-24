@@ -3,7 +3,7 @@ const querystring = require('querystring')
 const ProfileModel = require('shared').ProfileModel;
 const ProductModel = require('shared').ProductModel;
 const StoreModel = require('shared').StoreModel;
-
+const { FB_ALBUM_TYPES } = require('shared/constants');
 const _ = require('lodash')
 const {
   FACEBOOK_SERVICE, FACEBOOK_GRAPH_API_URL, FACEBOOK_PROFILE,
@@ -332,6 +332,7 @@ module.exports = {
   },
   shareFacebookPostAsLink: async function (update) {
     const profile = await ProfileModel.findById(update.profile);
+    const store = await StoreModel.findById(profile.store);
     const itemLink = update.productExternalURL;
     if (!update.images) {
       return {
@@ -340,7 +341,11 @@ module.exports = {
         response: null,
       }
     }
-    const image = `https://posting.ly/image?url=${update.images[0].url}`
+
+    let image = `https://posting.ly/image?url=${update.images[0].url}`
+    if (store.postFullImageOnPostAsLink) {
+      image = update.images[0].url;
+    }
 
     const requestBody = {
       message: update.text,
@@ -348,7 +353,8 @@ module.exports = {
       picture: image,
       published: 1,
       description: update.text,
-      access_token: profile.accessToken
+      access_token: profile.accessToken,
+      call_to_action: { "type": "Shop Now", "value": { "link": itemLink } }
     }
     const queryStr = querystring.stringify(requestBody);
     const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${profile.serviceUserId}/feed?${queryStr}`;
@@ -389,34 +395,35 @@ module.exports = {
     } else {
       fbDefaultAlbum = profile.fbDefaultAlbum;
     }
-    if (_.isNull(fbDefaultAlbum)) {
-      const defaultAlbumResponse = await this.getDefaultAlbum(profile.serviceUserId, profile.accessToken);
-      if (defaultAlbumResponse.status !== 200) {
-        return {
-          scheduleState: FAILED,
-          failedMessage: defaultAlbumResponse.message
-        };
-      } else {
-        if (_.isNull(defaultAlbumResponse.defaultAlbumId) || _.isUndefined(defaultAlbumResponse.defaultAlbumId)) {
-          const albumResponse = await this.createAlbum(profile.serviceUserId, FB_DEFAULT_ALBUM, '', profile.accessToken);
-          const albumCreateResponse = albumResponse.albumCreateResponse;
-          const albumCreateResponseJson = albumResponse.albumCreateResponseJson;
-          if (albumCreateResponse.status === 200) {
-            fbDefaultAlbum = albumCreateResponseJson.id;
-          } else {
-            return {
-              scheduleState: FAILED,
-              failedMessage: albumCreateResponseJson.error.message,
-              response: null,
-            }
-          }
-        } else {
-          fbDefaultAlbum = defaultAlbumResponse.defaultAlbumId;
-        }
-      }
-      profile.fbDefaultAlbum = fbDefaultAlbum;
-      await profile.save();
-    }
+    // if (_.isNull(fbDefaultAlbum)) {
+    //   const defaultAlbumResponse = await this.getDefaultAlbum(profile._id, profile.serviceUserId, profile.accessToken);
+    //   if (defaultAlbumResponse.status !== 200) {
+    //     return {
+    //       scheduleState: FAILED,
+    //       failedMessage: defaultAlbumResponse.message
+    //     };
+    //   } else {
+    //     if (_.isNull(defaultAlbumResponse.defaultAlbumId) || _.isUndefined(defaultAlbumResponse.defaultAlbumId)) {
+    //       const albumResponse = await this.createAlbum(profile.serviceUserId, FB_DEFAULT_ALBUM, '', profile.accessToken);
+    //       const albumCreateResponse = albumResponse.albumCreateResponse;
+    //       const albumCreateResponseJson = albumResponse.albumCreateResponseJson;
+    //       if (albumCreateResponse.status === 200) {
+    //         fbDefaultAlbum = albumCreateResponseJson.id;
+    //       } else {
+    //         return {
+    //           scheduleState: FAILED,
+    //           failedMessage: albumCreateResponseJson.error.message,
+    //           response: null,
+    //         }
+    //       }
+    //     } else {
+    //       fbDefaultAlbum = defaultAlbumResponse.defaultAlbumId;
+    //     }
+    //     profile.fbDefaultAlbum = fbDefaultAlbum;
+    //     await profile.save();
+    //   }
+
+    // }
     const imageResponse = await this.shareImage(fbDefaultAlbum, update.images[0].url, update.text, profile.accessToken);
     if (imageResponse.status === 200) {
       return {
@@ -446,7 +453,7 @@ module.exports = {
       access_token: accessToken
     }
     const queryStr = querystring.stringify(requestBody);
-    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${albumId}/photos?${queryStr}`;
+    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}me/photos?${queryStr}`;
     const imageUploadResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
@@ -468,14 +475,18 @@ module.exports = {
       }
     }
   },
-  getDefaultAlbum: async function (serviceUserId, accessToken) {
+  getDefaultAlbum: async function (profileId, serviceUserId, accessToken, after) {
+    const profile = await ProfileModel.findById(profileId);
     const fields = ['id', 'can_upload', 'count', 'event', 'from', 'link', 'location', 'name', 'type'];
     const requestBody = {
       access_token: accessToken,
       fields: fields.join(',')
     }
     const queryStr = querystring.stringify(requestBody);
-    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${serviceUserId}/albums?${queryStr}`;
+    let graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${serviceUserId}/albums?${queryStr}&limit=100`;
+    if (!_.isNull(after)) {
+      graphApiUrl = `${graphApiUrl}&after=${after}`
+    }
     const albumGetResponse = await fetch(`${graphApiUrl}`, {
       headers: {
         "Accept": "application/json",
@@ -483,22 +494,55 @@ module.exports = {
       },
     });
     const albumGetResponseJson = await albumGetResponse.json();
-    console.log("albumGetResponseJson", albumGetResponseJson)
     if (albumGetResponse.status === 200) {
-      const defaultAlbumId = albumGetResponseJson.data.map(album => {
-        if (album.type === FB_DEFAULT_ALBUM_TYPE) {
-          return album.id;
-        } else {
-          return undefined;
+      if (albumGetResponseJson.data.length > 0) {
+        const fbAlbums = albumGetResponseJson.data.map(album => {
+          if (FB_ALBUM_TYPES.includes(album.type)) {
+            return {
+              albumId: album.id,
+              name: album.name,
+              type: album.type
+            }
+          }
+        }).filter(album => {
+          return !_.isUndefined(album);
+        })
+        const albumsToBeUpdated = fbAlbums.concat(profile.fbAlbums);
+        const uniqFbAlbums = [...new Map(albumsToBeUpdated.map(item => [item['albumId'], item])).values()];
+        await ProfileModel.updateOne({ _id: profileId }, { fbAlbums: uniqFbAlbums });
+        if (albumGetResponseJson.paging) {
+          await this.getDefaultAlbum(profileId, serviceUserId, accessToken, albumGetResponseJson.paging.cursors.after)
         }
-      }).filter(album => {
-        return !_.isUndefined(album);
-      })
-      console.log("TCL: getDefaultAlbum defaultAlbumId", defaultAlbumId)
-      return {
-        status: albumGetResponse.status,
-        defaultAlbumId: defaultAlbumId[0]
+      } else {
+        const profileUpdated = await ProfileModel.findById(profileId);
+        console.log("profileUpdated", profileUpdated.fbAlbums)
+        const defaultAlbumId = profileUpdated.fbAlbums.map(album => {
+          if (album.type === FB_DEFAULT_ALBUM_TYPE) {
+            return album.albumId;
+          } else {
+            return undefined;
+          }
+        }).filter(album => {
+          return !_.isUndefined(album);
+        })[0]
+        console.log("defaultAlbumId", defaultAlbumId)
+        if (defaultAlbumId) {
+          await ProfileModel.updateOne({ _id: profileId }, { fbDefaultAlbum: defaultAlbumId });
+          return {
+            status: albumGetResponse.status,
+            defaultAlbumId: defaultAlbumId
+          }
+        } else {
+          return {
+            status: albumGetResponse.status,
+            defaultAlbumId: null,
+          }
+        }
       }
+
+
+
+
     } else {
       return {
         status: albumGetResponse.status,
@@ -510,7 +554,8 @@ module.exports = {
     const requestBody = {
       name: albumTitle,
       message: albumtText,
-      access_token: accessToken
+      access_token: accessToken,
+      type: 'wall'
     }
     const queryStr = querystring.stringify(requestBody);
     const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}${serviceUserId}/albums?${queryStr}`;

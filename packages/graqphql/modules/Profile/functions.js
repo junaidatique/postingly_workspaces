@@ -25,12 +25,12 @@ const formattedProfile = async (profile) => {
     return undefined;
   }
 }
-const getProfileById = async profileId => {
-  const profileDetail = await ProfileModel.findOne(profileId);
+const getProfileById = async profileId => {  
+  const profileDetail = await ProfileModel.find({ _id: profileId });  
   if (profileDetail === null) {
     throw new Error('Profile not found.');
   }
-  return formattedProfile(profileDetail)
+  return formattedProfile(profileDetail[0])
 }
 const getProfiles = async profileIds => {
   profiles = await ProfileModel.find({ _id: { $in: profileIds } });

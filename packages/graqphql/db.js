@@ -11,8 +11,8 @@ module.exports = async () => {
         connection = await mongoose.connect(process.env.MONGODB_URL, {
           useNewUrlParser: true, useCreateIndex: true, bufferCommands: false,
           bufferMaxEntries: 0,
-          ssl: true,
-          sslCA: returnCerts(),
+          // ssl: true,
+          // sslCA: returnCerts(),
           dbName: process.env.STAGE,
           useUnifiedTopology: true,
           keepAlive: true,

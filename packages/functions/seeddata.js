@@ -54,6 +54,17 @@ const {
 module.exports = {
 
   testFetch: async function (event, context) {
+    await dbConnection.createConnection(context);
+    // const profiles = await shared.ProfileModel.find(
+    //   {
+    //     service: FACEBOOK_SERVICE,
+    //     isConnected: true,
+    //     fbDefaultAlbum: { $exists: false },
+    //   }
+    // )
+    // await Promise.all(profiles.map(async profile => {
+    //   await sqsHelper.addToQueue('GetFacebookDefaultAlbums', { profileId: profile._id })
+    // }))
 
     const ActiveCampaignService = shared.ActiveCampaignService;
     const StoreModel = shared.StoreModel;

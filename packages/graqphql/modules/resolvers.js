@@ -10,6 +10,7 @@ module.exports = {
   Query: {
     getStore: storeResolvers.getStore,
     listStores: storeResolvers.listStores,
+    getProfile: profileResolvers.getProfile,
     listProfiles: profileResolvers.listProfiles,
     listRules: ruleResolvers.listRules,
     getRule: ruleResolvers.getRule,

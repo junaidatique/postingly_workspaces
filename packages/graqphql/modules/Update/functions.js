@@ -12,7 +12,7 @@ const formattedUpdate = async (update) => {
     id: update._id,
     store: storeFunctions.getStoreByID.bind(this, update._doc.store),
     profile: profileFunctions.getProfileById.bind(this, update._doc.profile),
-    rule: ruleFunctions.getRuleById.bind(this, update._doc.rule),
+    rule: (update._doc.rule) ? ruleFunctions.getRuleById.bind(this, update._doc.rule) : null,
     product: productFunctions.getProductById.bind(this, update._doc.product),
     scheduleTime: (update.scheduleTime !== undefined) ? moment(update.scheduleTime).toISOString() : null,
     createdAt: (update.createdAt !== undefined) ? moment(update.createdAt).toISOString() : null,

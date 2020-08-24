@@ -18,10 +18,11 @@ module.exports = {
     const rules = await UpdateModel.distinct('rule',
       {
         scheduleState: NOT_SCHEDULED,
-        scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(7, 'days') },
+        scheduleTime: { $gt: moment.utc(), $lt: moment.utc().add(1, 'days') },
         scheduleType: { $in: [SCHEDULE_TYPE_PRODUCT, SCHEDULE_TYPE_VARIANT] },
         rule: { $exists: true },
-        postType: RULE_TYPE_OLD
+        postType: RULE_TYPE_OLD,
+        isStoreDeleted: false
       }
     );
     if (process.env.IS_OFFLINE === 'false') {

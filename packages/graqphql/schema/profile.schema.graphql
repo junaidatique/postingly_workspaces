@@ -20,6 +20,13 @@ type Profile {
   numberOfUpdatesScheduled: Int
   numberOfUpdatesPosted: Int
   numberOfUpdatesFailed: Int
+  fbDefaultAlbum: String
+  fbAlbums: [FbAlbum]
+}
+type FbAlbum {
+  albumId: String
+  name: String
+  type: String
 }
 
 input connectProfileInput {
@@ -39,6 +46,7 @@ input updateConnectProfileInput {
 input updateProfileInput {  
   isTokenExpired: Boolean
   isConnected: Boolean
+  fbDefaultAlbum: String
 }
 enum BufferUpdateStatus{
   pending

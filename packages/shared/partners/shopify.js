@@ -555,7 +555,8 @@ module.exports = {
       storeId: event.storeId,
       partnerStore: PARTNERS_SHOPIFY,
       collectionId: null,
-      pageInfo: null
+      pageInfo: null,
+      productCount: 0
     }
 
     // console.log("TCL: syncCustomCollectionPayload", syncCustomCollectionPayload)
@@ -569,8 +570,8 @@ module.exports = {
       // syncing products
       await sqsHelper.addToQueue('SyncProductPage', syncProductPayload);
     } else {
-      await this.syncCollectionPage(syncCustomCollectionPayload);
-      await this.syncCollectionPage(syncSmartCollectionPayload);
+      // await this.syncCollectionPage(syncCustomCollectionPayload);
+      // await this.syncCollectionPage(syncSmartCollectionPayload);
       await this.syncProductPage(syncProductPayload);
     }
   },
@@ -625,10 +626,10 @@ module.exports = {
         const pageInfo = stringHelper.getShopifyPageInfo(res.headers.get('link'));
         if (!_.isNull(pageInfo)) {
           if (process.env.IS_OFFLINE === 'false') {
-            const collectionPayload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo };
+            const collectionPayload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo, productId: null };
             await sqsHelper.addToQueue('SyncCollectionPage', collectionPayload);
           } else {
-            await this.syncCollectionPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo });
+            await this.syncCollectionPage({ storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionType: event.collectionType, pageInfo: pageInfo, productId: null });
           }
         }
       }
@@ -637,7 +638,15 @@ module.exports = {
         await Promise.all(dbCollections.map(async collection => {
           if (process.env.IS_OFFLINE === 'false') {
             // syncing products for this collection
-            await sqsHelper.addToQueue('SyncProductPage', { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null });
+            await sqsHelper.addToQueue('SyncProductPage',
+              {
+                storeId: event.storeId,
+                partnerStore: PARTNERS_SHOPIFY,
+                collectionId: collection._id,
+                pageInfo: null,
+                productCount: 0
+              }
+            );
           } else {
             const payload = { storeId: event.storeId, partnerStore: PARTNERS_SHOPIFY, collectionId: collection._id, pageInfo: null };
             console.log("TCL: syncCollectionPage payload", payload)
@@ -720,13 +729,13 @@ module.exports = {
     if (!_.isNull(event.pageInfo)) {
       pageInfoQuery = `&page_info=${event.pageInfo}`;
     } else {
-      pageInfoQuery = '&published_status=published'
+      pageInfoQuery = ''
       if (!_.isNull(event.collectionId)) {
         const collectionDetail = await CollectionModel.findById(event.collectionId);
         collectionQuery = `&collection_id=${collectionDetail.partnerId}`;
       }
     }
-    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=75${collectionQuery}${pageInfoQuery}`;
+    const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products.json?limit=100${collectionQuery}${pageInfoQuery}`;
     console.log("TCL: syncProductPage url", url)
     const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if (_.isNull(json)) {
@@ -764,7 +773,8 @@ module.exports = {
             storeId: event.storeId,
             partnerStore: PARTNERS_SHOPIFY,
             collectionId: event.collectionId,
-            pageInfo: pageInfo
+            pageInfo: pageInfo,
+            productCount: parseInt(event.productCount) + 100
           };
           await sqsHelper.addToQueue('SyncProductPage', pageInfoProductPayload);
         } else {
@@ -793,7 +803,6 @@ module.exports = {
     let pageInfoQuery = '';
 
     const url = `https://${storeDetail.partnerSpecificUrl}/admin/api/${process.env.SHOPIFY_API_VERSION}/products/${productDetail.partnerId}.json`;
-    console.log("TCL: getSingleProduct url", url)
     const { json, res, error } = await this.shopifyAPICall(url, null, 'get', storeDetail.partnerToken);
     if (_.isNull(json)) {
       return;
@@ -817,14 +826,15 @@ module.exports = {
     });
   },
 
-  addCollectiontoItems: async function (model, items, collectionId) {
+  addCollectionsToItems: async function (model, items, collectionId) {
     if (items.length > 0) {
       let collections;
+
       const bulkCollectionUpdate = items.map(item => {
         collections = item.collections;
         collections.push(collectionId);
         collections = this.uniqueArray1(collections);
-        console.log("TCL: collections", collections)
+        collections = collections.slice(0, 15);
         return {
           updateOne: {
             filter: { _id: item._id },
@@ -900,7 +910,7 @@ module.exports = {
     })
     return returnImages;
   },
-  formatProductForQuery: function (storeDetail, product, productFromDB, currency, markIsNew) {
+  formatProductForQuery: function (storeDetail, product, productFromDB, currency, markIsNew, productCount) {
     let productVaraints = [];
     let productImages = [];
     if (!_.isUndefined(productFromDB)) {
@@ -933,7 +943,7 @@ module.exports = {
       minimumPrice: minimumPrice,
       maximumPrice: maximumPrice,
       onSale: onSale,
-      postableByImage: (product.images.length > 0) ? true : false,
+      postableByImage: (embeddedImages.length > 0) ? true : false,
       postableByQuantity: (quantity > 0) ? true : false,
       postableByPrice: (minimumPrice > 0) ? true : false,
       postableIsNew: (!_.isNull(markIsNew)) ? markIsNew : false,
@@ -954,7 +964,7 @@ module.exports = {
     const bulkProductInsert = apiProducts.map(product => {
       // get product from the list of dbProducts;
       const productFromDB = dbProducts.find(dbProduct => dbProduct.uniqKey === `${PARTNERS_SHOPIFY}-${product.id}`);
-      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, markIsNew);
+      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, markIsNew, event.productCount);
       return {
         updateOne: {
           filter: { uniqKey: `${PARTNERS_SHOPIFY}-${product.id}` },
@@ -979,8 +989,8 @@ module.exports = {
     }
 
     if (!_.isNull(event.collectionId)) {
-      const colltionProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description variants imagesList');
-      await this.addCollectiontoItems(ProductModel, colltionProducts, event.collectionId);
+      const collectionProducts = await ProductModel.where('uniqKey').in(apiProducts.map(product => `${PARTNERS_SHOPIFY}-${product.id}`)).select('_id uniqKey postableByImage collections partnerSpecificUrl description variants imagesList');
+      await this.addCollectionsToItems(ProductModel, collectionProducts, event.collectionId);
     }
     console.log("TCL: All Done")
   },
@@ -1110,10 +1120,12 @@ module.exports = {
   },
   productsUpdate: async function (event, context) {
     if (!_.isNull(event) && !_.isUndefined(event)) {
-      console.log("TCL: context", context.getRemainingTimeInMillis())
       const ProductModel = shared.ProductModel;
       const updateClass = require('shared').updateClass;
       const shopDomain = event.headers['X-Shopify-Shop-Domain'];
+      if (process.env.DISABLED_PRODUCT_UPDATES_STORES.includes(shopDomain)) {
+        return;
+      }
       console.log("TCL: shopDomain", shopDomain)
       const StoreModel = shared.StoreModel;
       const partnerId = JSON.parse(event.body).id;
@@ -1145,7 +1157,7 @@ module.exports = {
       const currency = currencyFormat.substr(currencyFormat.length - 3);
       // the following function basically change the format of the product from shopify 
       // and convert it into the data structure that is used by the app. 
-      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, productFromDB.postableIsNew);
+      const formatedProduct = this.formatProductForQuery(storeDetail, product, productFromDB, currency, productFromDB.postableIsNew, 0);
 
       // this is the object by the product found in db. 
       const productFromDBObject = {
@@ -1339,7 +1351,7 @@ module.exports = {
         moneyFormat: shop.money_format,
         moneyWithCurrencyFormat: shop.money_with_currency_format,
       }
-      // const update = await StoreModel.updateOne({ _id: storeDetail._id }, shopUpdate);
+      const update = await StoreModel.updateOne({ _id: storeDetail._id }, shopUpdate);
       return httpHelper.ok(
         {
           message: "Received"

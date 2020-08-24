@@ -258,10 +258,10 @@ module.exports = {
           error: update.error,
           textFormatted: update.text,
           media: {
-            link: update.media.link,
-            description: update.media.description,
-            title: update.media.title,
-            thumbnail: update.media.thumbnail
+            link: (update.media) ? update.media.link : '',
+            description: (update.media) ? update.media.description : '',
+            title: (update.media) ? update.media.title : '',
+            thumbnail: (update.media) ? update.media.thumbnail : ''
           }
         }
       } else {
