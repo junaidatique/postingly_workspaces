@@ -1351,7 +1351,7 @@ module.exports = {
         moneyFormat: shop.money_format,
         moneyWithCurrencyFormat: shop.money_with_currency_format,
       }
-      // const update = await StoreModel.updateOne({ _id: storeDetail._id }, shopUpdate);
+      const update = await StoreModel.updateOne({ _id: storeDetail._id }, shopUpdate);
       return httpHelper.ok(
         {
           message: "Received"
