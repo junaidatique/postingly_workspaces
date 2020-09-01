@@ -6,9 +6,18 @@ module.exports = {
   syncContact: async function (storeId) {
     console.log("storeId", storeId)
     const storeDetail = await StoreModel.findById(storeId);
-    const body = {
-      email: storeDetail.email,
-    }
+    const body = `{
+      "contact": {
+        "email": ${storeDetail.email},
+        "fieldValues": [
+          {
+            "field": "6",
+            "value": ${storeDetail.partner}
+          }
+        ]
+      }
+    }`
+    console.log("body", body)
     const contactResponse = await fetch(`${ACTIVE_CAMPAIGN_URL}contact/sync`, {
       body,
       headers: {
