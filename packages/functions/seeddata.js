@@ -54,25 +54,8 @@ module.exports = {
 
   testFetch: async function (event, context) {
     await dbConnection.createConnection(context);
-    // const profiles = await shared.ProfileModel.find(
-    //   {
-    //     service: FACEBOOK_SERVICE,
-    //     isConnected: true,
-    //     fbDefaultAlbum: { $exists: false },
-    //   }
-    // )
-    // await Promise.all(profiles.map(async profile => {
-    //   await sqsHelper.addToQueue('GetFacebookDefaultAlbums', { profileId: profile._id })
-    // }))
-
-    const profile = await shared.ProfileModel.findById('5f214dc1b56a1e65eef8aa97')
-    const response = await shared.FacebookService.getDefaultAlbum(
-      profile._id,
-      profile.serviceUserId,
-      profile.accessToken,
-      null
-    );
-    console.log("response", response)
+    const HootsuiteService = shared.HootsuiteService;
+    await HootsuiteService.login();
 
 
 
