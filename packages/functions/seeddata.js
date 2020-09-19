@@ -10,6 +10,8 @@ const dbConnection = require('./db');
 // const shareUpdates = require('./shareUpdates');
 // const changeCaption = require('./changeCaption');
 const fetch = require('node-fetch');
+
+
 let lambda;
 let sqs;
 const AWS = require('aws-sdk');
@@ -50,29 +52,41 @@ const {
   APPROVED,
 
 } = require('shared/constants')
+const IgApiClient = require('instagram-private-api').IgApiClient;
+const get = require('request-promise').get;
+// import { IgApiClient } from 'instagram-private-api'
 module.exports = {
 
   testFetch: async function (event, context) {
     await dbConnection.createConnection(context);
-    // const profiles = await shared.ProfileModel.find(
-    //   {
-    //     service: FACEBOOK_SERVICE,
-    //     isConnected: true,
-    //     fbDefaultAlbum: { $exists: false },
-    //   }
-    // )
-    // await Promise.all(profiles.map(async profile => {
-    //   await sqsHelper.addToQueue('GetFacebookDefaultAlbums', { profileId: profile._id })
-    // }))
+    const ig = new IgApiClient();
+    ig.state.generateDevice(process.env.INSTAGRAM_TEST_USERNAME);
+    // ig.state.proxyUrl = 'http://46.151.108.6:41171';
+    await ig.simulate.preLoginFlow();
+    try {
+      const loggedInUser = await ig.account.login(process.env.INSTAGRAM_TEST_USERNAME, process.env.INSTAGRAM_TEST_PASSWORD);
+      console.log("auth", loggedInUser)
+    } catch (error) {
+      console.log("error", error.message)
+    }
 
-    const profile = await shared.ProfileModel.findById('5f214dc1b56a1e65eef8aa97')
-    const response = await shared.FacebookService.getDefaultAlbum(
-      profile._id,
-      profile.serviceUserId,
-      profile.accessToken,
-      null
-    );
-    console.log("response", response)
+    // await ig.simulate.postLoginFlow();
+    // const userFeed = ig.feed.user(loggedInUser.pk);
+    // const myPostsFirstPage = await userFeed.items();
+    // // console.log("myPostsFirstPage", myPostsFirstPage[0])
+    // console.log("myPostsFirstPage", myPostsFirstPage[0].image_versions2.candidates)
+    // const imageURL = 'https://picsum.photos/800/800';
+    // const imageBuffer = await get({
+    //   url: imageURL,
+    //   encoding: null,
+    // });
+
+    // const publishResult = await ig.publish.photo({
+    //   file: imageBuffer,
+    //   caption: `Really nice photo from the internet! 💖 ${Math.random(0, 10)}`,
+    // });
+
+    // console.log(publishResult);
 
 
 
