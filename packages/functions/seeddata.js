@@ -61,7 +61,7 @@ module.exports = {
     await dbConnection.createConnection(context);
     const ig = new IgApiClient();
     ig.state.generateDevice(process.env.INSTAGRAM_TEST_USERNAME);
-    // ig.state.proxyUrl = 'http://46.151.108.6:41171';
+    ig.state.proxyUrl = `http://${process.env.PROXY_USERNAME}:${process.env.PROXY_PASSWORD}@${process.env.PROXY_IP}:${process.env.PROXY_PORT}`;
     await ig.simulate.preLoginFlow();
     try {
       const loggedInUser = await ig.account.login(process.env.INSTAGRAM_TEST_USERNAME, process.env.INSTAGRAM_TEST_PASSWORD);

@@ -38,5 +38,6 @@ module.exports = {
     deleteBufferUpdate: profileResolvers.deleteBufferUpdate,
     upgradePlan: storeResolvers.upgradePlan,
     deleteProductsUpdateWebhook: storeResolvers.deleteProductsUpdateWebhook,
+    connectInstagram: profileResolvers.connectInstagram,
   },
 }

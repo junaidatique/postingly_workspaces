@@ -23,6 +23,18 @@ type Profile {
   fbDefaultAlbum: String
   fbAlbums: [FbAlbum]
 }
+type connectInstagramMessage {
+  message: String
+  status: Int
+}
+input connectInstagramInput {
+  storeId: String
+  username: String
+  password: String
+  state: String
+  verificationCode: String
+}
+
 type FbAlbum {
   albumId: String
   name: String

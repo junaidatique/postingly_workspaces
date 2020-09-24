@@ -31,5 +31,6 @@ type Mutation {
   deleteBufferUpdate(profileId: ID!, updateId: String): updateDeleteResponse
   upgradePlan(storeId: ID!, plan: String): upgradeChargeURL
   deleteProductsUpdateWebhook(storeId: ID!): Store
+  connectInstagram(input: connectInstagramInput!): connectInstagramMessage
 }
 
