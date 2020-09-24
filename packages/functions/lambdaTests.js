@@ -27,25 +27,24 @@ const {
     RULE_TYPE_OLD } = require('shared/constants')
 module.exports = {
     execute: async function (event, context) {
-        // const token = "EAACwJczql2ABAMYRKLOXHYoOLD3Q5XaWkulc0WdzAkxRejGEHA1GDHFgIoxnLVspydjFzP8J9PrmcwhTZBcwnXmG9QPZC2NMBKcDtqBH1Pb4j7XMAR9eSANPTdeSndprFpYArJHMKMsmejLKrPebgjRMIWxQRYtZAyIxs7flsS3upTirGIO";
-        // const serviceUserId = 549867861701636;
-        // const albums = await facebookService.getDefaultAlbum(serviceUserId, token);
-        // console.log("albums", albums)
-        const StoreModel = shared.StoreModel;
-        // // console.log("TCL: StoreModel", StoreModel)
-        // const ProductModel = shared.ProductModel;
-        // const storeDetail = await StoreModel.findOne()
-        const storeDetail = await StoreModel.findOne({ _id: '5f207d1986514d3773614f9a' })
-        // // console.log("TCL: storeDetail", storeDetail)
-
         const UpdateModel = shared.UpdateModel;
-        const storeId = storeDetail._id;
-        // // const PartnerShopify = shared.PartnerShopify;
-
-        await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
-
+        const ProductModel = shared.ProductModel;
+        const StoreModel = shared.StoreModel;
         const RuleModel = shared.RuleModel;
+        const PartnerShopify = shared.PartnerShopify;
+
+        // // console.log("TCL: storeDetail ---------------------------------------------------------")
+        // const storeDetail = await StoreModel.findOne()
+        const storeDetail = await StoreModel.findOne({ _id: '5e37d833ada1d5000834b422' })
+        const storeId = storeDetail._id;
+        // // console.log("TCL: storeDetail ---------------------------------------------------------")
+
+
+
+        // // console.log("TCL: deleteMany & ruleDetail ---------------------------------------------------------")
+        await UpdateModel.collection.deleteMany({ _id: { $exists: true } });
         const ruleDetail = await RuleModel.findOne({ store: storeId, type: RULE_TYPE_OLD }).populate('profiles');
+        // // console.log("TCL: deleteMany & ruleDetail ---------------------------------------------------------")
 
         // // first iteration.
         // // console.log("TCL: createUpdates ---------------------------------------------------------")
@@ -64,7 +63,7 @@ module.exports = {
         // // updates = await UpdateModel.findOne({ scheduleState: APPROVED, scheduleTime: { $gt: new Date() } });
         // // updates = await UpdateModel.findOne({sch}).sort({ createdAt: 1 });
         updates = await UpdateModel.find({ scheduleState: APPROVED }).limit(1);
-        console.log("TCL: updates", updates)
+        console.log("TCL: updates", updates.length)
         await Promise.all(updates.map(async update => {
             await shareUpdates({ updateId: update._id });
         }));

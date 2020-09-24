@@ -177,6 +177,20 @@ module.exports = {
         } else if (args.input.state === 'challenge_required') {
             response = await InstagramService.challengeRequired(args.input.storeId, args.input.username, args.input.password, args.input.verificationCode)
         }
-        return response;
+        console.log("response", response)
+        if (response.status === 200) {
+
+            const profiles = await ProfileModel.where('store').eq(args.input.storeId);
+            const profileList = profiles.map(profile => {
+                return formattedProfile(profile);
+            })
+            return {
+                status: 200,
+                message: response.message,
+                profiles: profileList
+            }
+        } else {
+            return response;
+        }
     }
 }

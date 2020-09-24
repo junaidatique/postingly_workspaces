@@ -26,6 +26,7 @@ type Profile {
 type connectInstagramMessage {
   message: String
   status: Int
+  profiles: [Profile]
 }
 input connectInstagramInput {
   storeId: String

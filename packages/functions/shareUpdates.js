@@ -5,12 +5,12 @@ const updateClass = require('shared').updateClass;
 const sqsHelper = require('shared').sqsHelper;
 const {
     FACEBOOK_SERVICE, POST_AS_OPTION_FB_ALBUM, POST_AS_OPTION_FB_LINK, POST_AS_OPTION_FB_PHOTO,
-    TWITTER_SERVICE, TWITTER_PROFILE, BUFFER_SERVICE, POSTED, COLLECTION_OPTION_ALL, FAILED, APPROVED,
-    PARTNERS_SHOPIFY
+    TWITTER_SERVICE, TWITTER_PROFILE, POSTED, COLLECTION_OPTION_ALL, FAILED, APPROVED,
+    PARTNERS_SHOPIFY, INSTAGRAM_SERVICE
 } = require('shared/constants');
 const FacebookService = require('shared').FacebookService;
 const TwitterService = require('shared').TwitterService;
-const BufferService = require('shared').BufferService;
+const InstagramService = require('shared').InstagramService;
 const PartnerShopify = require('shared').PartnerShopify;
 const scheduleClass = require('shared').scheduleClass;
 const ProductModel = require('shared').ProductModel;
@@ -67,8 +67,8 @@ module.exports = {
                 if (update.serviceProfile === TWITTER_PROFILE) {
                     response = await TwitterService.shareTwitterPosts(update);
                 }
-            } else if (update.service === BUFFER_SERVICE) {
-                response = await BufferService.shareProductPosts(update);
+            } else if (update.service === INSTAGRAM_SERVICE) {
+                response = await InstagramService.shareProductPosts(update);
             }
             console.log("TCL: response", response)
         } else {
@@ -140,44 +140,5 @@ module.exports = {
             await updateClass.createHistoryForProduct(update)
         }
     },
-    bufferShare: async function (eventSQS, context) {
-        let event;
-        if (_.isUndefined(eventSQS.Records)) {
-            event = eventSQS;
-        } else {
-            event = JSON.parse(eventSQS.Records[0].body);
-        }
-        console.log("TCL: schedule event", event)
-        if (event.source === 'serverless-plugin-warmup') {
-            console.log('WarmUP - Lambda is warm!')
-            await new Promise(r => setTimeout(r, 25));
-            return 'lambda is warm!';
-        }
-        // function starts here. 
-        await dbConnection.createConnection(context);
-        const UpdateModel = shared.UpdateModel;
-        const RuleModel = shared.RuleModel;
-        const update = await UpdateModel.findById(event.updateId);
 
-        // console.log("update.scheduleState", update.scheduleState);
-        if (_.isNull(update) || _.isUndefined(update) || update.scheduleState !== APPROVED) {
-            return;
-        }
-        if (update.freeProExpired) {
-            update.scheduleState = FAILED;
-            update.failedMessage = "Free trial of PRO plan expired";
-            await update.save();
-            return;
-        }
-        response = await BufferService.getUpdateById(update);
-        if (response.status === 'error') {
-            update.scheduleState = FAILED;
-            update.failedMessage = response.error;
-        } else {
-            update.scheduleState = POSTED;
-        }
-        update.bufferStatus = response.status;
-        await update.save();
-        console.log("response", response)
-    }
 }
