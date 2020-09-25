@@ -1,5 +1,6 @@
 const IgApiClient = require('instagram-private-api').IgApiClient;
 const IgCheckpointError = require('instagram-private-api').IgCheckpointError;
+const IgLoginTwoFactorRequiredError = require('instagram-private-api').IgLoginTwoFactorRequiredError;
 const get = require('request-promise').get;
 const Bluebird = require('bluebird');
 const ProfileModel = require('shared').ProfileModel;
@@ -18,6 +19,11 @@ module.exports = {
       await this.createProfile(storeId, loggedInUser, password)
       return { status: 200, message: "You are now connected" }
     } catch (error) {
+
+      if (error instanceof IgLoginTwoFactorRequiredError) {
+        return { status: 400, message: '2fa' }
+      }
+      console.log("error", error)
       console.log("error", error.message)
       const errorMessage = error.message.split(';')[1].trim();
       if (errorMessage === 'challenge_required') {
@@ -27,6 +33,42 @@ module.exports = {
         return { status: 400, message: 'challenge_required' }
       } else {
         return { status: 400, message: "Please make sure you have entered the right username and password. Please verify on instagram that it was you." }
+      }
+    }
+  },
+  twoFA: async function (storeId, username, password, verificationCode) {
+    const ig = new IgApiClient();
+    ig.state.generateDevice(username);
+    ig.state.proxyUrl = `http://${process.env.PROXY_USERNAME}:${process.env.PROXY_PASSWORD}@${process.env.PROXY_IP}:${process.env.PROXY_PORT}`;
+    await ig.simulate.preLoginFlow();
+    try {
+      const loggedInUser = await ig.account.login(username, password);
+      console.log("loggedInUser", loggedInUser)
+      await this.createProfile(storeId, loggedInUser, password)
+      return { status: 200, message: "You are now connected" }
+    } catch (error) {
+      console.log("error.response", error.response)
+      if (error instanceof IgLoginTwoFactorRequiredError) {
+        try {
+          const { username, two_factor_identifier, totp_two_factor_on } = error.response.body.two_factor_info;
+          // decide which method to use
+          const verificationMethod = totp_two_factor_on ? '0' : '1'; // default to 1 for SMS
+
+          const codeResponse = await ig.account.twoFactorLogin({
+            username,
+            verificationCode: verificationCode,
+            twoFactorIdentifier: two_factor_identifier,
+            verificationMethod, // '1' = SMS (default), '0' = TOTP (google auth for example)
+            trustThisDevice: '1', // Can be omitted as '1' is used by default
+          });
+
+          await this.createProfile(storeId, codeResponse.logged_in_user, password)
+          return { status: 200, message: "You are now connected" }
+        } catch (e) {
+          console.log("e", e.message)
+          return { status: 200, message: "Invalid code" }
+        }
+
       }
     }
   },
@@ -115,9 +157,6 @@ module.exports = {
         file: imageBuffer,
         caption: update.text,
       });
-      console.log("publishResult", publishResult.media)
-      console.log("publishResult", publishResult.media.image_versions2)
-      console.log("publishResult", publishResult.media.image_versions2.candidates[0])
       return {
         scheduleState: POSTED,
         response: {

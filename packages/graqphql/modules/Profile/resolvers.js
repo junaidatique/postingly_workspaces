@@ -174,6 +174,8 @@ module.exports = {
         let response;
         if (args.input.state === 'login') {
             response = await InstagramService.login(args.input.storeId, args.input.username, args.input.password)
+        } else if (args.input.state === '2fa') {
+            response = await InstagramService.twoFA(args.input.storeId, args.input.username, args.input.password, args.input.verificationCode)
         } else if (args.input.state === 'challenge_required') {
             response = await InstagramService.challengeRequired(args.input.storeId, args.input.username, args.input.password, args.input.verificationCode)
         }
