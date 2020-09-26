@@ -162,9 +162,10 @@ module.exports = {
 
     } catch (e) {
       console.log("e.message", e.message)
+      const responseError = (e.message.split(';')[1].trim()) ? e.message.split(';')[1].trim() : e.message.split('-')[1].trim()
       return {
         scheduleState: FAILED,
-        failedMessage: e.message.split(';')[1].trim(),
+        failedMessage: responseError,
         response: null,
       }
     }
