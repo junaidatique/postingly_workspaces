@@ -15,7 +15,7 @@ module.exports = {
     await ig.simulate.preLoginFlow();
     try {
       const loggedInUser = await ig.account.login(username, password);
-      console.log("loggedInUser", loggedInUser)
+      console.log(`Instagram-login-loggedInUser ${username}`, loggedInUser)
       await this.createProfile(storeId, loggedInUser, password)
       return { status: 200, message: "You are now connected" }
     } catch (error) {
@@ -23,13 +23,10 @@ module.exports = {
       if (error instanceof IgLoginTwoFactorRequiredError) {
         return { status: 400, message: '2fa' }
       }
-      console.log("error", error)
-      console.log("error", error.message)
+      console.log(`Instagram-login-error ${username}`, error.message)
       const errorMessage = error.message.split(';')[1].trim();
       if (errorMessage === 'challenge_required') {
-        console.log("ig.state.checkpoint", ig.state.checkpoint)
         await ig.challenge.auto(true);
-        console.log("ig.state.checkpoint", ig.state.checkpoint)
         return { status: 400, message: 'challenge_required' }
       } else {
         return { status: 400, message: "Please make sure you have entered the right username and password. Please verify on instagram that it was you." }
@@ -43,11 +40,11 @@ module.exports = {
     await ig.simulate.preLoginFlow();
     try {
       const loggedInUser = await ig.account.login(username, password);
-      console.log("loggedInUser", loggedInUser)
+      console.log(`Instagram-twoFA-loggedInUser ${username}`, loggedInUser)
       await this.createProfile(storeId, loggedInUser, password)
       return { status: 200, message: "You are now connected" }
     } catch (error) {
-      console.log("error.response", error.response)
+      console.log(`Instagram-twoFA-error ${username}`, error.response)
       if (error instanceof IgLoginTwoFactorRequiredError) {
         try {
           const { username, two_factor_identifier, totp_two_factor_on } = error.response.body.two_factor_info;
@@ -59,13 +56,13 @@ module.exports = {
             verificationCode: verificationCode,
             twoFactorIdentifier: two_factor_identifier,
             verificationMethod, // '1' = SMS (default), '0' = TOTP (google auth for example)
-            trustThisDevice: '1', // Can be omitted as '1' is used by default
+            trustThisDevice: 1, // Can be omitted as '1' is used by default
           });
-
+          console.log(`Instagram-twoFA-codeResponse ${username}`, codeResponse)
           await this.createProfile(storeId, codeResponse.logged_in_user, password)
           return { status: 200, message: "You are now connected" }
         } catch (e) {
-          console.log("e", e.message)
+          console.log(`Instagram-twoFA-error 2 ${username}`, e.message)
           return { status: 200, message: "Invalid code" }
         }
 
@@ -73,7 +70,7 @@ module.exports = {
     }
   },
   challengeRequired: async function (storeId, username, password, verificationCode) {
-    console.log("verificationCode", verificationCode)
+    console.log(`Instagram-challengeRequired-verificationCode ${username}`, verificationCode)
     const ig = new IgApiClient();
     ig.state.generateDevice(username);
     ig.state.proxyUrl = `http://${process.env.PROXY_USERNAME}:${process.env.PROXY_PASSWORD}@${process.env.PROXY_IP}:${process.env.PROXY_PORT}`;
@@ -81,20 +78,18 @@ module.exports = {
 
     try {
       authUser = await ig.account.login(username, password);
-      console.log("authUser", authUser)
+      console.log(`Instagram-challengeRequired-authUser ${username}`, authUser)
       await this.createProfile(storeId, authUser, password)
       return { status: 200, message: "You are now connected" }
     } catch (IgCheckpointError) {
       try {
-        console.log(ig.state.checkpoint);
         await ig.challenge.auto(true);
-        console.log(ig.state.checkpoint);
         const codeResponse = await ig.challenge.sendSecurityCode(verificationCode);
-        console.log("codeResponse", codeResponse)
+        console.log(`Instagram-challengeRequired-codeResponse ${username}`, codeResponse)
         await this.createProfile(storeId, codeResponse.logged_in_user, password)
         return { status: 200, message: "Connected" }
       } catch (e) {
-        console.log('Could not resolve checkpoint:');
+        console.log(`Instagram-challengeRequired ${username} Could not resolve checkpoint`)
         return { status: 400, message: "Invalid Code. Please try again." }
       }
     }
