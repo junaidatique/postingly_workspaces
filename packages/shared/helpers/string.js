@@ -52,6 +52,14 @@ module.exports = {
     } else {
       return null;
     }
+  },
+  getProxyURL: function () {
+    const username = process.env.PROXY_USERNAME;
+    const password = process.env.PROXY_PASSWORD;
+    const proxyIP = process.env.PROXY_IP;
+    const port = process.env.PROXY_PORT;
+    var sessionId = (1000000 * Math.random()) | 0;
+    return `http://${username}${sessionId}:${password}@${proxyIP}:${port}`
   }
 
 }

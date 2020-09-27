@@ -2,6 +2,7 @@ const faker = require('faker');
 // const productStubs = require('../graqphql/__tests__/product/stubs');
 const shared = require('shared');
 const sqsHelper = require('shared').sqsHelper;
+const stringHelper = require('shared').stringHelper;
 const moment = require('moment');
 const _ = require('lodash');
 const dbConnection = require('./db');
@@ -59,9 +60,13 @@ module.exports = {
 
   testFetch: async function (event, context) {
     await dbConnection.createConnection(context);
+
+
+
+
     const ig = new IgApiClient();
     ig.state.generateDevice(process.env.INSTAGRAM_TEST_USERNAME);
-    ig.state.proxyUrl = `http://${process.env.PROXY_USERNAME}:${process.env.PROXY_PASSWORD}@${process.env.PROXY_IP}:${process.env.PROXY_PORT}`;
+    ig.state.proxyUrl = stringHelper.getProxyURL();
     await ig.simulate.preLoginFlow();
     try {
       const loggedInUser = await ig.account.login(process.env.INSTAGRAM_TEST_USERNAME, process.env.INSTAGRAM_TEST_PASSWORD);

@@ -1,17 +1,17 @@
 const IgApiClient = require('instagram-private-api').IgApiClient;
-const IgCheckpointError = require('instagram-private-api').IgCheckpointError;
 const IgLoginTwoFactorRequiredError = require('instagram-private-api').IgLoginTwoFactorRequiredError;
 const get = require('request-promise').get;
-const Bluebird = require('bluebird');
+
 const ProfileModel = require('shared').ProfileModel;
 const StoreModel = require('shared').StoreModel;
+const stringHelper = require('shared').stringHelper;
 
 const { INSTAGRAM_SERVICE, INSTAGRAM_PROFILE, FAILED, POSTED } = require('shared/constants');
 module.exports = {
   login: async function (storeId, username, password) {
     const ig = new IgApiClient();
     ig.state.generateDevice(username);
-    ig.state.proxyUrl = `http://${process.env.PROXY_USERNAME}:${process.env.PROXY_PASSWORD}@${process.env.PROXY_IP}:${process.env.PROXY_PORT}`;
+    ig.state.proxyUrl = stringHelper.getProxyURL();
     await ig.simulate.preLoginFlow();
     try {
       const loggedInUser = await ig.account.login(username, password);
@@ -36,7 +36,7 @@ module.exports = {
   twoFA: async function (storeId, username, password, verificationCode) {
     const ig = new IgApiClient();
     ig.state.generateDevice(username);
-    ig.state.proxyUrl = `http://${process.env.PROXY_USERNAME}:${process.env.PROXY_PASSWORD}@${process.env.PROXY_IP}:${process.env.PROXY_PORT}`;
+    ig.state.proxyUrl = stringHelper.getProxyURL();
     await ig.simulate.preLoginFlow();
     try {
       const loggedInUser = await ig.account.login(username, password);
@@ -73,7 +73,7 @@ module.exports = {
     console.log(`Instagram-challengeRequired-verificationCode ${username}`, verificationCode)
     const ig = new IgApiClient();
     ig.state.generateDevice(username);
-    ig.state.proxyUrl = `http://${process.env.PROXY_USERNAME}:${process.env.PROXY_PASSWORD}@${process.env.PROXY_IP}:${process.env.PROXY_PORT}`;
+    ig.state.proxyUrl = stringHelper.getProxyURL();
     let authUser;
 
     try {
@@ -137,7 +137,7 @@ module.exports = {
     try {
       const ig = new IgApiClient();
       ig.state.generateDevice(profile.serviceUsername);
-      ig.state.proxyUrl = `http://${process.env.PROXY_USERNAME}:${process.env.PROXY_PASSWORD}@${process.env.PROXY_IP}:${process.env.PROXY_PORT}`;
+      ig.state.proxyUrl = stringHelper.getProxyURL();
       await ig.simulate.preLoginFlow();
       const loggedInUser = await ig.account.login(profile.serviceUsername, profile.accessToken);
       console.log("loggedInUser", loggedInUser.username)
