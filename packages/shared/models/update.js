@@ -55,6 +55,9 @@ const updateResponse = {
     },
     message: {
       type: String
+    },
+    instagramImageUrl: {
+      type: String
     }
   }]
 }

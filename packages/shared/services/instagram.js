@@ -56,7 +56,7 @@ module.exports = {
             verificationCode: verificationCode,
             twoFactorIdentifier: two_factor_identifier,
             verificationMethod, // '1' = SMS (default), '0' = TOTP (google auth for example)
-            trustThisDevice: 1, // Can be omitted as '1' is used by default
+            trustThisDevice: '1', // Can be omitted as '1' is used by default
           });
           console.log(`Instagram-twoFA-codeResponse ${username}`, codeResponse)
           await this.createProfile(storeId, codeResponse.logged_in_user, password)
@@ -152,10 +152,11 @@ module.exports = {
         file: imageBuffer,
         caption: update.text,
       });
+      console.log("publishResult.media", publishResult.media)
       return {
         scheduleState: POSTED,
         response: {
-          url: publishResult.media.image_versions2.candidates[0].url,
+          instagramImageUrl: publishResult.media.image_versions2.candidates[0].url,
         },
         failedMessage: null
       };
