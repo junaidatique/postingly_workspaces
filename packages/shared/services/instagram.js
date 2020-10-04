@@ -168,7 +168,7 @@ module.exports = {
     const imageUrl = `https://posting.ly/buffer_image?url=${update.images[0].url}`;
     const iCookie = await InstaCookie.find({ username: profile.serviceUsername })
 
-    if (!iCookie) {
+    if (iCookie.length === 0) {
       return {
         scheduleState: FAILED,
         failedMessage: "Cookie not found. Connect again. ",
