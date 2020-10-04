@@ -71,6 +71,7 @@ const profileSchema = new mongoose.Schema({
   bufferId: {
     type: String
   },
+
   isConnected: {
     type: Boolean,
     default: false,

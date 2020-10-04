@@ -19,6 +19,7 @@ exports.UpdateModel = require('./models/update');
 exports.ProductModel = require('./models/product');
 exports.CollectionModel = require('./models/collection');
 exports.ImageModel = require('./models/image');
+exports.InstaCookie = require('./models/instaCookie');
 
 
 // partners

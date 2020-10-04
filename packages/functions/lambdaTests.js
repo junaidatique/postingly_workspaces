@@ -34,8 +34,8 @@ module.exports = {
         const PartnerShopify = shared.PartnerShopify;
 
         // // console.log("TCL: storeDetail ---------------------------------------------------------")
-        // const storeDetail = await StoreModel.findOne()
-        const storeDetail = await StoreModel.findOne({ _id: '5e37d833ada1d5000834b422' })
+        const storeDetail = await StoreModel.findOne()
+        // const storeDetail = await StoreModel.findOne({ _id: '5e37d833ada1d5000834b422' })
         const storeId = storeDetail._id;
         // // console.log("TCL: storeDetail ---------------------------------------------------------")
 
