@@ -71,7 +71,6 @@ module.exports = {
           const { username, two_factor_identifier, totp_two_factor_on } = error.response.body.two_factor_info;
           // decide which method to use
           const verificationMethod = totp_two_factor_on ? '0' : '1'; // default to 1 for SMS
-
           const codeResponse = await ig.account.twoFactorLogin({
             username,
             verificationCode: verificationCode,
@@ -84,6 +83,12 @@ module.exports = {
           await this.createProfile(storeId, codeResponse.logged_in_user, password, serialized)
           return { status: 200, message: "You are now connected" }
         } catch (e) {
+          console.log("e", e)
+          if (e.message.indexOf('challenge_required') > 0) {
+            // return await this.challengeRequired(storeId, username, password, verificationCode);
+            await ig.challenge.auto(true);
+            return { status: 400, message: 'challenge_required' }
+          }
           console.log(`Instagram-twoFA-error 2 ${username}`, e.message)
           return { status: 200, message: "Invalid code" }
         }
@@ -117,6 +122,9 @@ module.exports = {
         await this.createProfile(storeId, codeResponse.logged_in_user, password, serialized)
         return { status: 200, message: "Connected" }
       } catch (e) {
+        console.log("e", e)
+        console.log("e", e.message)
+
         console.log(`Instagram-challengeRequired ${username} Could not resolve checkpoint`)
         return { status: 400, message: "Invalid Code. Please try again." }
       }
