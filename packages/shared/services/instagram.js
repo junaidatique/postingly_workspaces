@@ -26,7 +26,7 @@ module.exports = {
     await ig.simulate.preLoginFlow();
     try {
       const loggedInUser = await ig.account.login(username, password);
-      await ig.simulate.postLoginFlow();
+      // await ig.simulate.postLoginFlow();
       console.log(`Instagram-login-loggedInUser ${username}`, loggedInUser)
       await this.createProfile(storeId, loggedInUser, password, serialized)
       return { status: 200, message: "You are now connected" };
