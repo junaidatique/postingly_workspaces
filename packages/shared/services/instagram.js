@@ -206,6 +206,8 @@ module.exports = {
         caption: update.text,
       });
       console.log("publishResult.media", publishResult.media)
+      console.log("publishResult.media.image_versions2", publishResult.media.image_versions2)
+      console.log("publishResult.media.image_versions2.candidates", publishResult.media.image_versions2.candidates)
       return {
         scheduleState: POSTED,
         response: {

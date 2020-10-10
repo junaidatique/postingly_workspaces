@@ -65,9 +65,9 @@ module.exports = {
   },
   testFetch: async function (event, context) {
     await dbConnection.createConnection(context);
-    // const profile = await shared.ProfileModel.findById('5f7a0722f5d96d1d63f1bf99');
-    const profile = await shared.ProfileModel.findOne()
-    const iCookie = await shared.InstaCookie.findOne()
+    const profile = await shared.ProfileModel.findById('5f7c51e813aae60009f32fca');
+    // const profile = await shared.ProfileModel.findOne()
+    const iCookie = await shared.InstaCookie.find({ username: profile.serviceUsername })
     // console.log("profile", profile)
 
 
@@ -123,11 +123,21 @@ module.exports = {
     // }
     // console.log("data.cookies.cookies", JSON.parse(data.cookies).cookies)
     // await ig.state.deserialize(data);
-    await ig.state.deserialize(iCookie.cookies);
+    await ig.state.deserialize(iCookie[0].cookies);
 
     const userFeed = ig.feed.user(igPK);
+    // console.log("userFeed", userFeed)
     const myPostsFirstPage = await userFeed.items();
-    console.log("myPostsFirstPage", myPostsFirstPage[0])
+
+    for (i = 0; i < 5; i++) {
+      console.log("myPostsFirstPage[0].code", myPostsFirstPage[i].code)
+      console.log("myPostsFirstPage[0].caption.text", myPostsFirstPage[i].caption.text)
+      console.log("myPostsFirstPage[0].image_versions2", myPostsFirstPage[i].image_versions2)
+      console.log("myPostsFirstPage[0].deleted_reason", myPostsFirstPage[i].deleted_reason)
+      console.log("-------------------------------------------")
+    }
+
+
 
     // // if (fakeExists()) {
     // //   // import state accepts both a string as well as an object
