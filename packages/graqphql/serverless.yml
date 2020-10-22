@@ -9,21 +9,22 @@ provider:
   name: aws
   runtime: nodejs10.x
   stage: ${env:STAGE}
+  region: us-west-2
   timeout: 30 
   memorySize: 256
   vpc:
     securityGroupIds:
-      - sg-0e0b1c8b49a3919d8
+      - sg-0f4152f35882c4eb3
     subnetIds:
-      - subnet-0be2e1119f5a9942b
-      - subnet-08f8f22623b8c212b
+      - subnet-0c928dbe126d885eb
+      - subnet-067027d8f3d3197fc
 
   iamRoleStatements:
     - Effect: Allow
       Action:
         - lambda:InvokeFunction
       Resource:
-        - arn:aws:lambda:us-east-1:*:* 
+        - arn:aws:lambda:us-west-2:*:* 
     - Effect: Allow
       Action:
         - ec2:DescribeNetworkInterfaces
@@ -32,12 +33,12 @@ provider:
         - ec2:DescribeInstances
         - ec2:AttachNetworkInterface
       Resource:
-        - arn:aws:lambda:us-east-1:*:*
+        - arn:aws:lambda:us-west-2:*:*
     - Effect: Allow
       Action:
         - sqs:*
       Resource:
-        - arn:aws:sqs:us-east-1:*:*  
+        - arn:aws:sqs:us-west-2:*:*  
   
 
 functions:

@@ -3,64 +3,64 @@ Resources:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingCreateUpdates
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200      
   stagingScheduleUpdates:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingScheduleUpdates
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingChangeCaption:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingChangeCaption
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingShareUpdates:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingShareUpdates
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingBufferShareUpdates:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingBufferShareUpdates
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingSyncStoreData:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingSyncStoreData
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingSyncCollectionPage:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingSyncCollectionPage
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingSyncProductPage:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingSyncProductPage
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingSyncVariantPage:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingSyncVariantPage
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingGetWebhooks:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingGetWebhooks
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingCreateWebhooks:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingCreateWebhooks
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingDeleteWebhooks:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingDeleteWebhooks
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
   stagingGetFacebookDefaultAlbums:
     Type: "AWS::SQS::Queue"
     Properties:
       QueueName: stagingGetFacebookDefaultAlbums
-      VisibilityTimeout: 3600
+      VisibilityTimeout: 1200
