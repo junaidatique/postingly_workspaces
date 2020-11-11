@@ -41,6 +41,7 @@
     "supertest": "^4.0.2"
   },
   "scripts": {
+    "start": "sls offline start ",
     "test": "jest --coverage ",
     "test:watch": "jest --watch --coverage"
   },
