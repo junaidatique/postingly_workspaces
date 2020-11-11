@@ -14,7 +14,7 @@ const {
 
 const stringHelper = require('shared').stringHelper;
 const httpHelper = require('shared').httpHelper
-const cognitoHelper = require('shared').cognitoHelper
+// const cognitoHelper = require('shared').cognitoHelper
 const jwt = require('shared').jwtHelper;
 const sqsHelper = require('shared').sqsHelper;
 const StoreModel = require('shared').StoreModel
@@ -124,13 +124,13 @@ module.exports = {
       if (!_.isUndefined(email) && !_.isNull(email) && email !== 'undefined' && email !== 'null') {
         createUserEmail = email;
       }
-      const cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
+      // const cognitoUser = await cognitoHelper.createUser(createUserUsername, createUserEmail, shopDomain);
       let isNewSignUpStore = false;
       if (store === null) {
         console.log("verifyCallback new sign up");
         const shopParams = {
           uniqKey: storeKey,
-          userId: cognitoUser,
+          userId: createUserUsername,
           email: shop.email,
           partner: PARTNERS_SHOPIFY,
           partnerId: shop.id,
@@ -162,13 +162,13 @@ module.exports = {
         }
         isCharged = store.isCharged;
         const shopUpdateParams = {
-          userId: cognitoUser,
+          userId: createUserUsername,
           partnerToken: accessToken,
           isUninstalled: false,
         };
         console.log("TCL: shopUpdateParams", shopUpdateParams)
         store.isUninstalled = false;
-        store.userId = cognitoUser;
+        store.userId = createUserUsername;
         store.partnerToken = accessToken;
         await StoreModel.updateOne({ _id: store._id }, shopUpdateParams);
       }
@@ -226,12 +226,15 @@ module.exports = {
       nonce = stringHelper.getRandomString(32);
       console.log("verifyCallback Completed");
       console.groupEnd();
-      return httpHelper.ok({
+      const responseAPI = {
         isNewSignUpStore: isNewSignUpStore,
-        userName: cognitoUser,
+        userName: createUserUsername,
+        email: shop.email,
         storePartnerId: storeKey,
-        token: jwt.createJWT(cognitoUser, nonce, now, 600),
-      });
+        token: jwt.createJWT(createUserUsername, nonce, now, 600),
+      };
+      console.log("responseAPI", responseAPI)
+      return httpHelper.ok(responseAPI);
     } catch (error) {
       console.error("verifyCallback Error", error);
       return httpHelper.internalError();
