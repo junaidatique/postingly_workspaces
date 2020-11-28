@@ -65,8 +65,9 @@ module.exports = {
   },
   testFetch: async function (event, context) {
     console.log("event", event)
-    // await dbConnection.createConnection(context);
-    // const profile = await shared.ProfileModel.findById('5f7c51e813aae60009f32fca');
+    await dbConnection.createConnection(context);
+    const profile = await shared.ProfileModel.find();
+    console.log("profile", profile)
     // // const profile = await shared.ProfileModel.findOne()
     // const iCookie = await shared.InstaCookie.find({ username: profile.serviceUsername })
     // // console.log("profile", profile)

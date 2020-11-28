@@ -146,9 +146,9 @@ module.exports = {
           moneyWithCurrencyFormat: shop.money_with_currency_format,
           isCharged: false,
           shortLinkService: LINK_SHORTENER_SERVICES_POOOST,
-          paymentPlan: PRO_PLAN,
+          paymentPlan: FREE_PLAN,
           isUninstalled: false,
-          freeProActivated: true
+          freeProActivated: false
         };
         const storeInstance = new StoreModel(shopParams);
         store = await storeInstance.save();
