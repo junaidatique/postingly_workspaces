@@ -29,7 +29,7 @@ module.exports = {
           storeId: storeDetail._id
         }
         if (process.env.IS_OFFLINE === 'false') {
-          // await sqsHelper.addToQueue('CreateWebhooks', webhookPayload);
+          await sqsHelper.addToQueue('DeleteWebhooks', webhookPayload);
         } else {
           // this.getWebhooks(webhookPayload);
         }
