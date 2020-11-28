@@ -90,3 +90,4 @@ typings/
 packages/.DS_Store
 packages/rest_api/_warmup/index.js
 packages/functions/_warmup/index.js
+postingly.env.production
