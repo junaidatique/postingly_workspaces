@@ -153,15 +153,7 @@ functions:
       - schedule:
           rate: cron(*/5 * * * ? *)
           enabled: true
-  # this lambda runs every 5 minutes and call share-updates lambda to post updates. 
-  cron-post-buffer-updates:
-    handler: cronPostUpdates.bufferShare
-    warmup:
-      enabled: false
-    events:
-      - schedule:
-          rate: cron(*/5 * * * ? *)
-          enabled: true
+ 
   # This lambda post updates to social media. 
   share-updates:
     handler: shareUpdates.share
@@ -172,16 +164,7 @@ functions:
           arn: arn:aws:sqs:us-west-2:${env:AWS_USER_ID}:${env:STAGE}ShareUpdates
           batchSize: 1
           enabled: true
-  # This lambda post updates to buffer. 
-  share-buffer-updates:
-    handler: shareUpdates.bufferShare
-    reservedConcurrency: ${env:RESERVED_CONCURRENCY_SHARE_UPDATES}
-    memorySize: 2048
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-west-2:${env:AWS_USER_ID}:${env:STAGE}BufferShareUpdates
-          batchSize: 1
-          enabled: true
+  
   # This lambda updates the urls for the scheduled products and also updates them in DB. 
   sync-products-weekly:
     handler: syncStoreData.syncProductsWeekly
@@ -233,11 +216,7 @@ functions:
     handler: webhooks.cronWebhooks
     warmup:
       enabled: false
-    timeout: 120 
-    events:
-      - schedule:
-          rate: cron(0 0 * * ? *)
-          enabled: true
+    timeout: 120     
   get-webhooks:
     handler: webhooks.getWebhooks
     warmup:
