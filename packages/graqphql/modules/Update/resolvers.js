@@ -167,21 +167,21 @@ module.exports = {
 
     dayCounter = -2;
     date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
-    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    matchFilter.scheduleTime = { $gte: moment().add(dayCounter, 'days').startOf('day').toISOString(), $lt: moment().add(dayCounter, 'days').endOf('day').toISOString() };
     response = await dailyUpdateReportAggregate(matchFilter);
     response.date = date;
     updateReport.push(response)
 
     dayCounter = -1;
     date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
-    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    matchFilter.scheduleTime = { $gte: moment().add(dayCounter, 'days').startOf('day').toISOString(), $lt: moment().add(dayCounter, 'days').endOf('day').toISOString() };
     response = await dailyUpdateReportAggregate(matchFilter);
     response.date = date;
     updateReport.push(response)
 
     dayCounter = 0;
     date = moment().utc().add(dayCounter, 'days').format("D/M/YYYY");
-    matchFilter.scheduleDayOfYear = moment().add(dayCounter, 'days').dayOfYear();
+    matchFilter.scheduleTime = { $gte: moment().add(dayCounter, 'days').startOf('day').toISOString(), $lt: moment().add(dayCounter, 'days').endOf('day').toISOString() };
     response = await dailyUpdateReportAggregate(matchFilter);
     response.date = date;
     updateReport.push(response)
