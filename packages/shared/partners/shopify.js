@@ -797,6 +797,9 @@ module.exports = {
     const StoreModel = shared.StoreModel;
     const ProductModel = shared.ProductModel;
     const productDetail = await ProductModel.findById(event.productId)
+    if (!productDetail) {
+      return false;
+    }
     const storeDetail = await StoreModel.findById(event.storeId);
     if (storeDetail.isUninstalled) {
       console.log("TCL: storeDetail.isUninstalled", storeDetail.isUninstalled)
@@ -815,6 +818,7 @@ module.exports = {
     if (apiProducts.length > 0) {
       await this.syncProducts(event, apiProducts, storeDetail, null, context);
     }
+    return true;
   },
 
   uniqueArray1: function (ar) {

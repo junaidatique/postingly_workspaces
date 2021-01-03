@@ -90,10 +90,16 @@ module.exports = {
                     response.failedMessage.indexOf('provided image') >= 0
                 ) {
                     if (update.images[0].url.indexOf(PARTNERS_SHOPIFY) >= 0) {
-                        await PartnerShopify.getSingleProduct({ productId: update.product, storeId: update.store }, context)
+                        const productSynced = await PartnerShopify.getSingleProduct({ productId: update.product, storeId: update.store }, context)
                         scheduleResponse = {};
-                        if (update.rule) {
+                        if (update.rule && productSynced) {
                             scheduleResponse = await scheduleClass.reScheduleProduct(update.product, context)
+                        }
+                        if (!productSynced) {
+                            response = {
+                                scheduleState: FAILED,
+                                failedMessage: 'Product does not exist',
+                            }
                         }
                         if (!_.isEmpty(scheduleResponse)) {
                             return;

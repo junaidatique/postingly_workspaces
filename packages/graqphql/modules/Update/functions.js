@@ -21,6 +21,7 @@ const formattedUpdate = async (update) => {
 }
 
 const dailyUpdateReportAggregate = async (matchFilter) => {
+  console.log("dailyUpdateReportAggregate -> matchFilter", matchFilter)
   res = await UpdateModel.aggregate([{
     "$match": matchFilter
   },
