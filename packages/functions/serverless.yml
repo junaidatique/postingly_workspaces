@@ -159,6 +159,7 @@ functions:
     handler: shareUpdates.share
     reservedConcurrency: ${env:RESERVED_CONCURRENCY_SHARE_UPDATES}
     memorySize: 2048
+    timeout: 360
     events:
       - sqs:
           arn: arn:aws:sqs:us-west-2:${env:AWS_USER_ID}:${env:STAGE}ShareUpdates
