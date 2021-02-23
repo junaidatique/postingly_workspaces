@@ -54,6 +54,7 @@ module.exports = {
     }
   },
   getProxyURL: function () {
+    // return "http://104.248.126.110:3128";
     const username = process.env.PROXY_USERNAME;
     const password = process.env.PROXY_PASSWORD;
     const proxyIP = process.env.PROXY_IP;

@@ -8,7 +8,9 @@ const InstaCookie = require('shared').InstaCookie;
 const StoreModel = require('shared').StoreModel;
 const stringHelper = require('shared').stringHelper;
 const igAPIURL = "http://54.186.53.22.xip.io:4000/";
-const proxy = "http://54.185.201.99:3128";
+// const igAPIURL = "http://159.89.84.125/";
+// const proxy = "http://54.185.201.99:3128";
+const proxy = "http://138.197.79.31:3128";
 
 const { INSTAGRAM_SERVICE, INSTAGRAM_PROFILE, FAILED, POSTED } = require('shared/constants');
 module.exports = {
@@ -22,6 +24,7 @@ module.exports = {
             body: JSON.stringify({
                 username: username,
                 password: password,
+                // proxy: stringHelper.getProxyURL()
                 proxy: proxy
             }),
             headers: {
@@ -211,7 +214,9 @@ module.exports = {
     shareProductPosts: async function (update) {
         const profile = await ProfileModel.findById(update.profile);
         console.log("profile", profile)
-        const imageUrl = `https://posting.ly/buffer_image?url=${update.images[0].url}`;
+        // const imageUrl = `https://posting.ly/buffer_image?url=${}`;
+        // const imageUrl = `https://posting.ly/buffer_image?url=${update.images[0].url}`;
+        const imageUrl = update.images[0].url;
 
         const linkCreateResponse = await fetch(`${igAPIURL}upload/photo`, {
             body: JSON.stringify({
