@@ -173,7 +173,8 @@ module.exports = {
     },
     shareProductPosts: async function (update) {
         const profile = await ProfileModel.findById(update.profile);
-        const imageUrl = `https://posting.ly/buffer_image?url=${update.images[0].url}`;
+        const imageUrl = `http://posting.ly/buffer_image?url=${update.images[0].url}`;
+        // const imageUrl = update.images[0].url;
         const iCookie = await InstaCookie.find({ username: profile.serviceUsername })
 
         if (iCookie.length === 0) {
