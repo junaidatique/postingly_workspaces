@@ -5,6 +5,7 @@ const sqsHelper = require('shared').sqsHelper;
 const stringHelper = require('shared').stringHelper;
 const moment = require('moment');
 const _ = require('lodash');
+const dateTime = shared.dateTime;
 const dbConnection = require('./db');
 // const createUpdates = require('./createUpdates');
 // const scheduleProductUpdates = require('./scheduleProductUpdates');
@@ -64,10 +65,17 @@ module.exports = {
 
   },
   testFetch: async function (event, context) {
-    console.log("event", event)
+    // console.log("event", event)
     await dbConnection.createConnection(context);
-    const profile = await shared.ProfileModel.find();
-    console.log("profile", profile)
+
+    const next_five_minutes = dateTime.getRoundedDate(5);
+    console.log("TCL: next_five_minutes", next_five_minutes)
+
+    const prevThirtyMinutes = dateTime.getOldRoundedDate(10);
+    console.log("prevThirtyMinutes", prevThirtyMinutes)
+
+    // const profile = await shared.ProfileModel.find();
+    // console.log("profile", profile)
     // // const profile = await shared.ProfileModel.findOne()
     // const iCookie = await shared.InstaCookie.find({ username: profile.serviceUsername })
     // // console.log("profile", profile)

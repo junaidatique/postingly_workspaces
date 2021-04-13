@@ -19,11 +19,14 @@ module.exports = {
     let updates;
     const next_five_minutes = dateTime.getRoundedDate(5);
     console.log("TCL: next_five_minutes", next_five_minutes)
+    const prevThirtyMinutes = dateTime.getOldRoundedDate(30);
+    console.log("prevThirtyMinutes", prevThirtyMinutes)
+
     if (process.env.IS_OFFLINE === 'false') {
       updates = await UpdateModel.find(
         {
           scheduleState: APPROVED,
-          scheduleTime: { $lte: next_five_minutes },
+          scheduleTime: { $lte: next_five_minutes, $gt: prevThirtyMinutes },
           service: { $ne: BUFFER_SERVICE },
         }
       );
