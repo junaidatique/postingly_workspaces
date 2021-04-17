@@ -797,7 +797,7 @@ module.exports = {
     const StoreModel = shared.StoreModel;
     const ProductModel = shared.ProductModel;
     const productDetail = await ProductModel.findById(event.productId)
-    if (!productDetail) {
+    if (!productDetail || _.isNull(productDetail)) {
       return false;
     }
     const storeDetail = await StoreModel.findById(event.storeId);

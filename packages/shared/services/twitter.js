@@ -117,7 +117,7 @@ module.exports = {
       const params = { status: update.text, media_ids: image_ids }
       console.log("TCL: params", params)
       const tweetResponse = await T.post('statuses/update', params);
-      console.log("TCL: tweetResponse", tweetResponse)
+      // console.log("TCL: tweetResponse", tweetResponse)
       return {
         scheduleState: POSTED,
         response: {

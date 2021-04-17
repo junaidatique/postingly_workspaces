@@ -54,6 +54,7 @@ module.exports = {
         if (process.env.ENABLE_POSTING === 'true') {
             console.log("update.service", update.service)
             if (update.service === FACEBOOK_SERVICE) {
+                console.log("update.postAsOption", update.postAsOption)
                 if (update.postAsOption === POST_AS_OPTION_FB_ALBUM) {
                     response = await FacebookService.shareFacebookPostAsAlbum(update);
                 }

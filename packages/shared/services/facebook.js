@@ -395,35 +395,7 @@ module.exports = {
     } else {
       fbDefaultAlbum = profile.fbDefaultAlbum;
     }
-    // if (_.isNull(fbDefaultAlbum)) {
-    //   const defaultAlbumResponse = await this.getDefaultAlbum(profile._id, profile.serviceUserId, profile.accessToken);
-    //   if (defaultAlbumResponse.status !== 200) {
-    //     return {
-    //       scheduleState: FAILED,
-    //       failedMessage: defaultAlbumResponse.message
-    //     };
-    //   } else {
-    //     if (_.isNull(defaultAlbumResponse.defaultAlbumId) || _.isUndefined(defaultAlbumResponse.defaultAlbumId)) {
-    //       const albumResponse = await this.createAlbum(profile.serviceUserId, FB_DEFAULT_ALBUM, '', profile.accessToken);
-    //       const albumCreateResponse = albumResponse.albumCreateResponse;
-    //       const albumCreateResponseJson = albumResponse.albumCreateResponseJson;
-    //       if (albumCreateResponse.status === 200) {
-    //         fbDefaultAlbum = albumCreateResponseJson.id;
-    //       } else {
-    //         return {
-    //           scheduleState: FAILED,
-    //           failedMessage: albumCreateResponseJson.error.message,
-    //           response: null,
-    //         }
-    //       }
-    //     } else {
-    //       fbDefaultAlbum = defaultAlbumResponse.defaultAlbumId;
-    //     }
-    //     profile.fbDefaultAlbum = fbDefaultAlbum;
-    //     await profile.save();
-    //   }
 
-    // }
     const imageResponse = await this.shareImage(fbDefaultAlbum, update.images[0].url, update.text, profile.accessToken);
     if (imageResponse.status === 200) {
       return {
@@ -452,28 +424,36 @@ module.exports = {
       caption: caption,
       access_token: accessToken
     }
-    const queryStr = querystring.stringify(requestBody);
-    const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}me/photos?${queryStr}`;
-    const imageUploadResponse = await fetch(`${graphApiUrl}`, {
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-    });
-    const imageUploadResponseJson = await imageUploadResponse.json();
-    if (imageUploadResponse.status === 200) {
-      return {
-        servicePostId: imageUploadResponseJson.post_id,
-        serviceId: imageUploadResponseJson.id,
-        status: imageUploadResponse.status
+    try {
+      const queryStr = querystring.stringify(requestBody);
+      const graphApiUrl = `${FACEBOOK_GRAPH_API_URL}me/photos?${queryStr}`;
+      const imageUploadResponse = await fetch(`${graphApiUrl}`, {
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
+      const imageUploadResponseJson = await imageUploadResponse.json();
+      if (imageUploadResponse.status === 200) {
+        return {
+          servicePostId: imageUploadResponseJson.post_id,
+          serviceId: imageUploadResponseJson.id,
+          status: imageUploadResponse.status
+        }
+      } else {
+        return {
+          status: imageUploadResponse.status,
+          message: imageUploadResponseJson.error.message,
+        }
       }
-    } else {
+    } catch (error) {
       return {
-        status: imageUploadResponse.status,
-        message: imageUploadResponseJson.error.message,
+        status: 500,
+        message: error.message,
       }
     }
+
   },
   getDefaultAlbum: async function (profileId, serviceUserId, accessToken, after) {
     const profile = await ProfileModel.findById(profileId);
